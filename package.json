@@ -1,0 +1,11 @@
+{
+  "name": "saascape",
+  "version": "1.0.0",
+  "description": "All-in-one software as a service management dashboard",
+  "main": "server.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Keir Davie",
+  "license": "GPL-3.0"
+}
