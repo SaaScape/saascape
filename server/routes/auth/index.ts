@@ -15,7 +15,7 @@ export default (app: express.Application) => {
   router.use(express.json())
   router.use(cookieParser())
 
-  app.use("/api", router)
+  app.use("/auth", router)
 
   router.get("/", use(getIndex))
 

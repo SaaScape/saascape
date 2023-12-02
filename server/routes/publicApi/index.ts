@@ -13,7 +13,7 @@ export default (app: express.Application) => {
   router.use(express.json())
   router.use(cookieParser())
 
-  app.use("/api", router)
+  app.use("/public_api", router)
 
   router.get("/", use(getIndex))
 
@@ -34,5 +34,5 @@ const catchError = async (
 }
 
 const getIndex = async (req: Request, res: Response) => {
-  sendSuccessResponse({ message: "hello world" }, req, res)
+  sendSuccessResponse({ message: "hello public world" }, req, res)
 }
