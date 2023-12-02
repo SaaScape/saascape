@@ -3,7 +3,7 @@ import { sendErrorResponse, sendSuccessResponse } from "../../helpers/responses"
 import cookieParser from "cookie-parser"
 import IError from "../../interfaces/error"
 import { AuthService } from "../../services/authService"
-import { ObjectId } from "mongodb"
+import withAuth from "../../middleware/withAuth"
 
 export default (app: express.Application) => {
   const use =
@@ -18,10 +18,10 @@ export default (app: express.Application) => {
   app.use("/auth", router)
 
   router.get("/", use(getIndex))
-
-  //  ROUTE IMPORTS -----------------------
-
-  // END ROUTE IMPORTS ---------------------
+  router.post("/login", use(login))
+  router.put("/token-login", use(tokenLogin))
+  router.get("/check-auth", use(withAuth), use(checkAuth))
+  router.put("/renew-token", use(renewAccessToken))
 
   router.use(catchError)
 }
@@ -44,19 +44,22 @@ const login = async (req: Request, res: Response) => {
   const { userAccount, accessToken, refreshToken } = await authService.login(
     req.body
   )
+  const { permissions } = req
   res.cookie("accessToken", accessToken, { httpOnly: true })
-  sendSuccessResponse({ userAccount, refreshToken }, req, res)
+  sendSuccessResponse({ userAccount, permissions, refreshToken }, req, res)
 }
 const tokenLogin = async (req: Request, res: Response) => {
   const authService = new AuthService()
   const { userAccount, accessToken } = await authService.refreshLogin(req.body)
+  const { permissions } = req
   res.cookie("accessToken", accessToken, { httpOnly: true })
-  sendSuccessResponse({ userAccount }, req, res)
+  sendSuccessResponse({ userAccount, permissions }, req, res)
 }
 const checkAuth = async (req: Request, res: Response) => {
   const authService = new AuthService()
   const { userObj } = await authService.getAuthDetails(req)
-  sendSuccessResponse({ authenticated: true, userObj }, req, res)
+  const { permissions } = req
+  sendSuccessResponse({ authenticated: true, userObj, permissions }, req, res)
 }
 const renewAccessToken = async (req: Request, res: Response) => {
   const authService = new AuthService()

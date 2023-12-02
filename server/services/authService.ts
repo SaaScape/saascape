@@ -31,6 +31,14 @@ export class AuthService {
               as: "groups",
             },
           },
+          {
+            $lookup: {
+              foreignField: "_id",
+              from: "permissions",
+              localField: "groups.permissions",
+              as: "permissions",
+            },
+          },
         ])
         .toArray()
     )?.[0] as IUser

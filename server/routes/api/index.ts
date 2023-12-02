@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from "express"
 import { sendErrorResponse, sendSuccessResponse } from "../../helpers/responses"
 import cookieParser from "cookie-parser"
 import IError from "../../interfaces/error"
+import withAuth from "../../middleware/withAuth"
 
 export default (app: express.Application) => {
   const use =
@@ -16,10 +17,8 @@ export default (app: express.Application) => {
   app.use("/api", router)
 
   router.get("/", use(getIndex))
-
-  //  ROUTE IMPORTS -----------------------
-
-  // END ROUTE IMPORTS ---------------------
+  // Authenticated routes below here
+  router.use(use(withAuth))
 
   router.use(catchError)
 }
