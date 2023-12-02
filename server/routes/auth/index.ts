@@ -54,22 +54,9 @@ const tokenLogin = async (req: Request, res: Response) => {
   sendSuccessResponse({ userAccount }, req, res)
 }
 const checkAuth = async (req: Request, res: Response) => {
-  req.userObj = {
-    _id: new ObjectId(),
-    username: "test",
-    first_name: "test",
-    last_name: "test",
-    email: "test",
-    groups: ["test"],
-    status: "test",
-    created_at: new Date(),
-    updated_at: new Date(),
-    password: "d",
-    refresh_tokens: [],
-  }
-  // const authService = new AuthService()
-  // const { userObj } = await authService.getAuthDetails(req)
-  // sendSuccessResponse({ authenticated: true, userObj }, req, res)
+  const authService = new AuthService()
+  const { userObj } = await authService.getAuthDetails(req)
+  sendSuccessResponse({ authenticated: true, userObj }, req, res)
 }
 const renewAccessToken = async (req: Request, res: Response) => {
   const authService = new AuthService()
