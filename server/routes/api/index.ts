@@ -19,6 +19,7 @@ export default (app: express.Application) => {
   router.get("/", use(getIndex))
   // Authenticated routes below here
   router.use(use(withAuth))
+  router.get("/hello", use(getIndex))
 
   router.use(catchError)
 }
