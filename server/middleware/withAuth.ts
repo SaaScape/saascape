@@ -8,7 +8,7 @@ import { db } from "../db"
 import jwtHelper from "../modules/jwt"
 import { IUser, IUserWithPermissions } from "../schemas/Users"
 
-const getPermissions = (req: Request) => {
+export const getPermissions = (req: Request) => {
   const { userObj } = req
   if (!userObj?._id) throw new Error("Missing _id from userObj in request")
 

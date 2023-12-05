@@ -19,7 +19,7 @@ export default (app: express.Application) => {
 
   router.get("/", use(getIndex))
   router.post("/login", use(login))
-  router.put("/token-login", use(tokenLogin))
+  router.post("/token-login", use(tokenLogin))
   router.get("/check-auth", use(withAuth), use(checkAuth))
   router.put("/renew-token", use(renewAccessToken))
 
@@ -42,15 +42,20 @@ const getIndex = async (req: Request, res: Response) => {
 const login = async (req: Request, res: Response) => {
   const authService = new AuthService()
   const { userAccount, accessToken, refreshToken } = await authService.login(
-    req.body
+    req.body,
+    req
   )
   const { permissions } = req
   res.cookie("accessToken", accessToken, { httpOnly: true })
+  console.log(permissions)
   sendSuccessResponse({ userAccount, permissions, refreshToken }, req, res)
 }
 const tokenLogin = async (req: Request, res: Response) => {
   const authService = new AuthService()
-  const { userAccount, accessToken } = await authService.refreshLogin(req.body)
+  const { userAccount, accessToken } = await authService.refreshLogin(
+    req.body,
+    req
+  )
   const { permissions } = req
   res.cookie("accessToken", accessToken, { httpOnly: true })
   sendSuccessResponse({ userAccount, permissions }, req, res)

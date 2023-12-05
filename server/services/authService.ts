@@ -8,9 +8,10 @@ import { comparePassword } from "../modules/bcrypt"
 import jwtHelper from "../modules/jwt"
 import { IUser } from "../schemas/Users"
 import { Request } from "express"
+import { getPermissions } from "../middleware/withAuth"
 export class AuthService {
   constructor() {}
-  async login(body: { username: string; password: string }) {
+  async login(body: { username: string; password: string }, req: Request) {
     const { username, password } = body
 
     const userAccount = (
@@ -77,11 +78,13 @@ export class AuthService {
     )
 
     const cleanUserAccount = cleanUserObj(userAccount)
+    req.userObj = userAccount
+    getPermissions(req)
 
     return { userAccount: cleanUserAccount, refreshToken, accessToken }
   }
 
-  async refreshLogin(body: { refreshToken: string }) {
+  async refreshLogin(body: { refreshToken: string }, req: Request) {
     const { refreshToken } = body
     // Decipher token
     const verifyResult = await jwtHelper.decipherJwt.refresh(refreshToken)
@@ -107,6 +110,14 @@ export class AuthService {
               as: "groups",
             },
           },
+          {
+            $lookup: {
+              foreignField: "_id",
+              from: "permissions",
+              localField: "groups.permissions",
+              as: "permissions",
+            },
+          },
         ])
         .toArray()
     )?.[0] as IUser
@@ -122,6 +133,9 @@ export class AuthService {
     const accessToken = await jwtHelper.createJwt.access(tokenObj)
 
     const cleanUserAccount = cleanUserObj(userAccount)
+
+    req.userObj = userAccount
+    getPermissions(req)
 
     return { userAccount: cleanUserAccount, accessToken }
   }

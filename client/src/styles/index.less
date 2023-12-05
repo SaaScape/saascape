@@ -1,5 +1,54 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css");
+
+@import "./common.less";
+@import "./variables.less";
+
+//COMPONENTS
+
+// PAGES
+@import "./pages/login.less";
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-family: "Public Sans", sans-serif;
+}
+body {
+  color: @dark-text;
+  background-color: @body-background;
+  overflow: hidden;
+}
+
+// main layout
+.main-layout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 60px 1fr;
+  grid-template-areas:
+    "aside header"
+    "aside main";
+  height: 100vh;
+  width: 100vw;
+  > main {
+    grid-area: main;
+    overflow-y: auto;
+    > .top {
+      padding: 20px;
+      .ant-breadcrumb {
+        ol {
+          li {
+            font-size: 1rem;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+  > header {
+    grid-area: header;
+  }
+  > aside {
+    grid-area: aside;
+  }
 }

@@ -14,9 +14,25 @@ function App() {
     unauthenticated: (
       <Routes>
         {checkedAuth ? (
-          <Route path='/*' element={<Login />} />
+          <Route
+            path='/*'
+            element={
+              <Login
+                checkedAuth={checkedAuth}
+                setIsAuthenticated={setIsAuthenticated}
+              />
+            }
+          />
         ) : (
-          <Route path='/*' element={<Loading />} />
+          <Route
+            path='/*'
+            element={
+              <Loading
+                setIsAuthenticated={setIsAuthenticated}
+                setCheckedAuth={setCheckedAuth}
+              />
+            }
+          />
         )}
       </Routes>
     ),
