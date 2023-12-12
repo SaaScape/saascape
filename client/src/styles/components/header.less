@@ -1,0 +1,37 @@
+header {
+  background-color: white;
+  box-shadow: 0px 0px 1px 1px @gray-border;
+  > .container {
+    padding: 0 20px;
+    height: 100%;
+    .menu-toggle {
+      font-size: 24px;
+      margin-right: 30px;
+      cursor: pointer;
+    }
+    .search-container {
+      display: grid;
+      grid-template-columns: 1fr 20px;
+      align-items: center;
+      background-color: @body-background;
+      border-radius: 20px;
+      height: 35px;
+      width: 280px;
+      padding: 0 10px;
+      overflow: hidden;
+      input {
+        background-color: transparent;
+        border: none;
+        height: 100%;
+        color: @gray;
+        &:focus {
+          box-shadow: none;
+        }
+      }
+      .icon {
+        cursor: pointer;
+        color: @gray;
+      }
+    }
+  }
+}

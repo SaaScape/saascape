@@ -1,10 +1,12 @@
+import Aside from "./components/Aside"
+import Header from "./components/Header"
 import Main from "./pages/Main"
 
 const MainLayout = () => {
   return (
     <div className='main-layout'>
-      <header>header</header>
-      <aside>aside</aside>
+      <Header />
+      <Aside />
       <Main />
     </div>
   )
