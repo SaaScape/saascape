@@ -33,5 +33,28 @@ header {
         color: @gray;
       }
     }
+    .notifications {
+      margin-right: 20px;
+      cursor: pointer;
+      &:hover {
+        svg {
+          color: @primary-blue;
+        }
+        .ant-badge {
+          bottom: 14px;
+          right: 5px;
+        }
+      }
+      .ant-badge {
+        bottom: 12px;
+        right: 5px;
+        transition: all 0.3s ease-in;
+      }
+      svg {
+        font-size: 20px;
+        color: @gray;
+        transition: all 0.3s;
+      }
+    }
   }
 }

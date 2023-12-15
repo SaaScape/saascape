@@ -1,13 +1,18 @@
 import { configureStore } from "@reduxjs/toolkit"
 import usersReducer, { IUserState } from "./slices/userSlice"
+import notificationsReducer, {
+  INotificationState,
+} from "./slices/notificationsSlice"
 
 export interface IStore {
   user: IUserState
+  notifications: INotificationState[]
 }
 
 export const store = configureStore({
   reducer: {
     user: usersReducer,
+    notifications: notificationsReducer,
   },
 })
 

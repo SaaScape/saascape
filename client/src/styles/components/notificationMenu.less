@@ -1,0 +1,54 @@
+.component-notification-menu {
+  display: grid;
+  grid-template-rows: 60px 1fr 40px;
+  background-color: white;
+  width: 350px;
+  .notification-header {
+    border-bottom: 1px solid @gray-border;
+    font-weight: 500;
+    font-size: 1rem;
+  }
+  ul {
+    max-height: 400px;
+    overflow: hidden;
+    overflow-y: auto;
+    list-style: none;
+    li {
+      padding: 15px 10px;
+      font-weight: 400;
+      font-size: 0.875rem;
+      border-bottom: 1px solid @gray-border;
+      transition: all 0.3s;
+      &:hover {
+        background-color: @body-background;
+      }
+      a {
+        color: @text-color;
+        text-decoration: none;
+        width: 100%;
+        height: 100%;
+        display: block;
+        display: grid;
+        grid-template-columns: 50px 1fr;
+        align-items: center;
+        justify-items: center;
+        .notification-data {
+          justify-self: flex-start;
+          .title {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+          }
+          .message {
+            font-size: 0.75rem;
+          }
+        }
+      }
+    }
+  }
+  .notification-footer {
+    a {
+      color: @text-color;
+      text-decoration: none;
+    }
+  }
+}

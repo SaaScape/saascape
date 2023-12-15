@@ -1,0 +1,41 @@
+.component-menu-container {
+  position: relative;
+
+  @keyframes menu-open {
+    0% {
+      transform: translateY(-20%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  @keyframes menu-close {
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-20);
+      opacity: 0;
+    }
+  }
+  .component-menu {
+    background-color: white;
+    border: 1px solid @gray-border;
+    border-radius: 3px;
+    &.menu-animate-enter {
+      animation: menu-open 0.3s;
+      pointer-events: none;
+    }
+
+    &.menu-animate-exit {
+      animation: menu-close 0.3s forwards;
+      pointer-events: none;
+    }
+    position: absolute;
+    right: 0;
+    top: 40px;
+  }
+}
