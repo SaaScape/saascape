@@ -1,8 +1,9 @@
 import { Route, Routes } from "react-router-dom"
 import ProtectedRoute from "./ProtectedRoutes"
 import routes from "../helpers/constants/routes"
-import Dashboard from "../pages/Dashboard"
+import Dashboard from "../pages/Dashboard/DashboardContainer"
 import permissions from "../helpers/constants/permissions"
+import { DomainsContainer } from "../pages/Domains/DomainsContainer"
 
 const MainRoutes = () => {
   return (
@@ -22,6 +23,12 @@ const MainRoutes = () => {
               permissions={[permissions.SUPER_ACCESS]}
             />
           }
+        />
+      </Route>
+      <Route path='/domains'>
+        <Route
+          path={routes.DOMAINS.ALL_DOMAINS}
+          element={<ProtectedRoute component={<DomainsContainer />} />}
         />
       </Route>
       <Route path='*' element={<div>404</div>} />

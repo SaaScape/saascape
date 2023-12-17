@@ -2,20 +2,28 @@ import { Avatar, Badge, Input } from "antd"
 import Icon from "./Icon"
 
 import { IStore } from "../store/store"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import MenuContainer from "./MenuContainer"
 import UserMenu from "./userMenu/UserMenu"
 import NotificationMenu from "./notifications/NotificationMenu"
+import { setConfigData } from "../store/slices/configData"
 
 const Header = () => {
   const user = useSelector((state: IStore) => state.user)
   const notifications = useSelector((state: IStore) => state?.notifications)
+  const configData = useSelector((state: IStore) => state.configData)
+
+  const dispatch = useDispatch()
+
+  const toggleAsideMenu = () => {
+    dispatch(setConfigData({ menuOpen: !configData.menuOpen }))
+  }
 
   return (
     <header>
       <div className='container d-flex justify-between align-center'>
         <div className='d-flex align-center'>
-          <span className='menu-toggle'>
+          <span className='menu-toggle' onClick={toggleAsideMenu}>
             <Icon icon='BARS' />
           </span>
           <div className='search-container'>

@@ -3,16 +3,22 @@ import usersReducer, { IUserState } from "./slices/userSlice"
 import notificationsReducer, {
   INotificationState,
 } from "./slices/notificationsSlice"
+import configDataReducer, { IConfigData } from "./slices/configData"
+import breadcrumbsReducer, { IBreadcrumbs } from "./slices/breadcrumbs"
 
 export interface IStore {
   user: IUserState
   notifications: INotificationState[]
+  configData: IConfigData
+  breadcrumbs: IBreadcrumbs[]
 }
 
 export const store = configureStore({
   reducer: {
     user: usersReducer,
     notifications: notificationsReducer,
+    configData: configDataReducer,
+    breadcrumbs: breadcrumbsReducer,
   },
 })
 

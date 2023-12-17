@@ -1,12 +1,14 @@
 import { IconDefinition } from "@fortawesome/free-solid-svg-icons"
 import * as solid from "@fortawesome/free-solid-svg-icons"
 import * as regular from "@fortawesome/free-regular-svg-icons"
+import * as brands from "@fortawesome/free-brands-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 
-export type IconStyles = "solid"
+export type IconStyles = "solid" | "regular" | "brands"
+
 interface IProps {
   icon: string
-  style?: "solid" | "regular"
+  style?: IconStyles
 }
 
 interface IIconsObj {
@@ -27,9 +29,16 @@ const iconsObj: IIconsObj = {
     TREND_DOWN: solid.faArrowTrendDown,
     USER: solid.faUser,
     SETTINGS: solid.faGear,
+    SERVER: solid.faServer,
+    DOMAIN: solid.faGlobe,
+    TENANT: solid.faBuilding,
+    DATABASE: solid.faDatabase,
   },
   regular: {
     BELL: regular.faBell,
+  },
+  brands: {
+    DOCKER: brands.faDocker,
   },
 }
 

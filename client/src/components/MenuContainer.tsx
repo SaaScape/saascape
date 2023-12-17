@@ -4,6 +4,7 @@ import { CSSTransition } from "react-transition-group"
 interface IProps {
   children: React.ReactNode[] | React.ReactNode
   MenuComponent: JSX.Element
+  onChange?: (value: boolean) => void
 }
 
 const MenuContainer = (props: IProps) => {
@@ -12,6 +13,8 @@ const MenuContainer = (props: IProps) => {
 
   const menuRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const { onChange } = props
 
   const toggleMenu = (e: React.MouseEvent) => {
     if (menuRef.current?.contains(e.target as Node)) return
@@ -34,6 +37,10 @@ const MenuContainer = (props: IProps) => {
     return () => {
       document.body.removeEventListener("click", event)
     }
+  }, [showMenu])
+
+  useEffect(() => {
+    onChange?.(showMenu)
   }, [showMenu])
 
   return (

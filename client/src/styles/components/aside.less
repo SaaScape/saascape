@@ -1,15 +1,107 @@
+@defaultPadding: 30px;
+
 aside {
   background-color: @dark-blue;
-  width: 300px;
+  transition: width 0.3s ease-in-out;
+  width: 250px;
   overflow-y: auto;
   overflow-x: hidden;
   color: white;
   h1 {
-    padding: 30px;
+    padding: @defaultPadding;
     font-weight: 500;
     font-size: 22px;
   }
-  .hidden {
+  &.hidden {
     width: 0px;
+  }
+  .user {
+    padding: @defaultPadding;
+    &.open {
+      .user-menu {
+        .user-data {
+          .user-name {
+            &::after {
+              transform: rotateX(0);
+            }
+          }
+        }
+      }
+    }
+    .user-menu {
+      .user-data {
+        padding: 5px 10px;
+        text-transform: capitalize;
+        .user-name {
+          &::after {
+            transition: all 0.3s;
+
+            content: "\f0d7";
+            font-family: "FontAwesome";
+            color: white;
+            position: absolute;
+            right: -20px;
+            transform: rotateX(180deg);
+          }
+        }
+      }
+    }
+
+    .ant-avatar {
+      background-color: white;
+      color: @dark-blue;
+      font-size: 1.1rem;
+    }
+  }
+
+  nav {
+    ul {
+      li {
+        padding-left: @defaultPadding;
+        height: 50px;
+        a {
+          height: 100%;
+          width: 100%;
+          transition: all 0.3s;
+          display: grid;
+          grid-template-columns: 35px 1fr;
+          grid-template-areas: "icon title";
+          color: @gray;
+          text-decoration: none;
+          justify-items: flex-start;
+          align-items: center;
+          font-size: 0.9rem;
+          .icon {
+            grid-area: icon;
+            font-size: 1.1rem;
+          }
+          .title {
+            grid-area: title;
+          }
+        }
+
+        &.active {
+          &::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 5px;
+            background-color: @primary-blue;
+          }
+          background-color: @darker-blue;
+          a {
+            color: whitesmoke;
+          }
+        }
+
+        &:hover:not(.open) {
+          a {
+            color: whitesmoke;
+          }
+        }
+      }
+    }
   }
 }

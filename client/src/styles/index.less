@@ -38,6 +38,20 @@ body {
   > main {
     grid-area: main;
     overflow-y: auto;
+    .ant-breadcrumb {
+      font-size: 1rem;
+      padding: 20px;
+      ol {
+        display: flex;
+        align-items: center;
+        li {
+          &:last-of-type {
+            font-weight: 500;
+            font-size: 1.1rem;
+          }
+        }
+      }
+    }
     > .top {
       padding: 20px;
       .ant-breadcrumb {

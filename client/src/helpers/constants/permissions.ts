@@ -2,6 +2,7 @@ export default {
   SUPER_ACCESS: "super_access", // Access to everything,
 
   //   PERMISSION PLAN BELOW
+  STANDARD_ACCESS: "standard_access", // All users
 
   //   USERS: {
   //     MANAGE_USERS: "manage_users",
