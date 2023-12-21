@@ -33,6 +33,7 @@ const iconsObj: IIconsObj = {
     DOMAIN: solid.faGlobe,
     TENANT: solid.faBuilding,
     DATABASE: solid.faDatabase,
+    APPLICATION: solid.faTerminal,
   },
   regular: {
     BELL: regular.faBell,

@@ -1,0 +1,27 @@
+section.dashboard {
+  .main {
+    display: grid;
+    grid-template-columns: repeat(25, 1fr);
+    grid-template-rows: repeat(5, 180px);
+    gap: 35px;
+
+    .ant-card {
+      position: relative;
+      .title {
+        font-weight: 500;
+        color: @gray;
+        font-size: 0.9rem;
+      }
+      &.data-card {
+        grid-column-end: span 5;
+      }
+      &.growth-card {
+        grid-column: 11 / span 15;
+        grid-row: 1 / span 2;
+      }
+      &.app-stats {
+        grid-column: 10 / span 16;
+      }
+    }
+  }
+}

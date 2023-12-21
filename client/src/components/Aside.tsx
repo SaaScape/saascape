@@ -22,6 +22,12 @@ const asideMenuItems: {
     permissions: [permissions.STANDARD_ACCESS],
   },
   {
+    name: "Applications",
+    icon: "APPLICATION",
+    path: "/applications",
+    permissions: [permissions.STANDARD_ACCESS],
+  },
+  {
     name: "Instances",
     icon: "DOCKER",
     iconStyle: "brands",
