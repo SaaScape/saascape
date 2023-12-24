@@ -1,0 +1,27 @@
+.custom-breadcrumbs {
+  .section-padding();
+  ul {
+    list-style: none;
+    display: flex;
+    align-items: center;
+
+    li {
+      margin-right: 3px;
+      & + li::before {
+        content: "/";
+        font-size: 1.25rem;
+        color: @gray;
+      }
+      &:last-of-type {
+        a {
+          color: @dark-text;
+          font-weight: 600;
+        }
+      }
+      a {
+        text-decoration: none;
+        color: @gray;
+      }
+    }
+  }
+}

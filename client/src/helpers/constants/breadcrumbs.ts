@@ -11,6 +11,18 @@ export default {
       path: "/applications",
     },
   ],
+  VIEW_APPLICATION: (text: string, id: string) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: text,
+        path: `/applications/${id}`,
+      },
+    ]
+  },
   SERVERS: [
     {
       title: "Servers",

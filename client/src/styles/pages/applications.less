@@ -16,6 +16,7 @@ section.applications {
 
     tbody {
       tr {
+        cursor: pointer;
         td {
           .application-name-container {
             padding: 5px;
@@ -31,6 +32,23 @@ section.applications {
           }
         }
       }
+    }
+  }
+}
+.manage-application-modal {
+  .top-bar {
+    .description {
+      color: @gray;
+      font-size: 0.875rem;
+      font-style: italic;
+      font-weight: 500;
+    }
+  }
+  form {
+    margin: 20px 0;
+    input,
+    textarea {
+      border-radius: 3px;
     }
   }
 }

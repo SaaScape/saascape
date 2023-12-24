@@ -5,6 +5,8 @@ import breadcrumbs from "../../helpers/constants/breadcrumbs"
 import { apiAxios } from "../../helpers/axios"
 import { Avatar } from "antd"
 import { useNavigate } from "react-router-dom"
+import ManageApplicationModal from "../../components/Applications/ManageApplicationModal"
+import { toast } from "react-toastify"
 
 export interface IApplication {
   application_name: string
@@ -53,8 +55,12 @@ const columns = [
 const ApplicationsContainer = () => {
   const [loading, setLoading] = useState(false)
   const [applications, setApplications] = useState<IApplication[]>([])
+  const [showManageApplicationModal, setShowManageApplicationModal] =
+    useState(false)
+  const [application, setApplication] = useState<IApplication | null>(null)
   const setBreadcrumbs = useSetBreadcrumbs()
   const navigate = useNavigate()
+
   useEffect(() => {
     setBreadcrumbs(breadcrumbs.APPLICATIONS)
   }, [])
@@ -65,11 +71,11 @@ const ApplicationsContainer = () => {
 
   const getApplications = async () => {
     setLoading(true)
-    const { data } = await apiAxios.get(`/applications`)
-    console.log(data)
-
-    if (data?.success) {
-      setApplications(data?.data?.applications)
+    const {
+      data: { data, success },
+    } = await apiAxios.get(`/applications`)
+    if (success) {
+      setApplications(data?.applications)
     }
     setLoading(false)
   }
@@ -78,17 +84,60 @@ const ApplicationsContainer = () => {
     onClick: () => navigate(`/applications/${record?._id}`),
   })
 
+  const onApplicationSave = async (values: any) => {
+    setLoading(true)
+
+    const data = await apiAxios?.[values?._id ? "put" : "post"](
+      `/applications`,
+      values
+    )
+
+    if (data?.data?.success) {
+      setShowManageApplicationModal(false)
+      toast.success(
+        <p className='toast-text'>
+          {values?._id
+            ? "Application updated successfully"
+            : "Application created successfully"}
+        </p>
+      )
+      return getApplications()
+    }
+
+    setLoading(false)
+  }
+
+  const onManageApplicationCancel = () => {
+    setShowManageApplicationModal(false)
+  }
+
+  const onCreateApplicationClick = () => {
+    setApplication(null)
+    setShowManageApplicationModal(true)
+  }
+
   const viewProps: IProps = {
     columns,
     loading,
     functions: {
       getApplications,
       onRow,
+      onCreateApplicationClick,
     },
     applications,
   }
 
-  return <Applications {...viewProps} />
+  return (
+    <>
+      <Applications {...viewProps} />
+      <ManageApplicationModal
+        onCancel={onManageApplicationCancel}
+        onSave={onApplicationSave}
+        open={showManageApplicationModal}
+        application={application}
+      />
+    </>
+  )
 }
 
 export default ApplicationsContainer

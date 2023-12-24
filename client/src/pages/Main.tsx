@@ -1,14 +1,14 @@
-import { Breadcrumb } from "antd"
 import MainRoutes from "../routes/MainRoutes"
 import { IStore } from "../store/store"
 import { useSelector } from "react-redux"
+import Breadcrumbs from "../components/Breadcrumbs"
 
 const Main = () => {
   const breadcrumbs = useSelector((state: IStore) => state.breadcrumbs)
 
   return (
     <main>
-      <Breadcrumb items={breadcrumbs} />
+      <Breadcrumbs breadcrumbs={breadcrumbs} />
       <MainRoutes />
     </main>
   )

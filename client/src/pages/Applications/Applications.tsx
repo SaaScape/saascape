@@ -16,7 +16,12 @@ const Applications = (props: IProps) => {
           </div>
         </div>
         <div className='right'>
-          <Button disabled={loading} className='btn-add' type='primary'>
+          <Button
+            disabled={loading}
+            className='btn-add'
+            type='primary'
+            onClick={functions?.onCreateApplicationClick}
+          >
             Add new application
           </Button>
         </div>
