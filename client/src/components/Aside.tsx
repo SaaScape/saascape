@@ -25,7 +25,7 @@ const asideMenuItems: {
     name: "Applications",
     icon: "APPLICATION",
     path: "/applications",
-    permissions: [permissions.STANDARD_ACCESS],
+    permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
   },
   {
     name: "Instances",
@@ -82,6 +82,17 @@ const Aside = () => {
     return breadcrumbs?.[0]?.path === path
   }
 
+  const checkIfHasPerms = (permissionArray: string[]) => {
+    const userPermissions = user?.permissions
+    if (!userPermissions) return
+
+    if (userPermissions.includes(permissions.SUPER_ACCESS)) return true
+
+    for (const permission of permissionArray) {
+      if (userPermissions.includes(permission)) return true
+    }
+  }
+
   return (
     <aside className={`aside ${asideOpen ? "" : "hidden"}`}>
       <h1>SaaScape</h1>
@@ -104,21 +115,24 @@ const Aside = () => {
       </div>
       <nav>
         <ul>
-          {asideMenuItems.map((item, i) => (
-            <li
-              key={i}
-              className={`d-flex align-center p-relative ${
-                checkIfActive(item.path) ? "active" : ""
-              }`}
-            >
-              <Link to={item.path}>
-                <span className='icon'>
-                  <Icon icon={item.icon} style={item?.iconStyle || "solid"} />
-                </span>
-                <div className='title'>{item.name}</div>
-              </Link>
-            </li>
-          ))}
+          {asideMenuItems.map((item, i) => {
+            if (!checkIfHasPerms(item.permissions)) return null
+            return (
+              <li
+                key={i}
+                className={`d-flex align-center p-relative ${
+                  checkIfActive(item.path) ? "active" : ""
+                }`}
+              >
+                <Link to={item.path}>
+                  <span className='icon'>
+                    <Icon icon={item.icon} style={item?.iconStyle || "solid"} />
+                  </span>
+                  <div className='title'>{item.name}</div>
+                </Link>
+              </li>
+            )
+          })}
         </ul>
       </nav>
     </aside>

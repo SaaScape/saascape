@@ -4,6 +4,7 @@ import routes from "../helpers/constants/routes"
 import Dashboard from "../pages/Dashboard/DashboardContainer"
 import permissions from "../helpers/constants/permissions"
 import { DomainsContainer } from "../pages/Domains/DomainsContainer"
+import ApplicationsContainer from "../pages/Applications/ApplicationsContainer"
 
 const MainRoutes = () => {
   return (
@@ -25,10 +26,32 @@ const MainRoutes = () => {
           }
         />
       </Route>
+      {/* Domains */}
       <Route path='/domains'>
         <Route
           path={routes.DOMAINS.ALL_DOMAINS}
           element={<ProtectedRoute component={<DomainsContainer />} />}
+        />
+      </Route>
+      {/* Applications */}
+      <Route path='/applications'>
+        <Route
+          path={routes.APPLICATIONS.ALL_APPLICATIONS}
+          element={
+            <ProtectedRoute
+              component={<ApplicationsContainer />}
+              permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+            />
+          }
+        />
+        <Route
+          path={routes.APPLICATIONS.VIEW_APPLICATION}
+          element={
+            <ProtectedRoute
+              component={<div>Hey application id</div>}
+              permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+            />
+          }
         />
       </Route>
       <Route path='*' element={<div>404</div>} />

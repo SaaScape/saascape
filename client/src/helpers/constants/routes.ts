@@ -7,4 +7,8 @@ export default {
     ALL_DOMAINS: "/domains",
     VIEW_DOMAIN: "/domains/:id",
   },
+  APPLICATIONS: {
+    ALL_APPLICATIONS: "/applications",
+    VIEW_APPLICATION: "/applications/:id",
+  },
 }

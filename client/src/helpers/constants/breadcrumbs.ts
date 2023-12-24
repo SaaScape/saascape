@@ -5,6 +5,12 @@ export default {
       path: "/",
     },
   ],
+  APPLICATIONS: [
+    {
+      title: "Applications",
+      path: "/applications",
+    },
+  ],
   SERVERS: [
     {
       title: "Servers",

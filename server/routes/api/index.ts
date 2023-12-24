@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser"
 import IError from "../../interfaces/error"
 import withAuth from "../../middleware/withAuth"
 import users from "./users"
+import applications from "./applications"
 
 export default (app: express.Application) => {
   const use =
@@ -23,6 +24,7 @@ export default (app: express.Application) => {
   router.get("/hello", use(getIndex))
 
   users(router, use)
+  applications(router, use)
 
   router.use(catchError)
 }
