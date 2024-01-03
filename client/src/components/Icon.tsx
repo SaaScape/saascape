@@ -34,6 +34,7 @@ const iconsObj: IIconsObj = {
     TENANT: solid.faBuilding,
     DATABASE: solid.faDatabase,
     APPLICATION: solid.faTerminal,
+    BRANCH: solid.faCodeBranch,
   },
   regular: {
     BELL: regular.faBell,

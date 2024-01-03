@@ -5,6 +5,7 @@ import Dashboard from "../pages/Dashboard/DashboardContainer"
 import permissions from "../helpers/constants/permissions"
 import { DomainsContainer } from "../pages/Domains/DomainsContainer"
 import ApplicationsContainer from "../pages/Applications/ApplicationsContainer"
+import ViewApplicationContainer from "../pages/Applications/ViewApplication/ViewApplicationContainer"
 
 const MainRoutes = () => {
   return (
@@ -48,7 +49,7 @@ const MainRoutes = () => {
           path={routes.APPLICATIONS.VIEW_APPLICATION}
           element={
             <ProtectedRoute
-              component={<div>Hey application id</div>}
+              component={<ViewApplicationContainer />}
               permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
             />
           }

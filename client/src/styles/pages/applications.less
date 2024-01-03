@@ -35,6 +35,11 @@ section.applications {
     }
   }
 }
+
+section.view-application {
+  padding: 0 20px;
+}
+
 .manage-application-modal {
   .top-bar {
     .description {
@@ -49,6 +54,63 @@ section.applications {
     input,
     textarea {
       border-radius: 3px;
+    }
+  }
+}
+
+section.versions {
+  main {
+    .data-card {
+      margin-bottom: 20px;
+      .content.statistics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        .statistic {
+          .statistic-title {
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+          }
+          .statistic-value {
+            font-size: 1.1rem;
+            color: @primary-blue;
+          }
+        }
+      }
+      table thead th.ant-table-cell {
+        background-color: transparent;
+        color: @gray;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: 500;
+        &::before {
+          background-color: transparent !important;
+        }
+      }
+    }
+  }
+}
+
+section.sub-section {
+  color: @dark-text;
+
+  > .top-bar {
+    background-color: white;
+    position: absolute;
+    z-index: 1;
+    left: -20px;
+    right: -20px;
+    top: -13px;
+    padding: 20px;
+    color: @dark-blue;
+  }
+  padding: 100px 0;
+  .data-card {
+    .top-bar {
+      .title {
+        color: @primary-blue;
+        font-weight: 600;
+      }
+      margin-bottom: 20px;
     }
   }
 }

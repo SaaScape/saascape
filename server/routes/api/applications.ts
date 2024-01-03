@@ -13,6 +13,11 @@ export default (app: Router, use: any) => {
     use(withPerms([permissions.APPLICATIONS.VIEW_APPLICATIONS])),
     use(findMany)
   )
+  router.get(
+    "/:id",
+    use(withPerms([permissions.APPLICATIONS.VIEW_APPLICATIONS])),
+    use(findOne)
+  )
   router.put(
     "/:id",
     use(withPerms([permissions.APPLICATIONS.UPDATE_APPLICATIONS])),
@@ -34,6 +39,11 @@ const findMany = async (req: Request, res: Response) => {
   const applicationService = new ApplicationService()
   const { applications } = await applicationService.findMany()
   sendSuccessResponse({ applications }, req, res)
+}
+const findOne = async (req: Request, res: Response) => {
+  const applicationService = new ApplicationService()
+  const { application } = await applicationService.findOne(req.params.id)
+  sendSuccessResponse({ application }, req, res)
 }
 const update = async (req: Request, res: Response) => {
   const applicationService = new ApplicationService()

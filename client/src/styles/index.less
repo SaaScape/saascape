@@ -41,6 +41,8 @@ body {
   > main {
     grid-area: main;
     overflow-y: auto;
+    display: grid;
+    grid-template-rows: 60px 1fr;
     .ant-breadcrumb {
       font-size: 1rem;
       padding: 20px;
@@ -73,4 +75,21 @@ body {
   > aside {
     grid-area: aside;
   }
+}
+
+.data-card {
+  color: @dark-text;
+  .ant-card-body {
+    padding: 15px;
+    .top-bar {
+      display: flex;
+      .title {
+        font-size: 1rem;
+      }
+    }
+  }
+}
+
+.container {
+  padding: 20px;
 }

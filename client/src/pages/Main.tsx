@@ -5,10 +5,12 @@ import Breadcrumbs from "../components/Breadcrumbs"
 
 const Main = () => {
   const breadcrumbs = useSelector((state: IStore) => state.breadcrumbs)
+  const layoutConfig = useSelector((state: IStore) => state.layoutConfig)
+  const { showBreadcrumbs } = layoutConfig
 
   return (
     <main>
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
+      {showBreadcrumbs && <Breadcrumbs breadcrumbs={breadcrumbs} />}
       <MainRoutes />
     </main>
   )
