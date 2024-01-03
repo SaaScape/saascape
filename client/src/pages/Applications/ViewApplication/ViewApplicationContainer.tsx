@@ -12,6 +12,8 @@ import Icon from "../../../components/Icon"
 import OverviewContainer from "./OverviewContainer"
 import InstancesContainer from "./InstancesContainer"
 import VersionsContainer from "./VersionsContainer"
+import PlansContainer from "./PlansContainer"
+import constants from "../../../helpers/constants/constants"
 
 export interface IProps {
   loading: boolean
@@ -41,18 +43,27 @@ export interface IOverviewMainProps {
     [functionName: string]: (...args: any[]) => any
   }
 }
+export interface IPlanMainProps {
+  application: IApplication | null
+  functions?: {
+    [functionName: string]: (...args: any[]) => any
+  }
+}
 
 interface ITabItem {
   label: string
   icon: ReactElement
   children: ReactElement
   key: string
+  disabled?: boolean
 }
 
 const ViewApplicationContainer = () => {
   const [application, setApplication] = useState<IApplication | null>(null)
   const [loading, setLoading] = useState(false)
   const selectedBreadcrumbs = useSelector((state: IStore) => state.breadcrumbs)
+  const configData = useSelector((state: IStore) => state.configData)
+  const { enabledIntegrations } = configData
 
   const setBreadcrumbs = useSetBreadcrumbs()
   const params = useParams()
@@ -73,6 +84,7 @@ const ViewApplicationContainer = () => {
     instances: IInstanceMainProps
     versions: IVersionMainProps
     overview: IOverviewMainProps
+    plans: IPlanMainProps
   } = {
     instances: {
       application,
@@ -81,6 +93,9 @@ const ViewApplicationContainer = () => {
       application,
     },
     overview: {
+      application,
+    },
+    plans: {
       application,
     },
   }
@@ -93,16 +108,24 @@ const ViewApplicationContainer = () => {
       children: <OverviewContainer {...pageProps.overview} />,
     },
     {
-      label: "Instances",
-      icon: <Icon icon='SERVER' />,
+      label: "Plans",
+      icon: <Icon icon='PLAN' />,
       key: "2",
-      children: <InstancesContainer {...pageProps.instances} />,
+      children: <PlansContainer {...pageProps.plans} />,
     },
     {
       label: "Versions",
       icon: <Icon icon='BRANCH' />,
       key: "3",
       children: <VersionsContainer {...pageProps.versions} />,
+      disabled: !enabledIntegrations?.[constants.INTEGRATIONS.DOCKER],
+    },
+    {
+      label: "Instances",
+      icon: <Icon icon='SERVER' />,
+      key: "4",
+      children: <InstancesContainer {...pageProps.instances} />,
+      disabled: !enabledIntegrations?.[constants.INTEGRATIONS.DOCKER],
     },
   ]
 

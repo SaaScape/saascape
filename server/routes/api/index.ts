@@ -5,6 +5,7 @@ import IError from "../../interfaces/error"
 import withAuth from "../../middleware/withAuth"
 import users from "./users"
 import applications from "./applications"
+import integrations from "./integrations"
 
 export default (app: express.Application) => {
   const use =
@@ -23,6 +24,7 @@ export default (app: express.Application) => {
   router.use(use(withAuth))
   router.get("/hello", use(getIndex))
 
+  integrations(router, use)
   users(router, use)
   applications(router, use)
 

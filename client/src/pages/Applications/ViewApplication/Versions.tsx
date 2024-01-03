@@ -1,4 +1,4 @@
-import { Card, Table } from "antd"
+import { Button, Card, Table } from "antd"
 import { IVersionProps } from "./VersionsContainer"
 
 const Versions = (props: IVersionProps) => {
@@ -10,7 +10,9 @@ const Versions = (props: IVersionProps) => {
           <h1>Versions</h1>
           <p>View and manage all versions of your application</p>
         </div>
-        <div className='right'></div>
+        <div className='right d-flex align-center'>
+          <Button type='primary'>Create Version</Button>
+        </div>
       </div>
       <main>
         <Card className='data-card'>

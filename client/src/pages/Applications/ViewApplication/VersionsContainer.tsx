@@ -43,6 +43,15 @@ const VersionsContainer = (props: IVersionMainProps) => {
     application: props.application,
     versionColumns,
   }
+
+  /* 
+     
+    What to do here?
+
+    Versions can be manually added with reference to the docker image and then instances can use that version, we will need to run validation on the version by pulling the image, so Docker must be configured. But if docker hub is configured, then versions will be added automatically via the docker hub webhooks and api.
+
+  */
+
   return <Versions {...versionProps} />
 }
 
