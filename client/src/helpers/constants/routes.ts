@@ -11,4 +11,8 @@ export default {
     ALL_APPLICATIONS: "/applications",
     VIEW_APPLICATION: "/applications/:id",
   },
+  TENANTS: {
+    ALL_TENANTS: "/tenants",
+    VIEW_TENANT: "/tenants/:id",
+  },
 }

@@ -43,7 +43,7 @@ const asideMenuItems: {
     name: "Tenants",
     icon: "TENANT",
     path: "/tenants",
-    permissions: [permissions.STANDARD_ACCESS],
+    permissions: [permissions.TENANTS.VIEW_TENANTS],
   },
   {
     name: "Databases",

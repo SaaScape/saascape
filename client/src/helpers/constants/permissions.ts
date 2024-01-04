@@ -11,4 +11,12 @@ export default {
     UPDATE_APPLICATIONS: "update_applications",
     DELETE_APPLICATIONS: "delete_applications",
   },
+
+  // Tenants
+  TENANTS: {
+    VIEW_TENANTS: "view_tenants",
+    CREATE_TENANTS: "create_tenants",
+    UPDATE_TENANTS: "update_tenants",
+    DELETE_TENANTS: "delete_tenants",
+  },
 }

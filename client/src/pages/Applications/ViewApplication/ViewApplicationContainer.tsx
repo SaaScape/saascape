@@ -127,6 +127,12 @@ const ViewApplicationContainer = () => {
       children: <InstancesContainer {...pageProps.instances} />,
       disabled: !enabledIntegrations?.[constants.INTEGRATIONS.DOCKER],
     },
+    {
+      label: "Configuration",
+      icon: <Icon icon='CONFIG' />,
+      key: "5",
+      children: <InstancesContainer {...pageProps.instances} />,
+    },
   ]
 
   const getApplication = async () => {

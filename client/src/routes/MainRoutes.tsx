@@ -6,6 +6,7 @@ import permissions from "../helpers/constants/permissions"
 import { DomainsContainer } from "../pages/Domains/DomainsContainer"
 import ApplicationsContainer from "../pages/Applications/ApplicationsContainer"
 import ViewApplicationContainer from "../pages/Applications/ViewApplication/ViewApplicationContainer"
+import TenantsContainer from "../pages/Tenants/TenantsContainer"
 
 const MainRoutes = () => {
   return (
@@ -51,6 +52,18 @@ const MainRoutes = () => {
             <ProtectedRoute
               component={<ViewApplicationContainer />}
               permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+            />
+          }
+        />
+      </Route>
+      {/* Tenants */}
+      <Route path='/tenants'>
+        <Route
+          path={routes.TENANTS.ALL_TENANTS}
+          element={
+            <ProtectedRoute
+              component={<TenantsContainer />}
+              permissions={[permissions.TENANTS.VIEW_TENANTS]}
             />
           }
         />
