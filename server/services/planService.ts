@@ -52,7 +52,10 @@ export default class PlanService {
     const plans =
       (await db.managementDb
         ?.collection<IPlan>("plans")
-        .countDocuments({ plan_name })) || 0
+        .countDocuments({
+          plan_name,
+          application_id: new ObjectId(this.applicationId),
+        })) || 0
 
     if (plans > 0) {
       throw { showError: "Plan already exists" }
