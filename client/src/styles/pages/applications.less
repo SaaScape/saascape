@@ -23,7 +23,45 @@ section.applications {
 }
 
 section.view-application {
-  padding: 0 20px;
+  > .top-bar-container {
+    background-color: white;
+    position: absolute;
+    z-index: 1;
+    left: 0px;
+    right: 0;
+    color: @dark-blue;
+    > .top-bar {
+      padding: 0 20px 0;
+      height: 80px;
+      h1 {
+        font-size: 1.125rem;
+        margin-bottom: 10px;
+      }
+      p {
+        font-size: 0.9rem;
+      }
+      button {
+        height: 40px;
+      }
+    }
+    .ant-tabs {
+      padding: 15px 0 0;
+      position: relative;
+      .ant-tabs-nav {
+        padding: 0 20px;
+        &::before {
+          border-bottom: none !important;
+        }
+      }
+      .ant-tabs-content-holder {
+        background-color: @body-background;
+        position: absolute;
+        top: 200px;
+        left: 0;
+        right: 0;
+      }
+    }
+  }
 }
 
 .manage-application-modal {
@@ -35,6 +73,16 @@ section.view-application {
       font-weight: 500;
     }
   }
+  form {
+    margin: 20px 0;
+    input,
+    textarea {
+      border-radius: 3px;
+    }
+  }
+}
+
+.create-plan-modal {
   form {
     margin: 20px 0;
     input,
@@ -62,34 +110,27 @@ section.versions {
           }
         }
       }
-      table thead th.ant-table-cell {
-        background-color: transparent;
-        color: @gray;
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        font-weight: 500;
-        &::before {
-          background-color: transparent !important;
-        }
-      }
     }
   }
+}
+
+section.plans {
 }
 
 section.sub-section {
   color: @dark-text;
 
-  > .top-bar {
-    background-color: white;
-    position: absolute;
-    z-index: 1;
-    left: -20px;
-    right: -20px;
-    top: -13px;
-    padding: 20px;
-    color: @dark-blue;
+  table thead th.ant-table-cell {
+    background-color: transparent;
+    color: @gray;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 500;
+    &::before {
+      background-color: transparent !important;
+    }
   }
-  padding: 100px 0;
+
   .data-card {
     .top-bar {
       .title {

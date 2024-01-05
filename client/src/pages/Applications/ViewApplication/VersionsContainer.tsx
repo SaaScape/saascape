@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { IApplication } from "../ApplicationsContainer"
 import Versions from "./Versions"
 import { IVersionMainProps } from "./ViewApplicationContainer"
+import { Button } from "antd"
 
 export interface IVersionProps {
   loading: boolean
@@ -43,6 +44,16 @@ const VersionsContainer = (props: IVersionMainProps) => {
     application: props.application,
     versionColumns,
   }
+
+  useEffect(() => {
+    props.setTopBar(
+      "Versions",
+      "View and manage all versions of your application",
+      <div className='right d-flex align-center'>
+        <Button type='primary'>Create Version</Button>
+      </div>
+    )
+  }, [])
 
   /* 
      

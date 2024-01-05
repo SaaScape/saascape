@@ -357,3 +357,14 @@
 .p-fixed {
   position: fixed;
 }
+
+.grid {
+  display: grid;
+  gap: 20px;
+  &.c-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  &.c-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

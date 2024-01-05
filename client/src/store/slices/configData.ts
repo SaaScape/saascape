@@ -1,5 +1,14 @@
 import { createSlice } from "@reduxjs/toolkit"
 
+export interface ICurrency {
+  symbol: string
+  name: string
+  symbol_native: string
+  decimal_digits: number
+  rounding: number
+  code: string
+  name_plural: string
+}
 export interface IConfigData {
   menuOpen: boolean
   integrations: {
@@ -8,12 +17,16 @@ export interface IConfigData {
   enabledIntegrations: {
     [key: string]: boolean
   }
+  currencies: { [key: string]: ICurrency }
+  defaultCurrency: ICurrency
 }
 
 const initialState = {
   menuOpen: true,
   integrations: {},
   enabledIntegrations: {},
+  currencies: [],
+  defaultCurrency: null,
 }
 
 const configDataSlice = createSlice({

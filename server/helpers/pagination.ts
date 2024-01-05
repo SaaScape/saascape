@@ -7,7 +7,7 @@ interface IConfiguration {
   findObj?: { [key: string]: any }
   aggregationPipeline?: { [key: string]: any }[]
   projectionObj?: { [key: string]: 0 | 1 }
-  timeConstraintField: string
+  timeConstraintField?: string
 }
 
 interface IPaginationObj {
@@ -61,7 +61,7 @@ export default class Pagination {
       collection,
       findObj,
       projectionObj = {},
-      timeConstraintField,
+      timeConstraintField = "created_at",
       aggregationPipeline,
     } = data
     if (!collection) throw new Error("Collection not specified")

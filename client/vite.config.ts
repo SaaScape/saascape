@@ -21,6 +21,9 @@ export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
         "/webhooks": {
           target: "http://localhost:4000",
         },
+        "/files": {
+          target: "http://localhost:4000",
+        },
       },
     }
     returnObj.server = server

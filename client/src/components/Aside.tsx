@@ -40,6 +40,12 @@ const asideMenuItems: {
     permissions: [permissions.STANDARD_ACCESS],
   },
   {
+    name: "Contacts",
+    icon: "CONTACT",
+    path: "/contacts",
+    permissions: [permissions.STANDARD_ACCESS],
+  },
+  {
     name: "Tenants",
     icon: "TENANT",
     path: "/tenants",

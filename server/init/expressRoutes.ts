@@ -9,6 +9,7 @@ export const initExpressRoutes = async (app: express.Application) => {
   // Init routes
 
   app.use(express.static(path.join(__dirname, "..", "..", "client", "dist")))
+  app.use(express.static(path.join(__dirname, "..", "public")))
 
   apiRouter(app) // /api
   authRouter(app) // /auth

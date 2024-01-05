@@ -5,12 +5,20 @@ import { apiAxios } from "./helpers/axios"
 import Main from "./pages/Main"
 import { useDispatch } from "react-redux"
 import { setConfigData } from "./store/slices/configData"
+import axios from "axios"
 
 const MainLayout = () => {
   const dispatch = useDispatch()
+
   useEffect(() => {
-    getIntegrations()
+    Promise.allSettled([getIntegrations(), getCurrencies()])
   }, [])
+
+  const getCurrencies = async () => {
+    const { data } = await axios.get("/files/currency.json")
+    dispatch(setConfigData({ currencies: data }))
+  }
+
   const getIntegrations = async () => {
     const {
       data: { success, data },

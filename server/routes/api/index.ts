@@ -6,6 +6,7 @@ import withAuth from "../../middleware/withAuth"
 import users from "./users"
 import applications from "./applications"
 import integrations from "./integrations"
+import plans from "./plans"
 
 export default (app: express.Application) => {
   const use =
@@ -27,6 +28,7 @@ export default (app: express.Application) => {
   integrations(router, use)
   users(router, use)
   applications(router, use)
+  plans(router, use)
 
   router.use(catchError)
 }

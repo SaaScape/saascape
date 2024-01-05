@@ -15,11 +15,24 @@ import VersionsContainer from "./VersionsContainer"
 import PlansContainer from "./PlansContainer"
 import constants from "../../../helpers/constants/constants"
 
+type setTopBar = (
+  title: string,
+  description?: string,
+  right?: ReactElement
+) => void
+
+interface ITopBarConfig {
+  title: string
+  description?: string
+  right?: ReactElement | null
+}
+
 export interface IProps {
   loading: boolean
   application: IApplication | null
   breadcrumbs: IBreadcrumbs[]
   tabItems: ITabItem[]
+  topBarConfig: ITopBarConfig
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
@@ -27,24 +40,28 @@ export interface IProps {
 
 export interface IVersionMainProps {
   application: IApplication | null
+  setTopBar: setTopBar
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
 }
 export interface IInstanceMainProps {
   application: IApplication | null
+  setTopBar: setTopBar
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
 }
 export interface IOverviewMainProps {
   application: IApplication | null
+  setTopBar: setTopBar
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
 }
 export interface IPlanMainProps {
   application: IApplication | null
+  setTopBar: setTopBar
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
@@ -63,6 +80,11 @@ const ViewApplicationContainer = () => {
   const [loading, setLoading] = useState(false)
   const selectedBreadcrumbs = useSelector((state: IStore) => state.breadcrumbs)
   const configData = useSelector((state: IStore) => state.configData)
+  const [topBarConfig, setTopBarConfig] = useState<ITopBarConfig>({
+    title: "",
+    description: "",
+    right: null,
+  })
   const { enabledIntegrations } = configData
 
   const setBreadcrumbs = useSetBreadcrumbs()
@@ -80,6 +102,14 @@ const ViewApplicationContainer = () => {
     getApplication()
   }, [])
 
+  const setTopBar: setTopBar = (title, description, right) => {
+    setTopBarConfig({
+      title,
+      description,
+      right,
+    })
+  }
+
   const pageProps: {
     instances: IInstanceMainProps
     versions: IVersionMainProps
@@ -88,15 +118,19 @@ const ViewApplicationContainer = () => {
   } = {
     instances: {
       application,
+      setTopBar,
     },
     versions: {
       application,
+      setTopBar,
     },
     overview: {
       application,
+      setTopBar,
     },
     plans: {
       application,
+      setTopBar,
     },
   }
 
@@ -149,6 +183,7 @@ const ViewApplicationContainer = () => {
     loading,
     application,
     tabItems,
+    topBarConfig,
   }
 
   return <ViewApplication {...viewProps} />
