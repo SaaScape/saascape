@@ -6,12 +6,13 @@ import Main from "./pages/Main"
 import { useDispatch } from "react-redux"
 import { setConfigData } from "./store/slices/configData"
 import axios from "axios"
+import { setApplications } from "./store/slices/applicationSlice"
 
 const MainLayout = () => {
   const dispatch = useDispatch()
 
   useEffect(() => {
-    Promise.allSettled([getIntegrations(), getCurrencies()])
+    Promise.allSettled([getIntegrations(), getCurrencies(), getApplications()])
   }, [])
 
   const getCurrencies = async () => {
@@ -26,6 +27,15 @@ const MainLayout = () => {
     if (success) {
       const { integrations, enabledIntegrations } = data
       dispatch(setConfigData({ integrations, enabledIntegrations }))
+    }
+  }
+
+  const getApplications = async () => {
+    const {
+      data: { data, success },
+    } = await apiAxios.get(`/applications`)
+    if (success) {
+      dispatch(setApplications(data?.applications))
     }
   }
 

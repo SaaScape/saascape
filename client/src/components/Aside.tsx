@@ -8,13 +8,19 @@ import permissions from "../helpers/constants/permissions"
 import { Link } from "react-router-dom"
 import Icon, { IconStyles } from "./Icon"
 
-const asideMenuItems: {
+interface IMenuItem {
   name: string
   icon: string
   path: string
   permissions: string[]
   iconStyle?: IconStyles
-}[] = [
+}
+
+interface ISubMenuItem extends IMenuItem {
+  subMenu: IMenuItem[]
+}
+
+const asideMenuItems: (IMenuItem | ISubMenuItem)[] = [
   {
     name: "Dashboard",
     icon: "DASHBOARD",
@@ -26,6 +32,40 @@ const asideMenuItems: {
     icon: "APPLICATION",
     path: "/applications",
     permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
+    subMenu: [
+      {
+        name: "Overview",
+        icon: "APPLICATION",
+        path: "/",
+        // Path will be include selectedApplicationId in the URL
+        // Users can quick switch between applications by selecting the application from dropdown in breadcrumbs
+        permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
+      },
+      {
+        name: "Plans",
+        icon: "APPLICATION",
+        path: "/plans",
+        permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
+      },
+      {
+        name: "Versions",
+        icon: "APPLICATION",
+        path: "/versions",
+        permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
+      },
+      {
+        name: "Instances",
+        icon: "APPLICATION",
+        path: "/instances",
+        permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
+      },
+      {
+        name: "Configuration",
+        icon: "APPLICATION",
+        path: "/configuration",
+        permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
+      },
+    ],
   },
   {
     name: "Servers",
@@ -92,6 +132,45 @@ const Aside = () => {
     }
   }
 
+  const generateMenuItem = (item: ISubMenuItem | IMenuItem, i: number) => {
+    const isParent = "subMenu" in item && !!item?.subMenu?.length
+
+    return isParent ? (
+      <li
+        key={i}
+        className={` p-relative ${checkIfActive(item.path) ? "active" : ""}`}
+      >
+        <div className='d-flex align-center'>
+          <Link to={item.path}>
+            <span className='icon'>
+              <Icon icon={item.icon} style={item?.iconStyle || "solid"} />
+            </span>
+            <div className='title'>{item.name}</div>
+          </Link>
+        </div>
+        <ul>
+          {item?.subMenu?.map((subItem, subItemIndex) =>
+            generateMenuItem(subItem, subItemIndex)
+          )}
+        </ul>
+      </li>
+    ) : (
+      <li
+        key={i}
+        className={`d-flex align-center p-relative ${
+          checkIfActive(item.path) ? "active" : ""
+        }`}
+      >
+        <Link to={item.path}>
+          <span className='icon'>
+            <Icon icon={item.icon} style={item?.iconStyle || "solid"} />
+          </span>
+          <div className='title'>{item.name}</div>
+        </Link>
+      </li>
+    )
+  }
+
   return (
     <aside className={`aside ${asideOpen ? "" : "hidden"}`}>
       <h1>SaaScape</h1>
@@ -116,21 +195,7 @@ const Aside = () => {
         <ul>
           {asideMenuItems.map((item, i) => {
             if (!checkIfHasPerms(item.permissions)) return null
-            return (
-              <li
-                key={i}
-                className={`d-flex align-center p-relative ${
-                  checkIfActive(item.path) ? "active" : ""
-                }`}
-              >
-                <Link to={item.path}>
-                  <span className='icon'>
-                    <Icon icon={item.icon} style={item?.iconStyle || "solid"} />
-                  </span>
-                  <div className='title'>{item.name}</div>
-                </Link>
-              </li>
-            )
+            return generateMenuItem(item, i)
           })}
         </ul>
       </nav>

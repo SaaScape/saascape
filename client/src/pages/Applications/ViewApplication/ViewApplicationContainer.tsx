@@ -3,9 +3,8 @@ import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
 import ViewApplication from "./ViewApplication"
 import breadcrumbs from "../../../helpers/constants/breadcrumbs"
 import { useParams } from "react-router-dom"
-import { IApplication } from "../ApplicationsContainer"
 import { apiAxios } from "../../../helpers/axios"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { IStore } from "../../../store/store"
 import { IBreadcrumbs } from "../../../store/slices/breadcrumbs"
 import Icon from "../../../components/Icon"
@@ -14,6 +13,10 @@ import InstancesContainer from "./InstancesContainer"
 import VersionsContainer from "./VersionsContainer"
 import PlansContainer from "./PlansContainer"
 import constants from "../../../helpers/constants/constants"
+import {
+  IApplication,
+  setSelectedApplication,
+} from "../../../store/slices/applicationSlice"
 
 type setTopBar = (
   title: string,
@@ -86,6 +89,7 @@ const ViewApplicationContainer = () => {
     right: null,
   })
   const { enabledIntegrations } = configData
+  const dispatch = useDispatch()
 
   const setBreadcrumbs = useSetBreadcrumbs()
   const params = useParams()
@@ -97,6 +101,10 @@ const ViewApplicationContainer = () => {
       breadcrumbs.VIEW_APPLICATION(application?.application_name || id, id)
     )
   }, [application])
+
+  useEffect(() => {
+    dispatch(setSelectedApplication(id))
+  }, [])
 
   useEffect(() => {
     getApplication()
