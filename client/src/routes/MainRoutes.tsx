@@ -7,6 +7,7 @@ import { DomainsContainer } from "../pages/Domains/DomainsContainer"
 import ApplicationsContainer from "../pages/Applications/ApplicationsContainer"
 import ViewApplicationContainer from "../pages/Applications/ViewApplication/ViewApplicationContainer"
 import TenantsContainer from "../pages/Tenants/TenantsContainer"
+import PlansContainer from "../pages/Applications/ViewApplication/PlansContainer"
 
 const MainRoutes = () => {
   return (
@@ -51,6 +52,15 @@ const MainRoutes = () => {
           element={
             <ProtectedRoute
               component={<ViewApplicationContainer />}
+              permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+            />
+          }
+        />
+        <Route
+          path={routes.APPLICATIONS.PLANS}
+          element={
+            <ProtectedRoute
+              component={<PlansContainer />}
               permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
             />
           }

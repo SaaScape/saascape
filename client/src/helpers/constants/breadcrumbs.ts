@@ -20,6 +20,24 @@ export default {
       {
         title: text,
         path: `/applications/${id}`,
+        type: "application_select",
+      },
+    ]
+  },
+  VIEW_APPLICATION_PLANS: (text: string, id: string) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: text,
+        path: `/applications/${id}`,
+        type: "application_select",
+      },
+      {
+        title: "Plans",
+        path: `/applications/${id}/plans`,
       },
     ]
   },

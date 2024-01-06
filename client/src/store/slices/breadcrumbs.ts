@@ -4,6 +4,7 @@ import { ReactElement } from "react"
 export interface IBreadcrumbs {
   title: string | ReactElement
   path: string
+  type?: string
 }
 
 const initialState: IBreadcrumbs[] = []
