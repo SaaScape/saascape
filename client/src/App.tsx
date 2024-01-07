@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import Login from "./pages/Login"
 import Loading from "./pages/Loading"
 import "./styles/index.less"
+import "./sockets/sockets"
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)

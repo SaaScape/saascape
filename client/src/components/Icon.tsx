@@ -37,6 +37,7 @@ const iconsObj: IIconsObj = {
     BRANCH: solid.faCodeBranch,
     PLAN: solid.faCreditCard,
     CONFIG: solid.faCogs,
+    CONTACTS: solid.faAddressBook,
   },
   regular: {
     BELL: regular.faBell,

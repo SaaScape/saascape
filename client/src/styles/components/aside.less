@@ -1,4 +1,5 @@
 @defaultPadding: 30px;
+@liHeight: 50px;
 
 aside {
   background-color: @dark-blue;
@@ -55,10 +56,32 @@ aside {
   }
 
   nav {
-    ul {
+    > ul {
+      > ul {
+        height: @liHeight;
+        overflow: hidden;
+        &.expanded {
+          height: auto;
+        }
+        > li {
+          &:first-of-type {
+            padding-left: @defaultPadding;
+            &::after {
+              transition: all 0.3s;
+
+              content: "\f0d7";
+              font-family: "FontAwesome";
+              color: white;
+              position: absolute;
+              right: 20px;
+            }
+          }
+          padding-left: 60px;
+        }
+      }
       li {
         padding-left: @defaultPadding;
-        height: 50px;
+        height: @liHeight;
         a {
           height: 100%;
           width: 100%;

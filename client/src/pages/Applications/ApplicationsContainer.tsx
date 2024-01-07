@@ -7,14 +7,13 @@ import { Avatar } from "antd"
 import { useNavigate } from "react-router-dom"
 import ManageApplicationModal from "../../components/Applications/ManageApplicationModal"
 import { toast } from "react-toastify"
+import { useDispatch, useSelector } from "react-redux"
+import { IStore } from "../../store/store"
+import {
+  IApplication,
+  setApplications,
+} from "../../store/slices/applicationSlice"
 
-export interface IApplication {
-  application_name: string
-  created_at: Date
-  updated_at: Date
-  _id: string
-  description: string
-}
 export interface IProps {
   columns: any[]
   loading: boolean
@@ -54,35 +53,30 @@ const columns = [
 
 const ApplicationsContainer = () => {
   const [loading, setLoading] = useState(false)
-  const [applications, setApplications] = useState<IApplication[]>([])
+  const { applications } = useSelector((state: IStore) => state.applications)
   const [showManageApplicationModal, setShowManageApplicationModal] =
     useState(false)
   const [application, setApplication] = useState<IApplication | null>(null)
   const setBreadcrumbs = useSetBreadcrumbs()
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   useEffect(() => {
     setBreadcrumbs(breadcrumbs.APPLICATIONS)
   }, [])
 
-  useEffect(() => {
-    getApplications()
-  }, [])
+  const onRow = (record: IApplication) => ({
+    onClick: () => navigate(`/applications/${record?._id}`),
+  })
 
   const getApplications = async () => {
-    setLoading(true)
     const {
       data: { data, success },
     } = await apiAxios.get(`/applications`)
     if (success) {
-      setApplications(data?.applications)
+      dispatch(setApplications(data?.applications))
     }
-    setLoading(false)
   }
-
-  const onRow = (record: IApplication) => ({
-    onClick: () => navigate(`/applications/${record?._id}`),
-  })
 
   const onApplicationSave = async (values: any) => {
     setLoading(true)

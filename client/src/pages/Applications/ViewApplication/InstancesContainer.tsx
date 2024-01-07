@@ -1,19 +1,43 @@
 import { useEffect } from "react"
 import Instances from "./Instances"
-import { IInstanceMainProps } from "./ViewApplicationContainer"
-import { Button } from "antd"
+import { IApplicationProps } from "../ApplicationRouteHandler"
+import { useParams } from "react-router-dom"
+import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
+import breadcrumbs from "../../../helpers/constants/breadcrumbs"
+import { IStore } from "../../../store/store"
+import { useSelector } from "react-redux"
+import { IApplication } from "../../../store/slices/applicationSlice"
 
-const InstancesContainer = (props: IInstanceMainProps) => {
+export interface IProps {
+  selectedApplication: IApplication | null
+}
+
+const InstancesContainer = (props: IApplicationProps) => {
+  const { selectedApplication } = useSelector(
+    (state: IStore) => state.applications
+  )
+  const { id } = useParams()
+  const setBreadcrumbs = useSetBreadcrumbs()
+
   useEffect(() => {
-    props.setTopBar(
-      "Instances",
-      "View and manage all instances deployed of the application",
-      <div className='right d-flex align-center'>
-        <Button type='primary'>Create Instance</Button>
-      </div>
+    props.setId(id)
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    setBreadcrumbs(
+      breadcrumbs.VIEW_APPLICATION_INSTANCES(
+        selectedApplication?.application_name || id,
+        id
+      )
     )
-  }, [])
-  return <Instances />
+  }, [selectedApplication])
+
+  const instanceProps: IProps = {
+    selectedApplication,
+  }
+
+  return <Instances {...instanceProps} />
 }
 
 export default InstancesContainer

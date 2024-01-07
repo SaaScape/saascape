@@ -10,6 +10,10 @@ export default {
   APPLICATIONS: {
     ALL_APPLICATIONS: "/applications",
     VIEW_APPLICATION: "/applications/:id",
+    PLANS: "/applications/:id/plans",
+    VERSIONS: "/applications/:id/versions",
+    INSTANCES: "/applications/:id/instances",
+    CONFIGURATIONS: "/applications/:id/configurations",
   },
   TENANTS: {
     ALL_TENANTS: "/tenants",
