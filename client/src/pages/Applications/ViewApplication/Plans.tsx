@@ -33,7 +33,7 @@ const Plans = (props: IProps) => {
                 loading={props?.loading}
                 columns={props?.planColumns}
                 rowKey={(record) => record._id}
-                onRow={props?.functions?.onRow?.()}
+                onRow={props?.functions?.onRow}
               />
             </div>
           </div>

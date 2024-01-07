@@ -19,4 +19,12 @@ export default {
     UPDATE_TENANTS: "update_tenants",
     DELETE_TENANTS: "delete_tenants",
   },
+
+  // Plans
+  PLANS: {
+    VIEW_PLANS: "view_plans",
+    CREATE_PLANS: "create_plans",
+    UPDATE_PLANS: "update_plans",
+    DELETE_PLANS: "delete_plans",
+  },
 }

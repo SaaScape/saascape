@@ -41,6 +41,32 @@ export default {
       },
     ]
   },
+  VIEW_APPLICATION_PLAN: (
+    text: string,
+    appId: string,
+    planId: string,
+    planName: string
+  ) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: text,
+        path: `/applications/${appId}`,
+        type: "application_select",
+      },
+      {
+        title: "Plans",
+        path: `/applications/${appId}/plans`,
+      },
+      {
+        title: planName,
+        path: `/applications/${appId}/plans/${planId}`,
+      },
+    ]
+  },
   VIEW_APPLICATION_VERSIONS: (text: string, id: string) => {
     return [
       {

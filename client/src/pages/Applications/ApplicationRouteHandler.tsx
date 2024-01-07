@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { retrieveAndSetApplications } from "../../helpers/utils"
 import { Spin } from "antd"
 import InstancesContainer from "./ViewApplication/InstancesContainer"
+import ViewPlanContainer from "./Plan/ViewPlanContainer"
 
 export interface IApplicationProps {
   setId: (id?: string) => void
@@ -48,6 +49,15 @@ const ApplicationRouteHandler = () => {
         element={
           <ProtectedRoute
             component={<PlansContainer {...allProps} />}
+            permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+          />
+        }
+      />
+      <Route
+        path={":id/plans/:planId"}
+        element={
+          <ProtectedRoute
+            component={<ViewPlanContainer {...allProps} />}
             permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
           />
         }

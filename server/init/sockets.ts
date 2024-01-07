@@ -33,13 +33,10 @@ class SocketServer {
       socket.on("disconnect", () => {
         delete this.connections[socket.id]
         console.log("a socket has disconnected", socket.id)
-        console.log(this.connections)
       })
       socket.on("authenticated", (data) => {
-        console.log(data)
         this.connections[socket.id] ??= {}
         this.connections[socket.id].userId = data._id
-        console.log(this.connections)
       })
     })
     console.log("Socket routes initialized")

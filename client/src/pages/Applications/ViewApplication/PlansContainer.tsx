@@ -10,10 +10,11 @@ import { toast } from "react-toastify"
 import { queryParamBuilder } from "../../../helpers/utils"
 import constants from "../../../helpers/constants/constants"
 import { IApplication } from "../../../store/slices/applicationSlice"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
 import breadcrumbs from "../../../helpers/constants/breadcrumbs"
 import { IApplicationProps } from "../ApplicationRouteHandler"
+import routes from "../../../helpers/constants/routes"
 
 export interface IPlan {
   _id: string
@@ -54,6 +55,8 @@ const PlansContainer = (props: IApplicationProps) => {
     limit: "20",
     page: "1",
   })
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     props?.setId(id)
@@ -111,6 +114,10 @@ const PlansContainer = (props: IApplicationProps) => {
     setShowCreatePlanModal(open)
   }
 
+  const onPlanClick = (planId: string) => {
+    navigate(`/applications/${id}/plans/${planId}`)
+  }
+
   const getPlans = async () => {
     setLoading(true)
     if (!selectedApplication?._id) return
@@ -149,6 +156,15 @@ const PlansContainer = (props: IApplicationProps) => {
     planColumns,
     plans,
     setCreateModalVisible,
+    functions: {
+      onRow: (record) => {
+        return {
+          onClick: () => {
+            onPlanClick(record?._id)
+          },
+        }
+      },
+    },
   }
 
   const createPlanModalProps: ICreatePlanModalProps = {

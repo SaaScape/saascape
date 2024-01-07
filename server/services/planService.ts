@@ -50,12 +50,10 @@ export default class PlanService {
 
     //   Check if plan exists
     const plans =
-      (await db.managementDb
-        ?.collection<IPlan>("plans")
-        .countDocuments({
-          plan_name,
-          application_id: new ObjectId(this.applicationId),
-        })) || 0
+      (await db.managementDb?.collection<IPlan>("plans").countDocuments({
+        plan_name,
+        application_id: new ObjectId(this.applicationId),
+      })) || 0
 
     if (plans > 0) {
       throw { showError: "Plan already exists" }
@@ -84,6 +82,27 @@ export default class PlanService {
           returnDocument: "after",
         }
       )
+    return { plan }
+  }
+
+  async findPlan(id: string) {
+    const findObj: {
+      _id: ObjectId
+      status: string
+      application_id?: ObjectId
+    } = {
+      _id: new ObjectId(id),
+      status: constants.STATUSES.ACTIVE_STATUS,
+    }
+
+    if (this.applicationId)
+      findObj["application_id"] = new ObjectId(this.applicationId)
+
+    const plan = await db.managementDb
+      ?.collection<IPlan>("plans")
+      .findOne(findObj)
+
+    if (!plan) throw { showError: "Plan not found" }
     return { plan }
   }
 }
