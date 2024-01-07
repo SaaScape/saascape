@@ -80,7 +80,7 @@ const Aside = () => {
         },
         {
           name: "Configuration",
-          icon: "APPLICATION",
+          icon: "SETTINGS",
           path: `/applications/${selectedApplication?._id}/configuration`,
           permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
           key: "1.5",
@@ -104,7 +104,7 @@ const Aside = () => {
     },
     {
       name: "Contacts",
-      icon: "CONTACT",
+      icon: "CONTACTS",
       path: "/contacts",
       permissions: [permissions.STANDARD_ACCESS],
       key: "5",

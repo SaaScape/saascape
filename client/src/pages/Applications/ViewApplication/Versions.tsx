@@ -1,4 +1,4 @@
-import { Card, Table } from "antd"
+import { Button, Card, Table } from "antd"
 import { IVersionProps } from "./VersionsContainer"
 
 const Versions = (props: IVersionProps) => {
@@ -6,6 +6,20 @@ const Versions = (props: IVersionProps) => {
 
   return (
     <section className='sub-section versions p-relative'>
+      <div className='top-bar-container'>
+        <div className='top-bar d-flex justify-between align-center'>
+          <div>
+            <h1>Versions</h1>
+            <p>
+              View and manage all versions of{" "}
+              {props?.selectedApplication?.application_name}
+            </p>
+          </div>
+          <div className='right'>
+            <Button type='primary'>Create Version</Button>
+          </div>
+        </div>
+      </div>
       <main>
         <Card className='data-card'>
           <div className='top-bar'>

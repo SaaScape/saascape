@@ -41,6 +41,40 @@ export default {
       },
     ]
   },
+  VIEW_APPLICATION_VERSIONS: (text: string, id: string) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: text,
+        path: `/applications/${id}`,
+        type: "application_select",
+      },
+      {
+        title: "Versions",
+        path: `/applications/${id}/versions`,
+      },
+    ]
+  },
+  VIEW_APPLICATION_INSTANCES: (text: string, id: string) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: text,
+        path: `/applications/${id}`,
+        type: "application_select",
+      },
+      {
+        title: "Instances",
+        path: `/applications/${id}/instances`,
+      },
+    ]
+  },
   SERVERS: [
     {
       title: "Servers",

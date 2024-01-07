@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import Plans from "./Plans"
-import { Button } from "antd"
 import CreatePlanModal, {
   ICreatePlanModalProps,
 } from "../../../components/Applications/CreatePlanModal"
@@ -8,15 +7,13 @@ import { useSelector } from "react-redux"
 import { IStore } from "../../../store/store"
 import { apiAxios } from "../../../helpers/axios"
 import { toast } from "react-toastify"
-import {
-  queryParamBuilder,
-  retrieveAndSetApplications,
-} from "../../../helpers/utils"
+import { queryParamBuilder } from "../../../helpers/utils"
 import constants from "../../../helpers/constants/constants"
 import { IApplication } from "../../../store/slices/applicationSlice"
 import { useParams } from "react-router-dom"
 import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
 import breadcrumbs from "../../../helpers/constants/breadcrumbs"
+import { IApplicationProps } from "../ApplicationRouteHandler"
 
 export interface IPlan {
   _id: string
@@ -32,30 +29,35 @@ export interface IPlan {
 }
 
 export type PaginatedPlans = { [page: number]: IPlan[] }
-export interface IPlanProps {
+export interface IProps {
   loading: boolean
   application: IApplication | null
   planColumns: any
   plans?: PaginatedPlans
+  setCreateModalVisible: (open: boolean) => void
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
 }
 
-const PlansContainer = () => {
+const PlansContainer = (props: IApplicationProps) => {
   const [loading, setLoading] = useState(false)
   const [plans, setPlans] = useState<{ [page: number]: IPlan[] }>({})
   const { id } = useParams()
-  const { applications, selectedApplication } = useSelector(
+  const { selectedApplication } = useSelector(
     (state: IStore) => state.applications
   )
 
   const [showCreatePlanModal, setShowCreatePlanModal] = useState(false)
   const configData = useSelector((state: IStore) => state.configData)
-  const [planQueryConfig, setPlanQueryConfig] = useState({
+  const [planQueryConfig] = useState({
     limit: "20",
     page: "1",
   })
+
+  useEffect(() => {
+    props?.setId(id)
+  }, [id])
 
   const { currencies } = configData
 
@@ -89,6 +91,7 @@ const PlansContainer = () => {
       },
     },
   ]
+
   const setBreadcrumbs = useSetBreadcrumbs()
   useEffect(() => {
     if (!id) return
@@ -99,23 +102,6 @@ const PlansContainer = () => {
       )
     )
   }, [selectedApplication])
-
-  // Firstly get application from param
-  useEffect(() => {
-    if (!id) return
-    retrieveAndSetApplications(id)
-  }, [id])
-
-  useEffect(() => {
-    const planButtons = (
-      <div>
-        <Button type='primary' onClick={() => setCreateModalVisible(true)}>
-          Create Plan
-        </Button>
-      </div>
-    )
-    // props.setTopBar("Plans", "View Plans", planButtons)
-  }, [])
 
   useEffect(() => {
     getPlans()
@@ -137,13 +123,11 @@ const PlansContainer = () => {
       })}`
     )
     if (success) {
-      const { page, records, totalDocuments } = data?.plans?.paginatedData || {}
+      const { page, records } = data?.plans?.paginatedData || {}
       setPlans((curr) => ({ ...curr, [+page]: records }))
     }
     setLoading(false)
   }
-
-  // TODO, util function that retrieves applications and sets state for that application
 
   const onPlanCreate = async (values: any) => {
     const {
@@ -159,11 +143,12 @@ const PlansContainer = () => {
     }
   }
 
-  const planProps: IPlanProps = {
+  const planProps: IProps = {
     loading,
     application: selectedApplication,
     planColumns,
     plans,
+    setCreateModalVisible,
   }
 
   const createPlanModalProps: ICreatePlanModalProps = {

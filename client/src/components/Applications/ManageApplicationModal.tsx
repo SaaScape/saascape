@@ -1,7 +1,7 @@
 import { Button, Form, Input, Modal } from "antd"
-import { IApplication } from "../../pages/Applications/ApplicationsContainer"
 import { useForm } from "antd/es/form/Form"
 import TextArea from "antd/es/input/TextArea"
+import { IApplication } from "../../store/slices/applicationSlice"
 
 interface IProps {
   open: boolean

@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react"
-import { IApplication } from "../ApplicationsContainer"
 import Versions from "./Versions"
-import { IVersionMainProps } from "./ViewApplicationContainer"
-import { Button } from "antd"
+import { IApplication } from "../../../store/slices/applicationSlice"
+import { useSelector } from "react-redux"
+import { IStore } from "../../../store/store"
+import { useParams } from "react-router-dom"
+import breadcrumbs from "../../../helpers/constants/breadcrumbs"
+import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
+import { IApplicationProps } from "../ApplicationRouteHandler"
 
 export interface IVersionProps {
   loading: boolean
-  application: IApplication | null
+  selectedApplication: IApplication | null
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
@@ -37,23 +41,34 @@ const versionColumns = [
   },
 ]
 
-const VersionsContainer = (props: IVersionMainProps) => {
-  const [loading, setLoading] = useState(false)
-  const versionProps: IVersionProps = {
-    loading,
-    application: props.application,
-    versionColumns,
-  }
+const VersionsContainer = (props: IApplicationProps) => {
+  const [loading] = useState(false)
+  const { selectedApplication } = useSelector(
+    (state: IStore) => state.applications
+  )
+
+  const { id } = useParams()
+  const setBreadcrumbs = useSetBreadcrumbs()
 
   useEffect(() => {
-    props.setTopBar(
-      "Versions",
-      "View and manage all versions of your application",
-      <div className='right d-flex align-center'>
-        <Button type='primary'>Create Version</Button>
-      </div>
+    props.setId(id)
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    setBreadcrumbs(
+      breadcrumbs.VIEW_APPLICATION_VERSIONS(
+        selectedApplication?.application_name || id,
+        id
+      )
     )
-  }, [])
+  }, [selectedApplication])
+
+  const versionProps: IVersionProps = {
+    loading,
+    selectedApplication,
+    versionColumns,
+  }
 
   /* 
      

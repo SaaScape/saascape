@@ -1,7 +1,8 @@
-import { Button, Tabs } from "antd"
+import { Button } from "antd"
 import { IProps } from "./ViewApplicationContainer"
 
 const ViewApplication = (props: IProps) => {
+  console.log(props)
   return (
     <section className='view-application p-relative'>
       <div className='top-bar-container'>
