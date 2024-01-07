@@ -3,13 +3,20 @@ import Aside from "./components/Aside"
 import Header from "./components/Header"
 import { apiAxios } from "./helpers/axios"
 import Main from "./pages/Main"
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { setConfigData } from "./store/slices/configData"
 import axios from "axios"
 import { setApplications } from "./store/slices/applicationSlice"
+import socket from "./sockets/sockets"
+import { IStore } from "./store/store"
 
 const MainLayout = () => {
   const dispatch = useDispatch()
+  const user = useSelector((state: IStore) => state.user)
+
+  useEffect(() => {
+    socket?.emit("authenticated", { _id: user?._id })
+  }, [])
 
   useEffect(() => {
     Promise.allSettled([getIntegrations(), getCurrencies(), getApplications()])
