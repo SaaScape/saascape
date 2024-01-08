@@ -9,7 +9,7 @@
 .custom-component {
   &.integrations-bar {
     padding: 5px;
-    background-color: @dark-blue;
+    background-color: lighten(@dark-blue, 70%);
     border-radius: 10px;
     margin-left: 20px;
     .integration-item {
@@ -19,8 +19,26 @@
       height: 30px;
       background-color: white;
       margin-right: 10px;
-      &:last-of-type {
+      &.add-integration {
         margin-right: 0;
+      }
+    }
+    .add-integration-menu {
+      width: 200px;
+      padding: 5px 10px;
+      ul {
+        list-style: none;
+        li {
+          height: 40px;
+          img.integration-logo {
+            width: 30px;
+            height: auto;
+            margin-right: 10px;
+          }
+          span {
+            text-transform: capitalize;
+          }
+        }
       }
     }
   }

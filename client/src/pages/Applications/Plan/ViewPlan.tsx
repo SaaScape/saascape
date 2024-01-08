@@ -1,8 +1,8 @@
 import { IViewProps } from "./ViewPlanContainer"
 import { planTermConverter } from "../../../helpers/utils"
 import StatisticBanner from "../../../components/StatisticBanner"
-import { Avatar, Card, Table } from "antd"
 import IntegrationsBar from "../../../components/Applications/IntegrationsBar"
+import constants from "../../../helpers/constants/constants"
 
 const ViewPlan = (props: IViewProps) => {
   return (
@@ -15,7 +15,10 @@ const ViewPlan = (props: IViewProps) => {
               <p>View and managed plan</p>
             </div>
             <div>
-              <IntegrationsBar linkedIds={props?.plan?.linked_ids || []} />
+              <IntegrationsBar
+                linkedIds={props?.plan?.linked_ids || []}
+                supportedIntegrations={[constants.INTEGRATIONS.STRIPE]}
+              />
             </div>
           </div>
           <div className='right'></div>

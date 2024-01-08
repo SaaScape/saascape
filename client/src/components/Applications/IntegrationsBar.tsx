@@ -4,26 +4,24 @@ import { IStore } from "../../store/store"
 import { useEffect, useState } from "react"
 import { ILinkedId } from "../../interfaces/interfaces"
 import { Tooltip } from "antd"
-
-/* 
-WHAT DOES INTEGRATIONS BAR DO AND NEED
-
-DOES:
-Displayed a bar with all of the integrations associated with entity and a plus icon if more are available
-
-NEED:
-Needs to retrieve a list of all enabled integrations for SaaScape as well as a list of linkedIds associated with the entity, the linkedIds will appear as integration items as long as that integration is enabled.
-
-*/
+import MenuContainer from "../MenuContainer"
 
 interface IProps {
   linkedIds: ILinkedId[]
+  supportedIntegrations?: string[]
+}
+interface IAddIntegrationProps {
+  children: React.ReactNode
+  availableIntegrations: string[]
+  integrationLogoMap: any
+  usedIntegrations: string[]
 }
 
 const IntegrationsBar = (props: IProps) => {
   const [availableIntegrations, setAvailableIntegrations] = useState<string[]>(
     []
   )
+  const [usedIntegrations, setUsedIntegrations] = useState<string[]>([])
 
   const { linkedIds } = props
 
@@ -34,6 +32,9 @@ const IntegrationsBar = (props: IProps) => {
   useEffect(() => {
     getAvailableIntegrations()
   }, [integrations])
+  useEffect(() => {
+    getUsedIntegrations()
+  }, [linkedIds])
 
   const integrationLogoMap = {
     [constants.INTEGRATIONS.DOCKER]: "/files/images/docker.svg",
@@ -44,9 +45,21 @@ const IntegrationsBar = (props: IProps) => {
   const getAvailableIntegrations = () => {
     setAvailableIntegrations(
       Object.entries(integrations)
-        .filter(([_, value]) => value)
+        .filter(
+          ([name, value]) =>
+            value &&
+            (props?.supportedIntegrations
+              ? props?.supportedIntegrations?.includes(name)
+              : true)
+        )
         .map(([key]) => key)
     )
+  }
+  const getUsedIntegrations = () => {
+    const usedIntegrations = [
+      ...new Set(linkedIds.map((linkedId) => linkedId.name)),
+    ]
+    setUsedIntegrations(usedIntegrations)
   }
 
   const generateIntegrationItem = (linkedIdObj?: ILinkedId) => {
@@ -70,7 +83,9 @@ const IntegrationsBar = (props: IProps) => {
     return (
       <div
         key={integration || "add_integration"}
-        className='integration-item d-flex align-center justify-center'
+        className={`integration-item d-flex align-center justify-center ${
+          integration ? "" : "add-integration"
+        }`}
       >
         {item}
       </div>
@@ -80,9 +95,42 @@ const IntegrationsBar = (props: IProps) => {
   return (
     <div className='custom-component integrations-bar d-flex align-center justify-center'>
       {linkedIds?.map((linkedId) => generateIntegrationItem(linkedId))}
-      {generateIntegrationItem()}
+      <AddIntegrationMenu
+        availableIntegrations={availableIntegrations}
+        integrationLogoMap={integrationLogoMap}
+        usedIntegrations={usedIntegrations}
+      >
+        {generateIntegrationItem()}
+      </AddIntegrationMenu>
     </div>
   )
+}
+
+const AddIntegrationMenu = (props: IAddIntegrationProps) => {
+  const integrations = props.availableIntegrations.filter(
+    (integration) => !props.usedIntegrations?.includes(integration)
+  )
+  if (!integrations.length) return null
+  const menu = (
+    <div className='add-integration-menu'>
+      <ul>
+        {integrations.map((integration) => {
+          return (
+            <li key={integration} className='d-flex align-center'>
+              <img
+                className='integration-logo'
+                src={props?.integrationLogoMap[integration]}
+                alt={integration}
+              />
+              <span>{integration}</span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+
+  return <MenuContainer MenuComponent={menu}>{props.children}</MenuContainer>
 }
 
 export default IntegrationsBar
