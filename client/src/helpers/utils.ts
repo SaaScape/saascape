@@ -5,6 +5,7 @@ import {
 } from "../store/slices/applicationSlice"
 import { store } from "../store/store"
 import { apiAxios } from "./axios"
+import constants from "./constants/constants"
 
 export const queryParamBuilder = (query: {
   [key: string]: string | undefined
@@ -41,4 +42,22 @@ export const retrieveAndSetApplications = async (applicationId: string) => {
     )
   }
   return data || []
+}
+
+export const getCurrency = (currency: string) => {
+  const { defaultCurrency, currencies } = store.getState().configData
+  return {
+    currency: currencies?.[currency] || defaultCurrency,
+    defaultCurrency,
+  }
+}
+
+export const planTermConverter = (term: string) => {
+  const values = {
+    [constants.BILLING_INTERVAL.DAY]: "Day",
+    [constants.BILLING_INTERVAL.WEEK]: "Week",
+    [constants.BILLING_INTERVAL.MONTH]: "Month",
+    [constants.BILLING_INTERVAL.ANNUAL]: "Year",
+  }
+  return values?.[term]
 }

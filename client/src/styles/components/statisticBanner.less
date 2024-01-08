@@ -1,0 +1,28 @@
+.custom-component.statistic-banner {
+  .content {
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      justify-items: center;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      .grid-child {
+        border-right: 1px solid @gray-border;
+        width: 100%;
+        &:last-of-type {
+          border-right: none;
+        }
+        .title {
+          font-size: 1rem;
+          color: @gray;
+          margin-bottom: 5px;
+        }
+        .value {
+          font-size: 1.5rem;
+        }
+      }
+    }
+  }
+}

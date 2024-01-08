@@ -8,9 +8,14 @@ import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
 import breadcrumbs from "../../../helpers/constants/breadcrumbs"
 import { IPlan } from "../ViewApplication/PlansContainer"
 import { apiAxios } from "../../../helpers/axios"
+import { ICurrency } from "../../../store/slices/configData"
+import { getCurrency } from "../../../helpers/utils"
 
 export interface IViewProps {
   planId: string
+  plan: IPlan | null
+  currency: ICurrency | null
+  loading: boolean
 }
 
 const ViewPlanContainer = (props: IApplicationProps) => {
@@ -20,6 +25,7 @@ const ViewPlanContainer = (props: IApplicationProps) => {
   )
   const [plan, setPlan] = useState<IPlan | null>(null)
   const [loading, setLoading] = useState(false)
+  const [currency, setCurrency] = useState<ICurrency | null>(null)
 
   useEffect(() => {
     props?.setId(id)
@@ -43,6 +49,11 @@ const ViewPlanContainer = (props: IApplicationProps) => {
     getPlan()
   }, [selectedApplication, planId])
 
+  useEffect(() => {
+    if (!plan) return
+    setCurrency(getCurrency(plan?.currency)?.currency)
+  }, [plan])
+
   const getPlan = async () => {
     setLoading(true)
     if (!selectedApplication?._id || !planId) return
@@ -59,6 +70,9 @@ const ViewPlanContainer = (props: IApplicationProps) => {
 
   const viewProps: IViewProps = {
     planId: planId || "",
+    plan,
+    currency,
+    loading,
   }
   return <ViewPlan {...viewProps} />
 }

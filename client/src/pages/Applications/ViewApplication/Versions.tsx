@@ -1,5 +1,6 @@
 import { Button, Card, Table } from "antd"
 import { IVersionProps } from "./VersionsContainer"
+import StatisticBanner from "../../../components/StatisticBanner"
 
 const Versions = (props: IVersionProps) => {
   const { versionColumns } = props
@@ -21,22 +22,20 @@ const Versions = (props: IVersionProps) => {
         </div>
       </div>
       <main>
-        <Card className='data-card'>
-          <div className='top-bar'>
-            <div className='title'>Last 30 Days</div>
+        <StatisticBanner loading={props?.loading}>
+          <div>
+            <div className='title'>Total New Versions</div>
+            <div className='value'>22</div>
           </div>
-          <div className='content statistics'>
-            <div className='statistic'>
-              <div className='statistic-title'>Total New Versions</div>
-              <div className='statistic-value'>22</div>
-            </div>
-            <div className='statistic'>
-              <div className='statistic-title'>Total New Versions</div>
-              <div className='statistic-value'>22</div>
+          <div>
+            <div>
+              <div className='title'>Total New Versions</div>
+              <div className='value'>22</div>
             </div>
           </div>
-        </Card>
-        <Card className='data-card'>
+        </StatisticBanner>
+
+        {/* <Card className='data-card'>
           <div className='top-bar'>
             <div className='title'>Latest Version</div>
           </div>
@@ -51,7 +50,7 @@ const Versions = (props: IVersionProps) => {
           <div className='content'>
             <Table columns={versionColumns} dataSource={[]} />
           </div>
-        </Card>
+        </Card> */}
       </main>
     </section>
   )

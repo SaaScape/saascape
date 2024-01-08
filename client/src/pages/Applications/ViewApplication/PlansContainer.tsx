@@ -7,14 +7,12 @@ import { useSelector } from "react-redux"
 import { IStore } from "../../../store/store"
 import { apiAxios } from "../../../helpers/axios"
 import { toast } from "react-toastify"
-import { queryParamBuilder } from "../../../helpers/utils"
-import constants from "../../../helpers/constants/constants"
+import { planTermConverter, queryParamBuilder } from "../../../helpers/utils"
 import { IApplication } from "../../../store/slices/applicationSlice"
 import { useNavigate, useParams } from "react-router-dom"
 import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
 import breadcrumbs from "../../../helpers/constants/breadcrumbs"
 import { IApplicationProps } from "../ApplicationRouteHandler"
-import routes from "../../../helpers/constants/routes"
 
 export interface IPlan {
   _id: string
@@ -72,13 +70,8 @@ const PlansContainer = (props: IApplicationProps) => {
       key: "billing_interval",
       render: (text: any, record: IPlan) => {
         const { billing_interval_count } = record
-        const values = {
-          [constants.BILLING_INTERVAL.DAY]: "Day",
-          [constants.BILLING_INTERVAL.WEEK]: "Week",
-          [constants.BILLING_INTERVAL.MONTH]: "Month",
-          [constants.BILLING_INTERVAL.ANNUAL]: "Year",
-        }
-        return `${billing_interval_count} ${values[text]}${
+        const value = planTermConverter(text)
+        return `${billing_interval_count} ${value}${
           billing_interval_count > 1 ? "s" : ""
         }`
       },

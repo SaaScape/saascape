@@ -21,11 +21,21 @@ export interface IConfigData {
   defaultCurrency: ICurrency
 }
 
-const initialState = {
+const initialState: {
+  menuOpen: boolean
+  integrations: {
+    [key: string]: any[]
+  }
+  enabledIntegrations: {
+    [key: string]: boolean
+  }
+  currencies: { [key: string]: ICurrency }
+  defaultCurrency: ICurrency | null
+} = {
   menuOpen: true,
   integrations: {},
   enabledIntegrations: {},
-  currencies: [],
+  currencies: {},
   defaultCurrency: null,
 }
 

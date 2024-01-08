@@ -23,45 +23,6 @@ section.applications {
 }
 
 section.view-application {
-  > .top-bar-container {
-    background-color: white;
-    position: absolute;
-    z-index: 1;
-    left: 0px;
-    right: 0;
-    color: @dark-blue;
-    > .top-bar {
-      padding: 0 20px 0;
-      height: 80px;
-      h1 {
-        font-size: 1.125rem;
-        margin-bottom: 10px;
-      }
-      p {
-        font-size: 0.9rem;
-      }
-      button {
-        height: 40px;
-      }
-    }
-    .ant-tabs {
-      padding: 15px 0 0;
-      position: relative;
-      .ant-tabs-nav {
-        padding: 0 20px;
-        &::before {
-          border-bottom: none !important;
-        }
-      }
-      .ant-tabs-content-holder {
-        background-color: @body-background;
-        position: absolute;
-        top: 200px;
-        left: 0;
-        right: 0;
-      }
-    }
-  }
 }
 
 .manage-application-modal {
@@ -92,31 +53,6 @@ section.view-application {
   }
 }
 
-section.versions {
-  main {
-    .data-card {
-      margin-bottom: 20px;
-      .content.statistics {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        .statistic {
-          .statistic-title {
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-          }
-          .statistic-value {
-            font-size: 1.1rem;
-            color: @primary-blue;
-          }
-        }
-      }
-    }
-  }
-}
-
-section.plans {
-}
-
 section.sub-section {
   color: @dark-text;
 
@@ -134,7 +70,6 @@ section.sub-section {
   .data-card {
     .top-bar {
       .title {
-        color: @primary-blue;
         font-weight: 600;
       }
       margin-bottom: 20px;
