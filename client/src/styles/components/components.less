@@ -1,0 +1,27 @@
+@import "./header.less";
+@import "./aside.less";
+@import "./menuContainer.less";
+@import "./userMenu.less";
+@import "./notificationMenu.less";
+@import "./breadcrumbs.less";
+@import "./statisticBanner.less";
+
+.custom-component {
+  &.integrations-bar {
+    padding: 5px;
+    background-color: @dark-blue;
+    border-radius: 10px;
+    margin-left: 20px;
+    .integration-item {
+      border-radius: 50%;
+      overflow: hidden;
+      width: 30px;
+      height: 30px;
+      background-color: white;
+      margin-right: 10px;
+      &:last-of-type {
+        margin-right: 0;
+      }
+    }
+  }
+}

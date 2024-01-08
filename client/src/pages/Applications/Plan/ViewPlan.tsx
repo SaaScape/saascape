@@ -1,21 +1,28 @@
 import { IViewProps } from "./ViewPlanContainer"
 import { planTermConverter } from "../../../helpers/utils"
 import StatisticBanner from "../../../components/StatisticBanner"
+import { Avatar, Card, Table } from "antd"
+import IntegrationsBar from "../../../components/Applications/IntegrationsBar"
 
 const ViewPlan = (props: IViewProps) => {
   return (
     <section className='sub-section view-plan'>
       <div className='top-bar-container'>
         <div className='top-bar d-flex justify-between align-center'>
-          <div>
-            <h1>{props?.plan?.plan_name || "Loading..."}</h1>
-            <p>View and managed plan</p>
+          <div className='d-flex align-center'>
+            <div>
+              <h1>{props?.plan?.plan_name || "Loading..."}</h1>
+              <p>View and managed plan</p>
+            </div>
+            <div>
+              <IntegrationsBar linkedIds={props?.plan?.linked_ids || []} />
+            </div>
           </div>
           <div className='right'></div>
         </div>
       </div>
 
-      <StatisticBanner loading={props?.loading}>
+      <StatisticBanner className='m-b-20' loading={props?.loading}>
         <div>
           <div className='title'>Plan Name</div>
           <div className='value'>{props?.plan?.plan_name}</div>

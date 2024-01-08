@@ -13,8 +13,9 @@ import { useNavigate, useParams } from "react-router-dom"
 import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
 import breadcrumbs from "../../../helpers/constants/breadcrumbs"
 import { IApplicationProps } from "../ApplicationRouteHandler"
+import { ILinkedIdEnabledDocument } from "../../../interfaces/interfaces"
 
-export interface IPlan {
+export interface IPlan extends ILinkedIdEnabledDocument {
   _id: string
   plan_name: string
   billing_interval: string
