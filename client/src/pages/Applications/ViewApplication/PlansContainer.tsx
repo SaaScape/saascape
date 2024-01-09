@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import Plans from "./Plans"
-import CreatePlanModal, {
-  ICreatePlanModalProps,
-} from "../../../components/Applications/CreatePlanModal"
+import ManagePlanModal, {
+  IManagePlanModalProps,
+} from "../../../components/Applications/ManagePlanModal"
 import { useSelector } from "react-redux"
 import { IStore } from "../../../store/store"
 import { apiAxios } from "../../../helpers/axios"
@@ -48,7 +48,7 @@ const PlansContainer = (props: IApplicationProps) => {
     (state: IStore) => state.applications
   )
 
-  const [showCreatePlanModal, setShowCreatePlanModal] = useState(false)
+  const [showManagePlanModal, setShowManagePlanModal] = useState(false)
   const configData = useSelector((state: IStore) => state.configData)
   const [planQueryConfig] = useState({
     limit: "20",
@@ -105,7 +105,7 @@ const PlansContainer = (props: IApplicationProps) => {
   }, [selectedApplication])
 
   const setCreateModalVisible = (open: boolean) => {
-    setShowCreatePlanModal(open)
+    setShowManagePlanModal(open)
   }
 
   const onPlanClick = (planId: string) => {
@@ -161,8 +161,8 @@ const PlansContainer = (props: IApplicationProps) => {
     },
   }
 
-  const createPlanModalProps: ICreatePlanModalProps = {
-    open: showCreatePlanModal,
+  const managePlanModalProps: IManagePlanModalProps = {
+    open: showManagePlanModal,
     onCancel: () => setCreateModalVisible(false),
     currencies,
     onPlanCreate,
@@ -171,7 +171,7 @@ const PlansContainer = (props: IApplicationProps) => {
   return (
     <>
       <Plans {...planProps} />
-      <CreatePlanModal {...createPlanModalProps} />
+      <ManagePlanModal {...managePlanModalProps} />
     </>
   )
 }

@@ -1,3 +1,10 @@
 {
-  "cSpell.words": ["antd", "fontawesome", "fortawesome", "reduxjs", "toastify"]
+  "cSpell.words": [
+    "antd",
+    "fontawesome",
+    "fortawesome",
+    "Popconfirm",
+    "reduxjs",
+    "toastify"
+  ]
 }

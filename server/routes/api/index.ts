@@ -20,10 +20,8 @@ export default (app: express.Application) => {
 
   app.use("/api", router)
 
-  router.get("/", use(getIndex))
   // Authenticated routes below here
   router.use(use(withAuth))
-  router.get("/hello", use(getIndex))
 
   integrations(router, use)
   users(router, use)
@@ -40,8 +38,4 @@ const catchError = async (
   next: NextFunction
 ) => {
   sendErrorResponse(err, req, res)
-}
-
-const getIndex = async (req: Request, res: Response) => {
-  sendSuccessResponse({ message: "hello world" }, req, res)
 }

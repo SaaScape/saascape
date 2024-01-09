@@ -3,6 +3,7 @@ import { planTermConverter } from "../../../helpers/utils"
 import StatisticBanner from "../../../components/StatisticBanner"
 import IntegrationsBar from "../../../components/Applications/IntegrationsBar"
 import constants from "../../../helpers/constants/constants"
+import { Button } from "antd"
 
 const ViewPlan = (props: IViewProps) => {
   return (
@@ -21,7 +22,14 @@ const ViewPlan = (props: IViewProps) => {
               />
             </div>
           </div>
-          <div className='right'></div>
+          <div className='right'>
+            <Button
+              type='primary'
+              onClick={() => props?.onManagePlanClick(true)}
+            >
+              Manage Plan
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -54,6 +62,11 @@ const ViewPlan = (props: IViewProps) => {
           <div className='value'>0</div>
         </div>
       </StatisticBanner>
+
+      <div className='addon-plan-container'>
+        <h3>Add-ons</h3>
+        <p>Manage add-ons for your plan</p>
+      </div>
     </section>
   )
 }

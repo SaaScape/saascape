@@ -9,6 +9,7 @@ export interface IPlan extends Document, ILinkedIdEnabledDocument {
   status: string
   application_id: ObjectId
   price: number
+  additional_configuration?: { property: string; value: string }[]
   created_at: Date
   updated_at: Date
 }

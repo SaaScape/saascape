@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { IApplicationProps } from "../ApplicationRouteHandler"
 import ViewPlan from "./ViewPlan"
 import { useSelector } from "react-redux"
@@ -10,12 +10,18 @@ import { IPlan } from "../ViewApplication/PlansContainer"
 import { apiAxios } from "../../../helpers/axios"
 import { ICurrency } from "../../../store/slices/configData"
 import { getCurrency } from "../../../helpers/utils"
+import ManagePlanModal from "../../../components/Applications/ManagePlanModal"
+import { toast } from "react-toastify"
 
 export interface IViewProps {
   planId: string
   plan: IPlan | null
   currency: ICurrency | null
   loading: boolean
+  onManagePlanClick: (state: boolean) => void
+  functions?: {
+    [functionName: string]: (...args: any[]) => any
+  }
 }
 
 const ViewPlanContainer = (props: IApplicationProps) => {
@@ -26,12 +32,18 @@ const ViewPlanContainer = (props: IApplicationProps) => {
   const [plan, setPlan] = useState<IPlan | null>(null)
   const [loading, setLoading] = useState(false)
   const [currency, setCurrency] = useState<ICurrency | null>(null)
+  const [showManagePlanModal, setShowManagePlanModal] = useState(false)
+
+  const configData = useSelector((state: IStore) => state.configData)
+  const { currencies } = configData
+  const navigate = useNavigate()
 
   useEffect(() => {
     props?.setId(id)
   }, [id])
 
   const setBreadcrumbs = useSetBreadcrumbs()
+
   useEffect(() => {
     if (!id || !planId) return
     setBreadcrumbs(
@@ -68,13 +80,63 @@ const ViewPlanContainer = (props: IApplicationProps) => {
     setLoading(false)
   }
 
+  const onManagePlanClick = (state: boolean) => {
+    setShowManagePlanModal(state)
+  }
+
+  const onPlanSave = async (values: any) => {
+    setLoading(true)
+    console.log("updating plan", values)
+    const {
+      data: { success },
+    } = await apiAxios.put(
+      `/plans/${planId}?applicationId=${selectedApplication?._id}`,
+      values
+    )
+    if (success) {
+      toast.success("Plan updated successfully")
+      await getPlan()
+      setShowManagePlanModal(false)
+    }
+    setLoading(false)
+  }
+
+  const onPlanDelete = async () => {
+    setLoading(true)
+    const {
+      data: { success },
+    } = await apiAxios.delete(
+      `/plans/${planId}?applicationId=${selectedApplication?._id}`
+    )
+    if (success) {
+      toast.success("Plan deleted successfully")
+      navigate(`/applications/${id}/plans`)
+    }
+    setLoading(false)
+  }
+
   const viewProps: IViewProps = {
     planId: planId || "",
     plan,
     currency,
     loading,
+    onManagePlanClick,
   }
-  return <ViewPlan {...viewProps} />
+
+  const managePlanProps = {
+    open: showManagePlanModal,
+    currencies,
+    onCancel: () => setShowManagePlanModal(false),
+    onPlanUpdate: onPlanSave,
+    plan,
+    onPlanDelete,
+  }
+  return (
+    <>
+      <ViewPlan {...viewProps} />
+      <ManagePlanModal {...managePlanProps} />
+    </>
+  )
 }
 
 export default ViewPlanContainer

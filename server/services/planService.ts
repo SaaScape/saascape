@@ -38,6 +38,7 @@ export default class PlanService {
       billing_interval_count,
       currency,
       price,
+      additional_configuration = [],
     } = data
 
     checkForMissingParams(data, [
@@ -68,6 +69,7 @@ export default class PlanService {
       currency,
       price,
       linked_ids: [],
+      additional_configuration,
       created_at: new Date(),
       updated_at: new Date(),
     }
@@ -83,6 +85,57 @@ export default class PlanService {
         }
       )
     return { plan }
+  }
+  async updatePlan(_id: string, data: IPlan) {
+    if (!this.applicationId)
+      throw { showError: "Missing required param: applicationId" }
+
+    const { plan_name, price, additional_configuration = [] } = data
+
+    checkForMissingParams(data, ["plan_name", "currency", "price"])
+
+    // Get plan to be updated
+    const planToBeUpdated = await db.managementDb
+      ?.collection<IPlan>("plans")
+      ?.findOne({
+        _id: new ObjectId(_id),
+        application_id: new ObjectId(this.applicationId),
+      })
+
+    if (!planToBeUpdated) {
+      throw { showError: "Plan does not exist" }
+    }
+
+    // Check if plan name is in use
+
+    const plansUsingName =
+      (await db.managementDb?.collection<IPlan>("plans").countDocuments({
+        plan_name,
+        application_id: new ObjectId(this.applicationId),
+        _id: { $ne: new ObjectId(_id) },
+      })) || 0
+
+    if (plansUsingName > 0) {
+      throw { showError: "A plan with this name already exists" }
+    }
+
+    const payload = {
+      plan_name,
+      price,
+      additional_configuration,
+      updated_at: new Date(),
+    }
+
+    const updatedPlan = await db.managementDb
+      ?.collection<IPlan>("plans")
+      .findOneAndUpdate(
+        { _id: new ObjectId(_id) },
+        { $set: { ...payload } },
+        {
+          returnDocument: "after",
+        }
+      )
+    return { updatedPlan }
   }
 
   async findPlan(id: string) {
@@ -104,5 +157,40 @@ export default class PlanService {
 
     if (!plan) throw { showError: "Plan not found" }
     return { plan }
+  }
+
+  async deletePlan(id: string) {
+    if (!this.applicationId)
+      throw { showError: "Missing required param: applicationId" }
+
+    // Get plan to be deleted
+    const planToBeDeleted = await db.managementDb
+      ?.collection<IPlan>("plans")
+      ?.findOne({
+        _id: new ObjectId(id),
+        application_id: new ObjectId(this.applicationId),
+      })
+
+    if (!planToBeDeleted) {
+      throw { showError: "Plan does not exist" }
+    }
+
+    const updateResult = await db.managementDb
+      ?.collection<IPlan>("plans")
+      .updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            status: constants.STATUSES.DELETED_STATUS,
+          },
+        }
+      )
+
+    if (!updateResult) throw { showError: "Plan not deleted" }
+
+    if (updateResult?.modifiedCount !== 1)
+      throw { showError: "Plan not deleted" }
+
+    return { success: true }
   }
 }
