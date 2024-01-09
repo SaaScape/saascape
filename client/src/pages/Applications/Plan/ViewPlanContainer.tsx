@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2024 Keir Davie <keir@keirdavie.me>
+Author: Keir Davie <keir@keirdavie.me>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 import { useNavigate, useParams } from "react-router-dom"
 import { IApplicationProps } from "../ApplicationRouteHandler"
 import ViewPlan from "./ViewPlan"
@@ -10,7 +28,9 @@ import { IPlan } from "../ViewApplication/PlansContainer"
 import { apiAxios } from "../../../helpers/axios"
 import { ICurrency } from "../../../store/slices/configData"
 import { getCurrency } from "../../../helpers/utils"
-import ManagePlanModal from "../../../components/Applications/ManagePlanModal"
+import ManagePlanModal, {
+  IManagePlanModalProps,
+} from "../../../components/Applications/ManagePlanModal"
 import { toast } from "react-toastify"
 
 export interface IViewProps {
@@ -18,7 +38,12 @@ export interface IViewProps {
   plan: IPlan | null
   currency: ICurrency | null
   loading: boolean
-  onManagePlanClick: (state: boolean) => void
+  onAddonDelete: () => void
+  onManagePlanClick: (
+    state: boolean,
+    isAddon: boolean,
+    addonId?: string
+  ) => void
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
@@ -33,6 +58,8 @@ const ViewPlanContainer = (props: IApplicationProps) => {
   const [loading, setLoading] = useState(false)
   const [currency, setCurrency] = useState<ICurrency | null>(null)
   const [showManagePlanModal, setShowManagePlanModal] = useState(false)
+  const [isAddon, setIsAddon] = useState(false)
+  const [selectedAddon, setSelectedAddon] = useState<string | null>(null)
 
   const configData = useSelector((state: IStore) => state.configData)
   const { currencies } = configData
@@ -66,7 +93,15 @@ const ViewPlanContainer = (props: IApplicationProps) => {
     setCurrency(getCurrency(plan?.currency)?.currency)
   }, [plan])
 
+  // useEffect(() => {
+  //   if (!showManagePlanModal) {
+  //     setSelectedAddon(null)
+  //     setIsAddon(false)
+  //   }
+  // }, [showManagePlanModal])
+
   const getPlan = async () => {
+    console.log("gett")
     setLoading(true)
     if (!selectedApplication?._id || !planId) return
     const {
@@ -80,7 +115,13 @@ const ViewPlanContainer = (props: IApplicationProps) => {
     setLoading(false)
   }
 
-  const onManagePlanClick = (state: boolean) => {
+  const onManagePlanClick = (
+    state: boolean,
+    isAddon: boolean,
+    addonId?: string
+  ) => {
+    setIsAddon(isAddon)
+    setSelectedAddon(addonId || null)
     setShowManagePlanModal(state)
   }
 
@@ -115,21 +156,43 @@ const ViewPlanContainer = (props: IApplicationProps) => {
     setLoading(false)
   }
 
+  const onAddonDelete = async () => {
+    setLoading(true)
+    const {
+      data: { success },
+    } = await apiAxios.delete(
+      `/plans/addon-plan/${planId}?applicationId=${selectedApplication?._id}`,
+      { data: { addonPlanId: selectedAddon } }
+    )
+    if (success) {
+      toast.success("Plan deleted successfully")
+      await getPlan()
+      setShowManagePlanModal(false)
+    }
+    setLoading(false)
+  }
+
   const viewProps: IViewProps = {
     planId: planId || "",
     plan,
     currency,
     loading,
     onManagePlanClick,
+    onAddonDelete,
   }
 
-  const managePlanProps = {
+  const managePlanProps: IManagePlanModalProps = {
     open: showManagePlanModal,
     currencies,
     onCancel: () => setShowManagePlanModal(false),
     onPlanUpdate: onPlanSave,
     plan,
     onPlanDelete,
+    isAddon,
+    addonId: selectedAddon,
+    onAddonCreate: onPlanSave,
+    onAddonUpdate: onPlanSave,
+    onAddonDelete,
   }
   return (
     <>

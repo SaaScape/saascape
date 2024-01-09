@@ -1,2 +1,43 @@
 section.view-plan {
+  .addon-plan-section {
+    margin-top: 50px;
+    .addon-plan-container {
+      padding: 30px 0;
+      display: flex;
+      flex-wrap: wrap;
+      .addon-plan {
+        .ant-card-body {
+          height: 100%;
+        }
+        margin: 0 20px 20px 0;
+        height: 200px;
+        flex-basis: 215px;
+
+        .addon-wrapper {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          .btn-delete {
+            font-size: 0.7rem;
+          }
+          .title {
+            font-weight: 600;
+            font-size: 1rem;
+          }
+
+          .price {
+            font-size: 1.25rem;
+            font-weight: 600;
+            .value {
+              margin-right: 10px;
+            }
+            div.interval {
+              font-size: 0.9rem;
+            }
+          }
+        }
+      }
+    }
+  }
 }

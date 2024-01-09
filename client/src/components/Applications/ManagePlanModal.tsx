@@ -1,3 +1,21 @@
+/*
+Copyright (c) 2024 Keir Davie <keir@keirdavie.me>
+Author: Keir Davie <keir@keirdavie.me>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 import {
   Button,
   Card,
@@ -22,7 +40,12 @@ export interface IManagePlanModalProps {
   onPlanCreate?: (values: any) => void
   onPlanUpdate?: (values: any) => void
   onPlanDelete?: () => void
+  onAddonCreate?: (values: any) => void
+  onAddonUpdate?: (values: any) => void
+  onAddonDelete?: () => void
   plan?: IPlan | null
+  isAddon?: boolean
+  addonId?: string | null
 }
 
 const ManagePlanModal = (props: IManagePlanModalProps) => {
@@ -74,12 +97,17 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
     },
   ]
 
-  const isUpdate = !!props?.plan?._id
-  const isReadOnly = isUpdate
+  const isUpdate =
+    !!props?.plan?._id &&
+    (props.isAddon ? (!!props?.addonId ? true : false) : true)
+  const isReadOnly = isUpdate || props?.isAddon
 
   const title = (
     <div className='top-bar'>
-      <div className='title'>{props?.plan?._id ? "Edit" : "Create"} Plan</div>
+      <div className='title'>
+        {props?.plan?._id && props?.addonId ? "Edit" : "Create"}{" "}
+        {props?.isAddon ? "Add-on" : ""} Plan
+      </div>
       <div className='description'>
         A plan allows you to create subscriptions for your application
       </div>
@@ -87,9 +115,35 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
   )
 
   const onSave = async (values: any) => {
-    props?.plan?._id
-      ? props?.onPlanUpdate?.(values)
-      : props?.onPlanCreate?.(values)
+    values.isAddon = props?.isAddon
+    if (isUpdate) {
+      props?.isAddon
+        ? props?.onAddonUpdate?.({ _id: props?.addonId, ...values })
+        : props?.onPlanUpdate?.({ _id: props?.plan?._id, ...values })
+    } else {
+      props?.isAddon
+        ? props?.onAddonCreate?.({ _id: props?.plan?._id, ...values })
+        : props?.onPlanCreate?.(values)
+    }
+  }
+
+  const initialValues = () => {
+    const values = { ...props?.plan }
+    if (values && props?.isAddon) {
+      values.price = 0
+      values.plan_name = ""
+      values.additional_configuration = []
+
+      if (props?.addonId) {
+        const addonObj = values?.addon_plans?.find(
+          (addon) => addon?._id === props?.addonId
+        )
+        values.price = addonObj?.price || 0
+        values.plan_name = addonObj?.plan_name || ""
+        values.additional_configuration = addonObj?.additional_configuration
+      }
+    }
+    return values
   }
 
   return (
@@ -106,8 +160,11 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
         layout='vertical'
         onFinish={onSave}
         preserve={false}
-        initialValues={props?.plan || {}}
+        initialValues={initialValues() || {}}
       >
+        <Form.Item hidden name={"isAddon"}>
+          <Input type='checkbox' checked={props?.isAddon} />
+        </Form.Item>
         <div className='grid c-2'>
           <Form.Item
             label='Plan Name'
@@ -183,7 +240,9 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
           {isUpdate && (
             <Popconfirm
               title='Are you sure you want to delete this plan?'
-              onConfirm={props?.onPlanDelete}
+              onConfirm={
+                props?.isAddon ? props?.onAddonDelete : props?.onPlanDelete
+              }
             >
               <Button className='m-r-10' danger>
                 Delete
@@ -191,7 +250,7 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
             </Popconfirm>
           )}
           <Button htmlType='submit' type='primary'>
-            {props?.plan?._id ? "Update" : "Create"} Plan
+            {isUpdate ? "Update" : "Create"} Plan
           </Button>
         </div>
       </Form>
