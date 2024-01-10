@@ -8,6 +8,7 @@ import IntegrationsBar from "../../components/Applications/IntegrationsBar"
 import constants from "../../helpers/constants/constants"
 import { apiAxios } from "../../helpers/axios"
 import { queryParamBuilder } from "../../helpers/utils"
+import ManageContactModal from "../../components/Contacts/ManageContactModal"
 
 export type ContactType = "tenant" | "lead"
 
@@ -67,6 +68,8 @@ const ContactsContainer = () => {
       totalDocuments: 0,
       records: {},
     })
+  const [contact, setContact] = useState<IContact | null>(null)
+  const [showManageContactModal, setShowManageContactModal] = useState(false)
 
   const setBreadcrumbs = useSetBreadcrumbs()
 
@@ -200,6 +203,24 @@ const ContactsContainer = () => {
     getContacts(value)
   }
 
+  const onManageContact = (contact: IContact) => {
+    setContact(contact || null)
+    setShowManageContactModal(true)
+  }
+
+  const closeManageContactModal = () => {
+    setShowManageContactModal(false)
+    setContact(null)
+  }
+
+  const onRowClick = (record: IContact) => {
+    onManageContact(record)
+  }
+
+  const onContactSave = (values: any) => {
+    console.log(values)
+  }
+
   const viewProps: IViewProps = {
     paginatedContacts,
     loading,
@@ -208,9 +229,29 @@ const ContactsContainer = () => {
     functions: {
       onTableChange,
       onSearch,
+      onManageContact,
+      onRow: (record) => {
+        return {
+          onClick: () => {
+            onRowClick(record)
+          },
+        }
+      },
     },
   }
-  return <Contacts {...viewProps} />
+
+  const ManageContactModalProps = {
+    open: showManageContactModal,
+    onCancel: closeManageContactModal,
+    contact,
+    onSave: onContactSave,
+  }
+  return (
+    <>
+      <Contacts {...viewProps} />
+      <ManageContactModal {...ManageContactModalProps} />
+    </>
+  )
 }
 
 export default ContactsContainer

@@ -20,7 +20,7 @@ const Contacts = (props: IViewProps) => {
           <Button
             disabled={loading}
             className='btn-add'
-            onClick={functions?.onCreateContactClick}
+            onClick={functions?.onManageContact}
           >
             Add new Contact
           </Button>
