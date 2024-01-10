@@ -125,4 +125,22 @@ export default {
       path: "/tenants",
     },
   ],
+  CONTACTS: [
+    {
+      title: "Contacts",
+      path: "/contacts",
+    },
+  ],
+  VIEW_CONTACT: (text: string, id: string) => {
+    return [
+      {
+        title: "Contacts",
+        path: "/contacts",
+      },
+      {
+        title: text,
+        path: `/contacts/${id}`,
+      },
+    ]
+  },
 }

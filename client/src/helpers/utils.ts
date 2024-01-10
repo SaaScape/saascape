@@ -8,7 +8,7 @@ import { apiAxios } from "./axios"
 import constants from "./constants/constants"
 
 export const queryParamBuilder = (query: {
-  [key: string]: string | undefined
+  [key: string]: string | number | undefined
 }) => {
   return `?${Object.entries(query)
     .map((param) => `${param[0]}=${param[1]}`)

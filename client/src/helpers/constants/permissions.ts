@@ -20,6 +20,14 @@ export default {
     DELETE_TENANTS: "delete_tenants",
   },
 
+  // Contacts
+  CONTACTS: {
+    VIEW_CONTACTS: "view_contacts",
+    CREATE_CONTACTS: "create_contacts",
+    UPDATE_CONTACTS: "update_contacts",
+    DELETE_CONTACTS: "delete_contacts",
+  },
+
   // Plans
   PLANS: {
     VIEW_PLANS: "view_plans",

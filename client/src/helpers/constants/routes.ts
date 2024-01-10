@@ -19,4 +19,8 @@ export default {
     ALL_TENANTS: "/tenants",
     VIEW_TENANT: "/tenants/:id",
   },
+  CONTACTS: {
+    ALL_CONTACTS: "/contacts",
+    VIEW_CONTACT: "/contacts/:id",
+  },
 }

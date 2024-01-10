@@ -8,8 +8,13 @@
 
 .custom-component {
   &.integrations-bar {
+    &.transparent {
+      background-color: transparent;
+    }
+    &.full {
+      background-color: lighten(@dark-blue, 70%);
+    }
     padding: 5px;
-    background-color: lighten(@dark-blue, 70%);
     border-radius: 10px;
     margin-left: 20px;
     .integration-item {

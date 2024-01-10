@@ -7,6 +7,8 @@ import { DomainsContainer } from "../pages/Domains/DomainsContainer"
 import ApplicationsContainer from "../pages/Applications/ApplicationsContainer"
 import TenantsContainer from "../pages/Tenants/TenantsContainer"
 import ApplicationRouteHandler from "../pages/Applications/ApplicationRouteHandler"
+import ContactsContainer from "../pages/Contacts/ContactsContainer"
+import ViewContactContainer from "../pages/Contacts/ViewContactContainer"
 
 const MainRoutes = () => {
   return (
@@ -56,6 +58,26 @@ const MainRoutes = () => {
             <ProtectedRoute
               component={<TenantsContainer />}
               permissions={[permissions.TENANTS.VIEW_TENANTS]}
+            />
+          }
+        />
+      </Route>
+      <Route path='/contacts'>
+        <Route
+          path={routes.CONTACTS.ALL_CONTACTS}
+          element={
+            <ProtectedRoute
+              component={<ContactsContainer />}
+              permissions={[permissions.CONTACTS.VIEW_CONTACTS]}
+            />
+          }
+        />
+        <Route
+          path={routes.CONTACTS.VIEW_CONTACT}
+          element={
+            <ProtectedRoute
+              component={<ViewContactContainer />}
+              permissions={[permissions.CONTACTS.VIEW_CONTACTS]}
             />
           }
         />

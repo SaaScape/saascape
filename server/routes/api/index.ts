@@ -7,6 +7,7 @@ import users from "./users"
 import applications from "./applications"
 import integrations from "./integrations"
 import plans from "./plans"
+import contacts from "./contacts"
 
 export default (app: express.Application) => {
   const use =
@@ -27,6 +28,7 @@ export default (app: express.Application) => {
   users(router, use)
   applications(router, use)
   plans(router, use)
+  contacts(router, use)
 
   router.use(catchError)
 }
