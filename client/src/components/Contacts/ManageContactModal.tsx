@@ -1,5 +1,6 @@
 import { Button, Collapse, Form, Input, Modal, Select } from "antd"
 import { IContact } from "../../pages/Contacts/ContactsContainer"
+import { useEffect } from "react"
 
 interface IProps {
   open: boolean
@@ -13,6 +14,20 @@ const ManageContactModal = (props: IProps) => {
 
   const [form] = Form.useForm()
 
+  useEffect(() => {
+    if (!open) return
+    form.resetFields()
+    if (contact?._id) {
+      // Set address fields
+      const fieldObj: { [key: string]: string } = {}
+      for (const fieldName in contact?.address || {}) {
+        fieldObj[`address_${fieldName}`] = contact?.address?.[fieldName]
+      }
+
+      form.setFieldsValue({ ...contact, ...fieldObj })
+    }
+  }, [contact, open])
+
   const title = (
     <div className='top-bar'>
       <div className='title'>{contact ? "Edit Contact" : "Create Contact"}</div>
@@ -20,11 +35,12 @@ const ManageContactModal = (props: IProps) => {
     </div>
   )
   const onSubmit = (values: any) => {
-    onSave(values)
+    onSave?.(values)
   }
 
   const addressCollapse = [
     {
+      key: 1,
       label: "Address",
       children: (
         <>
@@ -39,13 +55,13 @@ const ManageContactModal = (props: IProps) => {
           </div>
           <div className='grid c-3'>
             <Form.Item
-              name={"address_line_1"}
+              name={"address_line1"}
               label={"Line 1"}
               rules={[{ required: true }]}
             >
               <Input type='text' placeholder={"123 Open Sourced Street"} />
             </Form.Item>
-            <Form.Item name={"address_line_2"} label={"Line 2"}>
+            <Form.Item name={"address_line2"} label={"Line 2"}>
               <Input type='text' placeholder={"+44 123 456 789"} />
             </Form.Item>
           </div>
@@ -58,7 +74,7 @@ const ManageContactModal = (props: IProps) => {
               <Input type='text' placeholder={"London"} />
             </Form.Item>
             <Form.Item
-              name={"address_postal_code"}
+              name={"address_postcode"}
               required
               label={"Post Code"}
               rules={[{ required: true }]}
@@ -74,7 +90,7 @@ const ManageContactModal = (props: IProps) => {
     },
   ]
 
-  const initialValues = contact || {
+  const initialValues = {
     contact_type: "lead",
   }
 
@@ -93,7 +109,6 @@ const ManageContactModal = (props: IProps) => {
         layout='vertical'
         initialValues={initialValues}
         onFinish={onSubmit}
-        preserve={false}
       >
         <div className='grid c-3'>
           <Form.Item
@@ -140,7 +155,7 @@ const ManageContactModal = (props: IProps) => {
             <Input type='text' placeholder={"+44 123 456 789"} />
           </Form.Item>
         </div>
-        <Collapse items={addressCollapse} ghost />
+        <Collapse items={addressCollapse} ghost defaultActiveKey={1} />
         <div className='d-flex justify-end'>
           <Button className='m-r-10' onClick={onCancel}>
             Cancel

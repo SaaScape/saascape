@@ -9,6 +9,7 @@ import constants from "../../helpers/constants/constants"
 import { apiAxios } from "../../helpers/axios"
 import { queryParamBuilder } from "../../helpers/utils"
 import ManageContactModal from "../../components/Contacts/ManageContactModal"
+import { toast } from "react-toastify"
 
 export type ContactType = "tenant" | "lead"
 
@@ -26,6 +27,7 @@ export interface IContact extends ILinkedIdEnabledDocument {
     state: string
     postcode: string
     country: string
+    [key: string]: string
   }
   status: string
   contact_type: ContactType
@@ -217,8 +219,35 @@ const ContactsContainer = () => {
     onManageContact(record)
   }
 
+  const updateContact = async (contactId: string, values: any) => {
+    const {
+      data: { success },
+    } = await apiAxios.put(`/contacts/${contactId}`, values)
+    if (success) {
+      toast.success("Contact updated successfully")
+      getContacts(queryConfig?.searchValue)
+      closeManageContactModal()
+    }
+  }
+
+  const createContact = async (values: any) => {
+    const {
+      data: { success },
+    } = await apiAxios.post(`/contacts`, values)
+    if (success) {
+      toast.success("Contact created successfully")
+      getContacts(queryConfig?.searchValue)
+      closeManageContactModal()
+    }
+  }
+
   const onContactSave = (values: any) => {
     console.log(values)
+    if (contact?._id) {
+      updateContact(contact?._id, values)
+    } else {
+      createContact(values)
+    }
   }
 
   const viewProps: IViewProps = {
