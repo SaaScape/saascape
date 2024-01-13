@@ -35,4 +35,12 @@ export default {
     UPDATE_PLANS: "update_plans",
     DELETE_PLANS: "delete_plans",
   },
+
+  // Servers
+  SERVERS: {
+    VIEW_SERVERS: "view_servers",
+    CREATE_SERVERS: "create_servers",
+    UPDATE_SERVERS: "update_servers",
+    DELETE_SERVERS: "delete_servers",
+  },
 }

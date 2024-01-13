@@ -9,6 +9,7 @@ import TenantsContainer from "../pages/Tenants/TenantsContainer"
 import ApplicationRouteHandler from "../pages/Applications/ApplicationRouteHandler"
 import ContactsContainer from "../pages/Contacts/ContactsContainer"
 import ViewContactContainer from "../pages/Contacts/ViewContactContainer"
+import ServersContainer from "../pages/Servers/ServersContainer"
 
 const MainRoutes = () => {
   return (
@@ -78,6 +79,17 @@ const MainRoutes = () => {
             <ProtectedRoute
               component={<ViewContactContainer />}
               permissions={[permissions.CONTACTS.VIEW_CONTACTS]}
+            />
+          }
+        />
+      </Route>
+      <Route path='/servers'>
+        <Route
+          path={routes.SERVERS.ALL_SERVERS}
+          element={
+            <ProtectedRoute
+              component={<ServersContainer />}
+              permissions={[permissions.SERVERS.VIEW_SERVERS]}
             />
           }
         />

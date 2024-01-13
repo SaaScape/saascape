@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "startd": "nodemon -r dotenv/config server.ts",
-    "start": "ts-node -r dotenv/config server.ts"
+    "startd-bg": "nodemon -r dotenv/config background/server.ts",
+    "start": "ts-node -r dotenv/config server.ts",
+    "start-bg": "ts-node -r dotenv/config background/server.ts"
   },
   "author": "Keir Davie",
   "license": "GPL-3.0",
@@ -27,6 +29,7 @@
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.29.4",
     "mongodb": "^6.3.0",
-    "socket.io": "^4.7.2"
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.3"
   }
 }

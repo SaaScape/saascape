@@ -23,4 +23,8 @@ export default {
     ALL_CONTACTS: "/contacts",
     VIEW_CONTACT: "/contacts/:id",
   },
+  SERVERS: {
+    ALL_SERVERS: "/servers",
+    VIEW_SERVER: "/servers/:id",
+  },
 }
