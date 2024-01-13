@@ -1,4 +1,5 @@
 import constants from "../../helpers/constants"
+import { initializeServerQueueProducer } from "../../queue/producers/serverProducers"
 
 export default class ServerSocket {
   data?: any
@@ -11,10 +12,10 @@ export default class ServerSocket {
   }
 
   events = {
-    [constants.SOCKET_EVENTS.SERVER_CREATE]: () => this.serverCreate(),
+    [constants.SOCKET_EVENTS.SERVER_INITIALIZE]: () => this.initializeServer(),
   }
 
-  async serverCreate() {
-    console.log("server create", this.data)
+  async initializeServer() {
+    await initializeServerQueueProducer(this.data)
   }
 }

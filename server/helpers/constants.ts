@@ -3,6 +3,9 @@ export default {
     ACTIVE_STATUS: "active",
     DELETED_STATUS: "deleted",
   },
+  SERVER_STATUSES: {
+    PENDING_INITIALIZATION: "pending_initialization",
+  },
   INTEGRATIONS: {
     STRIPE: "stripe",
     DOCKER_HUB: "docker_hub",
@@ -13,6 +16,9 @@ export default {
   },
   SOCKET_EVENTS: {
     SERVER_CONNECT: "server_connect",
-    SERVER_CREATE: "server_create",
+    SERVER_INITIALIZE: "server_initialize",
+  },
+  SOCKET_ROOMS: {
+    BACKGROUND_SERVERS: "background_servers",
   },
 }

@@ -8,6 +8,7 @@ import applications from "./applications"
 import integrations from "./integrations"
 import plans from "./plans"
 import contacts from "./contacts"
+import servers from "./servers"
 
 export default (app: express.Application) => {
   const use =
@@ -29,6 +30,7 @@ export default (app: express.Application) => {
   applications(router, use)
   plans(router, use)
   contacts(router, use)
+  servers(router, use)
 
   router.use(catchError)
 }

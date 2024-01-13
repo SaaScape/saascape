@@ -2,6 +2,7 @@ import http from "http"
 import https from "https"
 import { Server } from "socket.io"
 import jwtHelper from "../modules/jwt"
+import constants from "../helpers/constants"
 
 interface ISocketConnection {
   userId?: string
@@ -11,12 +12,10 @@ class SocketServer {
   webServer: http.Server | https.Server | undefined
   io: Server | undefined
   connections: { [socketId: string]: ISocketConnection } = {}
-  backgroundConnections: { [socketId: string]: ISocketConnection } = {}
   constructor() {
     this.webServer = undefined
     this.io = undefined
     this.connections = {}
-    this.backgroundConnections = {}
   }
 
   startServer(webServer: http.Server | https.Server) {
@@ -38,7 +37,7 @@ class SocketServer {
             const err = new Error("Invalid background server token")
             return next(err)
           }
-          this.backgroundConnections[socket.id] ??= {}
+          socket.join(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
           return next()
         } else {
           const cookies = Object.fromEntries(
@@ -69,7 +68,6 @@ class SocketServer {
     io.on("connection", (socket) => {
       socket.on("disconnect", () => {
         delete this.connections[socket.id]
-        delete this.backgroundConnections[socket.id]
       })
     })
     console.log("Socket routes initialized")
