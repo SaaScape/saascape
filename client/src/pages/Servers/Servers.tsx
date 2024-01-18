@@ -3,7 +3,7 @@ import { IViewProps } from "./ServersContainer"
 import { Button, Table } from "antd"
 
 const Servers = (props: IViewProps) => {
-  const { loading, columns, functions } = props
+  const { loading, columns, functions, servers } = props
   return (
     <section className='servers'>
       <div className='top-bar d-flex justify-between align-center'>
@@ -28,7 +28,7 @@ const Servers = (props: IViewProps) => {
       </div>
       <div className='table-container'>
         <Table
-          dataSource={[]}
+          dataSource={servers}
           onChange={props?.functions?.onTableChange}
           loading={loading}
           columns={columns}

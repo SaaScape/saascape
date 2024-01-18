@@ -12,7 +12,7 @@ export const defaultOnFailed = (job: Bull.Job) => {
 }
 
 const initializeWorkers = async () => {
-  Promise.all([initializeServerWorkers()])
+  await Promise.all([initializeServerWorkers()])
 }
 
 export default initializeWorkers

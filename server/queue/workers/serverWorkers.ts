@@ -1,28 +1,43 @@
 import Bull from "bull"
 import queues from "../../helpers/queues"
 import { getQueue } from "../queue"
-import { IWorker, defaultOnFailed } from "./initWorkers"
 
-const workers: { [key: string]: IWorker } = {
-  [queues.SERVER.INITIALIZE_SERVER]: {
-    worker: async (job: Bull.Job) => {
-      console.log(`Initializing server ${job.data?._id} from Job ${job.id}`)
-    },
-    onComplete: async (job: Bull.Job) => {
-      console.log(job.id, "finished")
-      // await job.remove()
-    },
-  },
+import ServerService from "../../services/serverService"
+import constants from "../../helpers/constants"
+import { logError } from "../../helpers/error"
+
+const initializeInitServerQueue = async () => {
+  const queue = getQueue(queues.SERVER.INITIALIZE_SERVER)
+  queue.process(2, async (job: Bull.Job) => {
+    console.log(`Initializing server ${job.data?._id} from Job ${job.id}`)
+    const serverService = new ServerService()
+    await serverService.beginInitialization(job.data?._id)
+  })
+  queue.on("failed", async (job) => {
+    const serverService = new ServerService()
+    serverService.finishInitialization(
+      job.data?._id,
+      constants.STATUSES.FAILED_STATUS
+    )
+    await logError({
+      error: { message: job.failedReason },
+      entityId: job.data?._id,
+      status: constants.STATUSES.FAILED_STATUS,
+      module: constants.MODULES.SERVER,
+      event: queues.SERVER.INITIALIZE_SERVER,
+    })
+  })
+  queue.on("completed", async (job) => {
+    const serverService = new ServerService()
+    serverService.finishInitialization(
+      job.data?._id,
+      constants.STATUSES.COMPLETED_STATUS
+    )
+  })
 }
 
 const initializeQueues = async () => {
-  const queueNames = [queues.SERVER.INITIALIZE_SERVER]
-  for (const queueName of queueNames) {
-    const queue = getQueue(queueName)
-    queue.process(5, workers[queueName]?.worker)
-    queue.on("completed", workers[queueName]?.onComplete)
-    queue.on("failed", workers[queueName]?.onFailed || defaultOnFailed)
-  }
+  await Promise.allSettled([initializeInitServerQueue()])
 }
 
 export default initializeQueues

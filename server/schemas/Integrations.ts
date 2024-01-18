@@ -7,4 +7,6 @@ export interface IIntegration {
   created_at: Date
   updated_at: Date
   config: object
+  type: string
+  module?: string
 }

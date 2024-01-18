@@ -5,3 +5,8 @@ export interface ILinkedId {
 export interface ILinkedIdEnabledDocument {
   linked_ids: ILinkedId[]
 }
+
+export interface IEncryptedData {
+  iv: string
+  encryptedData: string
+}

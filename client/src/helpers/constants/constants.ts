@@ -3,6 +3,11 @@ export default {
     ACTIVE_STATUS: "active",
     INACTIVE_STATUS: "inactive",
   },
+  SERVER_STATUSES: {
+    PENDING_INITIALIZATION: "pending_initialization",
+    FAILED_INITIALIZATION: "failed_initialization",
+    SUCCESSFUL_INITIALIZATION: "successful_initialization",
+  },
   INTEGRATIONS: {
     DOCKER: "docker",
     DOCKER_HUB: "docker_hub",

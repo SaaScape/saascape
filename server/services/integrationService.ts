@@ -32,6 +32,8 @@ export default class IntegrationService {
       const obj = {
         _id: integration?._id,
         status: integration?.status,
+        type: integration?.type,
+        module: integration?.module,
         created_at: integration?.created_at,
         updated_at: integration?.updated_at,
       }
