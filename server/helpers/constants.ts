@@ -11,6 +11,10 @@ export default {
     SUCCESSFUL_INITIALIZATION: "successful_initialization",
     INITIALIZING: "initializing",
   },
+  AVAILABILITY: {
+    ONLINE: "online",
+    OFFLINE: "offline",
+  },
   INTEGRATIONS: {
     STRIPE: "stripe",
     DOCKER_HUB: "docker_hub",

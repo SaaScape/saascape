@@ -8,6 +8,10 @@ export default {
     FAILED_INITIALIZATION: "failed_initialization",
     SUCCESSFUL_INITIALIZATION: "successful_initialization",
   },
+  AVAILABILITY: {
+    ONLINE: "online",
+    OFFLINE: "offline",
+  },
   INTEGRATIONS: {
     DOCKER: "docker",
     DOCKER_HUB: "docker_hub",

@@ -12,6 +12,8 @@ export interface IServer extends Document, ILinkedIdEnabledDocument {
   server_name: string
   status: string
   server_status: string
+  availability: string
+  availability_changed: Date
   created_at: Date
   updated_at: Date
 }

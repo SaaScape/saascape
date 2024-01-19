@@ -1,4 +1,4 @@
-import { NodeSSH } from "node-ssh"
+import ping from "ping"
 import {
   checkForMissingParams,
   decipherData,
@@ -46,6 +46,8 @@ export default class ServerService {
       server_name: data.server_name,
       server_status: constants.SERVER_STATUSES.PENDING_INITIALIZATION,
       status: constants.STATUSES.ACTIVE_STATUS,
+      availability: constants.AVAILABILITY.ONLINE,
+      availability_changed: new Date(),
       created_at: new Date(),
       updated_at: new Date(),
       linked_ids: [],
@@ -344,5 +346,61 @@ export default class ServerService {
     )
 
     // Emit task to main server to notify of completion, server will then notify fe
+  }
+
+  async getServerAvailability(serverId?: string) {
+    const statusMap = {
+      [constants.AVAILABILITY.ONLINE]: true,
+      [constants.AVAILABILITY.OFFLINE]: false,
+    }
+
+    if (serverId) {
+      let server = await db.managementDb
+        ?.collection<IServer>("servers")
+        .findOne({ _id: new ObjectId(serverId) })
+      if (!server) throw new Error("Server not found")
+      const response = await ping.promise.probe(server.server_ip_address)
+      if (statusMap?.[server?.availability] !== response.alive) {
+        server = await db.managementDb
+          ?.collection<IServer>("servers")
+          .findOneAndUpdate(
+            { _id: new ObjectId(serverId) },
+            {
+              $set: {
+                availability: response.alive
+                  ? constants.AVAILABILITY.ONLINE
+                  : constants.AVAILABILITY.OFFLINE,
+                availability_changed: new Date(),
+              },
+            },
+            { returnDocument: "after" }
+          )
+      }
+
+      return { availability: server?.availability }
+    } else {
+      const servers = await db.managementDb
+        ?.collection<IServer>("servers")
+        .find({ status: { $nin: [constants.STATUSES.DELETED_STATUS] } })
+        .toArray()
+
+      if (!servers) throw new Error("Servers not found")
+      for (const server of servers) {
+        const response = await ping.promise.probe(server.server_ip_address)
+        if (statusMap?.[server?.availability] !== response.alive) {
+          await db.managementDb?.collection<IServer>("servers").updateOne(
+            { _id: new ObjectId(server?._id) },
+            {
+              $set: {
+                availability: response.alive
+                  ? constants.AVAILABILITY.ONLINE
+                  : constants.AVAILABILITY.OFFLINE,
+                availability_changed: new Date(),
+              },
+            }
+          )
+        }
+      }
+    }
   }
 }

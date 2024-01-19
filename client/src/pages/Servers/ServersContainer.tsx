@@ -72,6 +72,22 @@ const ServersContainer = () => {
         }
       },
     },
+    {
+      title: "Availability",
+      dataIndex: "availability",
+      key: "availability",
+      render: (text: string) => {
+        switch (text) {
+          case constants.AVAILABILITY.ONLINE:
+            return <Tag color='green'>{constants.AVAILABILITY.ONLINE}</Tag>
+          case constants.AVAILABILITY.OFFLINE:
+            return <Tag color='red'>{constants.AVAILABILITY.OFFLINE}</Tag>
+
+          default:
+            return text
+        }
+      },
+    },
   ]
 
   const onManageServer = () => {
