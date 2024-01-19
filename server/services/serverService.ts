@@ -1,4 +1,5 @@
 import ping from "ping"
+import path from "path"
 import {
   checkForMissingParams,
   decipherData,
@@ -86,6 +87,9 @@ export default class ServerService {
     })
     await sshService.connect()
     await sshService.testAdmin()
+    const osInfo = await sshService.getOsInfo()
+    if (!osInfo?.OperatingSystemPrettyName.includes("Ubuntu"))
+      throw { showError: "Only Ubuntu is supported at this time" }
 
     return { success: true }
   }
@@ -258,7 +262,24 @@ export default class ServerService {
 
     return
   }
+
+  async applyNginxSaaScapeFile(ssh: SSHService) {
+    const localPath = path.join(
+      __dirname,
+      "../",
+      "public",
+      "files",
+      "html",
+      "saascapeNginx.html"
+    )
+    const file = await fsp.readFile(localPath, "utf8")
+
+    const remotePath = "/var/www/html/index.html"
+    await ssh.client.execCommand(`echo "${file}" | sudo tee ${remotePath}`)
+    await ssh.client.execCommand("sudo nginx -s reload")
+  }
   async beginInitialization(id: string) {
+    // Give each stage a number and set to a class so that if failed, we can simply re init from a stage instead of starting from scratch. Error will throw the stage we was on
     const server = (await db.managementDb
       ?.collection<IServer>("servers")
       .findOneAndUpdate(
@@ -300,6 +321,10 @@ export default class ServerService {
 
     await ssh.connect()
 
+    const osInfo = await ssh.getOsInfo()
+    if (!osInfo?.OperatingSystemPrettyName.includes("Ubuntu"))
+      throw new Error("Only Ubuntu is supported at this time")
+
     let dockerInfo = await this.#getDockerInfo(ssh).catch(() => false)
     if (!dockerInfo) {
       await this.#installDocker(ssh)
@@ -315,6 +340,8 @@ export default class ServerService {
       await this.#installNginx(ssh)
       nginxInfo = await this.#getNginxInfo(ssh)
     }
+
+    await this.applyNginxSaaScapeFile(ssh)
 
     // Create nginx integration
     await this.#createNginxIntegration(nginxInfo as string)
