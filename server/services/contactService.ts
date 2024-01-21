@@ -26,7 +26,7 @@ export class ContactService {
     })
 
     return {
-      contacts,
+      data: contacts,
     }
   }
 

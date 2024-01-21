@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import useSetBreadcrumbs from "../../middleware/useSetBreadcrumbs"
 import Contacts from "./Contacts"
 import breadcrumbs from "../../helpers/constants/breadcrumbs"
@@ -7,9 +7,12 @@ import { Avatar } from "antd"
 import IntegrationsBar from "../../components/Applications/IntegrationsBar"
 import constants from "../../helpers/constants/constants"
 import { apiAxios } from "../../helpers/axios"
-import { queryParamBuilder } from "../../helpers/utils"
 import ManageContactModal from "../../components/Contacts/ManageContactModal"
 import { toast } from "react-toastify"
+
+import usePaginatedTable, {
+  IPaginatedViewProps,
+} from "../../hooks/usePaginatedTable"
 
 export type ContactType = "tenant" | "lead"
 
@@ -34,77 +37,34 @@ export interface IContact extends ILinkedIdEnabledDocument {
   created_at: Date
   updated_at: Date
 }
-export interface IViewProps {
-  paginatedContacts: IPaginatedContacts
+export interface IViewProps extends IPaginatedViewProps {
   loading: boolean
   columns?: any
-  tableConfig: ITableConfig
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
 }
 
-export interface ITableConfig {
-  current: number
-  pageSize: number
-}
-
-interface IPaginatedContacts {
-  totalDocuments: number
-  records: {
-    [pageNumber: number]: IContact[]
-  }
-}
+const apiUrl = `/contacts`
 
 const ContactsContainer = () => {
-  const [loading, setLoading] = useState(false)
-  const [tableConfig, setTableConfig] = useState<ITableConfig>({
-    current: 1,
-    pageSize: 10,
-  })
-  const [queryConfig, setQueryConfig] = useState({
-    searchValue: "",
-  })
-  const [paginatedContacts, setPaginatedContacts] =
-    useState<IPaginatedContacts>({
-      totalDocuments: 0,
-      records: {},
-    })
+  const {
+    tableConfig,
+    paginatedData,
+    onSearch,
+    dataFetching,
+    reload,
+    onTableChange,
+  } = usePaginatedTable({ apiUrl })
+
   const [contact, setContact] = useState<IContact | null>(null)
   const [showManageContactModal, setShowManageContactModal] = useState(false)
 
   const setBreadcrumbs = useSetBreadcrumbs()
 
-  const prevTableConfigRef = useRef<ITableConfig>()
-
   useEffect(() => {
     setBreadcrumbs(breadcrumbs.CONTACTS)
   }, [])
-
-  useEffect(() => {
-    return () => {
-      prevTableConfigRef.current = tableConfig
-    }
-  }, [tableConfig])
-
-  useEffect(() => {
-    ;(() => {
-      const records = paginatedContacts?.records?.[tableConfig?.current]?.length
-      if (
-        prevTableConfigRef.current?.current !== tableConfig?.current &&
-        !records
-      )
-        return getContacts(queryConfig?.searchValue)
-
-      if (prevTableConfigRef.current?.pageSize !== tableConfig?.pageSize) {
-        setPaginatedContacts((curr) => ({
-          ...curr,
-          records: {},
-        }))
-        return getContacts(queryConfig?.searchValue)
-      }
-    })()
-  }, [tableConfig])
 
   const columns = [
     {
@@ -172,38 +132,6 @@ const ContactsContainer = () => {
       },
     },
   ]
-  const getContacts = async (value: string) => {
-    setLoading(true)
-    const {
-      data: { data, success },
-    } = await apiAxios.get(
-      `/contacts${queryParamBuilder({
-        page: tableConfig?.current,
-        limit: tableConfig?.pageSize,
-        searchValue: value,
-      })}`
-    )
-    if (success) {
-      setPaginatedContacts((curr) => ({
-        totalDocuments: +data?.contacts?.documentCount,
-        records: {
-          ...(curr?.records || {}),
-          [+data?.contacts?.paginatedData?.page]:
-            data?.contacts?.paginatedData?.records,
-        },
-      }))
-    }
-    setLoading(false)
-  }
-
-  const onTableChange = (config: any) => {
-    setTableConfig(config)
-  }
-
-  const onSearch = (value: string) => {
-    setQueryConfig({ searchValue: value })
-    getContacts(value)
-  }
 
   const onManageContact = (contact: IContact) => {
     setContact(contact || null)
@@ -225,7 +153,7 @@ const ContactsContainer = () => {
     } = await apiAxios.put(`/contacts/${contactId}`, values)
     if (success) {
       toast.success("Contact updated successfully")
-      getContacts(queryConfig?.searchValue)
+      reload()
       closeManageContactModal()
     }
   }
@@ -236,13 +164,12 @@ const ContactsContainer = () => {
     } = await apiAxios.post(`/contacts`, values)
     if (success) {
       toast.success("Contact created successfully")
-      getContacts(queryConfig?.searchValue)
+      reload()
       closeManageContactModal()
     }
   }
 
   const onContactSave = (values: any) => {
-    console.log(values)
     if (contact?._id) {
       updateContact(contact?._id, values)
     } else {
@@ -251,12 +178,12 @@ const ContactsContainer = () => {
   }
 
   const viewProps: IViewProps = {
-    paginatedContacts,
-    loading,
+    paginatedData,
+    loading: dataFetching,
     columns,
     tableConfig,
+    onTableChange,
     functions: {
-      onTableChange,
       onSearch,
       onManageContact,
       onRow: (record) => {

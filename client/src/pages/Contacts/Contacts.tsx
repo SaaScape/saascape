@@ -1,9 +1,17 @@
 import { Button, Table } from "antd"
 import Search from "antd/es/input/Search"
 import { IViewProps } from "./ContactsContainer"
+import PaginatedTable from "../../components/PaginatedTable"
 
 const Contacts = (props: IViewProps) => {
-  const { columns, loading, functions, paginatedContacts, tableConfig } = props
+  const {
+    columns,
+    loading,
+    functions,
+    paginatedData,
+    tableConfig,
+    onTableChange,
+  } = props
   return (
     <section className='contacts'>
       <div className='top-bar d-flex justify-between align-center'>
@@ -27,19 +35,14 @@ const Contacts = (props: IViewProps) => {
         </div>
       </div>
       <div className='table-container'>
-        <Table
-          pagination={{
-            pageSize: tableConfig?.pageSize,
-            total: paginatedContacts?.totalDocuments,
-            current: tableConfig?.current,
-          }}
-          dataSource={paginatedContacts?.records?.[tableConfig?.current]}
-          onChange={props?.functions?.onTableChange}
+        <PaginatedTable
           loading={loading}
           columns={columns}
-          rowKey={(record) => record._id}
-          onRow={functions?.onRow}
-        ></Table>
+          tableConfig={tableConfig}
+          paginatedData={paginatedData}
+          onTableChange={onTableChange}
+          functions={functions}
+        />
       </div>
     </section>
   )

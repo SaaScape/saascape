@@ -9,6 +9,13 @@ import integrations from "./integrations"
 import plans from "./plans"
 import contacts from "./contacts"
 import servers from "./servers"
+import domains from "./domains"
+
+export type routeFunction = (
+  req: Request,
+  res: Response,
+  next?: NextFunction
+) => any
 
 export default (app: express.Application) => {
   const use =
@@ -31,6 +38,7 @@ export default (app: express.Application) => {
   plans(router, use)
   contacts(router, use)
   servers(router, use)
+  domains(router, use)
 
   router.use(catchError)
 }

@@ -32,8 +32,8 @@ export default (app: Router, use: any) => {
 
 const findMany = async (req: Request, res: Response) => {
   const contactService = new ContactService()
-  const { contacts } = await contactService.findMany(req.query)
-  sendSuccessResponse({ contacts }, req, res)
+  const { data } = await contactService.findMany(req.query)
+  sendSuccessResponse({ data }, req, res)
 }
 
 const findById = async (req: Request, res: Response) => {
