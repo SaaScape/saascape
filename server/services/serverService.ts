@@ -14,6 +14,7 @@ import { ObjectId } from "mongodb"
 import SSHService from "./sshService"
 import { IIntegration } from "../schemas/Integrations"
 import { ILinkedId } from "../interfaces/interfaces"
+import { IDomain } from "../schemas/Domains"
 
 export default class ServerService {
   _id?: ObjectId
@@ -104,6 +105,7 @@ export default class ServerService {
           { server_name: { $regex: new RegExp(search, "i") } },
           { server_ip_address: { $regex: new RegExp(search, "i") } },
         ],
+        status: constants.STATUSES.ACTIVE_STATUS,
       })
       .limit(1000)
       .toArray()
@@ -120,6 +122,28 @@ export default class ServerService {
       })
 
     return JSON.parse(dockerInfo.stdout)
+  }
+  async #enableDockerEngineAPI(ssh: SSHService) {
+    const overrideFile = await fsp.readFile(
+      path.join(__dirname, "../", "configs/dockerServiceOverride.conf"),
+      {
+        encoding: "utf-8",
+      }
+    )
+    await ssh.client.execCommand(
+      `sudo mkdir -p /etc/systemd/system/docker.service.d`
+    )
+    const result = await ssh.client.execCommand(
+      'echo "' +
+        overrideFile +
+        '" | sudo tee /etc/systemd/system/docker.service.d/override.conf'
+    )
+
+    if (result.code !== 0) {
+      throw new Error(result.stderr)
+    }
+    await ssh.client.execCommand("sudo systemctl daemon-reload")
+    await ssh.client.execCommand("sudo systemctl restart docker")
   }
   async #installDocker(ssh: SSHService) {
     console.log("installing docker")
@@ -262,7 +286,6 @@ export default class ServerService {
 
     return
   }
-
   async applyNginxSaaScapeFile(ssh: SSHService) {
     const localPath = path.join(
       __dirname,
@@ -330,6 +353,7 @@ export default class ServerService {
       await this.#installDocker(ssh)
       dockerInfo = await this.#getDockerInfo(ssh)
     }
+    await this.#enableDockerEngineAPI(ssh)
 
     // Create docker integration
     await this.#createDockerIntegration(dockerInfo)
@@ -374,7 +398,6 @@ export default class ServerService {
 
     // Emit task to main server to notify of completion, server will then notify fe
   }
-
   async getServerAvailability(serverId?: string) {
     const statusMap = {
       [constants.AVAILABILITY.ONLINE]: true,
@@ -428,6 +451,72 @@ export default class ServerService {
           )
         }
       }
+    }
+  }
+
+  async nginxTest(ssh: SSHService) {
+    const nginxResult = await ssh.client.execCommand("sudo nginx -t")
+    if (nginxResult.code !== 0) {
+      throw new Error(nginxResult.stderr)
+    }
+  }
+  async addDomain(
+    serverId: string,
+    data: { domain: IDomain; html: string; configFile: string }
+  ) {
+    const server = await db.managementDb
+      ?.collection<IServer>("servers")
+      .findOne({ _id: new ObjectId(serverId) })
+    if (!server) throw new Error("Server not found")
+
+    const { domain } = data
+
+    const adminUsername = decipherData(
+      server.admin_username.encryptedData,
+      server.admin_username.iv
+    )
+    const privateKey = decipherData(
+      server.private_key.encryptedData,
+      server.private_key.iv
+    )
+
+    const ssh = new SSHService({
+      host: server.server_ip_address,
+      port: server.server_ssh_port,
+      username: adminUsername,
+      privateKey,
+    })
+
+    await ssh.connect()
+
+    const mkDirResult = await ssh.client.execCommand(
+      `sudo mkdir -p /var/www/${domain.domain_name}`
+    )
+    if (mkDirResult.code !== 0) {
+      throw new Error(mkDirResult.stderr)
+    }
+
+    const mkIndexResult = await ssh.client.execCommand(
+      `sudo echo "${data.html}" | sudo tee /var/www/${domain.domain_name}/index.html`
+    )
+    if (mkIndexResult.code !== 0) {
+      throw new Error(mkIndexResult.stderr)
+    }
+
+    const nginxConfigFileResult = await ssh.client.execCommand(
+      `sudo echo "${data.configFile}" | sudo tee /etc/nginx/sites-enabled/${domain.domain_name}`
+    )
+    if (nginxConfigFileResult.code !== 0) {
+      throw new Error(nginxConfigFileResult.stderr)
+    }
+
+    const nginx = await this.nginxTest(ssh)
+
+    const restartNginxResult = await ssh.client.execCommand(
+      "sudo nginx -s reload"
+    )
+    if (restartNginxResult.code !== 0) {
+      throw new Error(restartNginxResult.stderr)
     }
   }
 }

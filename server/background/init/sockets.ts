@@ -1,10 +1,11 @@
 import { Socket, io } from "socket.io-client"
 import constants from "../../helpers/constants"
 import ServerSocket from "../socketServices/serverSocket"
+import DomainSocket from "../socketServices/domainSocket"
 export let socket: Socket | undefined
 
 const generateSocketEventMap = () => {
-  const socketServices = [ServerSocket]
+  const socketServices = [ServerSocket, DomainSocket]
   const obj: { [key: string]: string } = {}
   for (const Service of socketServices) {
     const service = new Service()
@@ -50,6 +51,7 @@ class SocketEvent {
   routeMap = {
     // MAP ROUTES TO SERVICE
     [constants.SOCKET_ROUTES.SERVER]: ServerSocket,
+    [constants.SOCKET_ROUTES.DOMAIN]: DomainSocket,
   }
 }
 

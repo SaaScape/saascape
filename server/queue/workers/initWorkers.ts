@@ -1,5 +1,6 @@
 import Bull from "bull"
 import initializeServerWorkers from "./serverWorkers"
+import initializeDomainWorkers from "./domainWorkers"
 
 export interface IWorker {
   worker: (job: Bull.Job) => void
@@ -12,7 +13,7 @@ export const defaultOnFailed = (job: Bull.Job) => {
 }
 
 const initializeWorkers = async () => {
-  await Promise.all([initializeServerWorkers()])
+  await Promise.all([initializeServerWorkers(), initializeDomainWorkers()])
 }
 
 export default initializeWorkers

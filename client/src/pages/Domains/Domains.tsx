@@ -28,7 +28,7 @@ const Domains = (props: IViewProps) => {
           <Button
             disabled={loading}
             className='btn-add'
-            onClick={functions?.onManageServer}
+            onClick={functions?.onAddDomainClick}
           >
             Add new Domain
           </Button>

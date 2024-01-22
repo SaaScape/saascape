@@ -4,6 +4,7 @@ export default {
     DELETED_STATUS: "deleted",
     FAILED_STATUS: "failed",
     COMPLETED_STATUS: "completed",
+    PENDING_STATUS: "pending",
   },
   SERVER_STATUSES: {
     PENDING_INITIALIZATION: "pending_initialization",
@@ -27,13 +28,16 @@ export default {
   },
   MODULES: {
     SERVER: "server",
+    DOMAIN: "domain",
   },
   SOCKET_ROUTES: {
     SERVER: "server",
+    DOMAIN: "domain",
   },
   SOCKET_EVENTS: {
     SERVER_CONNECT: "server_connect",
     SERVER_INITIALIZE: "server_initialize",
+    DOMAIN_ADD: "domain_add",
   },
   SOCKET_ROOMS: {
     BACKGROUND_SERVERS: "background_servers",
