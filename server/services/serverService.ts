@@ -142,6 +142,8 @@ export default class ServerService {
     if (result.code !== 0) {
       throw new Error(result.stderr)
     }
+
+    // await this.secureDocker(ssh)
     await ssh.client.execCommand("sudo systemctl daemon-reload")
     await ssh.client.execCommand("sudo systemctl restart docker")
   }
@@ -301,6 +303,104 @@ export default class ServerService {
     await ssh.client.execCommand(`echo "${file}" | sudo tee ${remotePath}`)
     await ssh.client.execCommand("sudo nginx -s reload")
   }
+  async installOpenSSL(ssh: SSHService) {
+    // const exec1 = await ssh.client.execCommand(
+    //   "sudo apt-get update && sudo apt-get upgrade -y"
+    // )
+    // const exec2 = await ssh.client.execCommand(
+    //   "sudo apt install build-essential checkinstall zlib1g-dev -y"
+    // )
+    // const exec3 = await ssh.client.execCommand(
+    //   "cd /usr/local/src/ && wget https://www.openssl.org/source/old/1.1.1/openssl-1.1.1f.tar.gz"
+    // )
+    // const exec4 = await ssh.client.execCommand(
+    //   "cd /usr/local/src/ && tar -xvf openssl-1.1.1f.tar.gz"
+    // )
+    // const exec5 = await ssh.client.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1f && ./config && make && make install"
+    // )
+    // //     ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib
+    // // make
+    // // make test
+    // const exec6 = await ssh.client.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1 &&./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib"
+    // )
+    // const exec7 = await ssh.client.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1 && make"
+    // )
+    // const exec8 = await ssh.client.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1 && make test"
+    // )
+    // const exec9 = await ssh.client.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1 && make install"
+    // )
+  }
+
+  async checkIfOpenSSLInstalled(ssh: SSHService) {
+    const response = await ssh.client.execCommand("sudo openssl version")
+    if (response.code !== 0) throw new Error(response.stderr)
+    return response.stdout
+  }
+
+  async secureDocker(ssh: SSHService) {
+    // Get Server FQDN from info
+    console.log("securing docker")
+    const osInfo = await ssh.getOsInfo()
+    const { Hostname: hostname } = osInfo
+    const organization = "SaaScape"
+    const serverPublicIp = `10.0.0.2`
+    const serverPrivateIp = `10.0.0.1`
+
+    await ssh.client.execCommand("sudo mkdir -p /root/certs")
+
+    // CA KEY
+    await ssh.client.execCommand(
+      "sudo openssl genrsa -aes256 -passout pass: -out /root/certs/ca-key.pem 4096"
+    )
+    // CA
+    await ssh.client.execCommand(
+      `sudo openssl req -new -x509 -days 365 -key /root/certs/ca-key.pem -sha256 -out /root/certs/ca.pem -passin pass: -subj "/C=UK/ST=London/L=London/O=${organization}/CN=${hostname}"`
+    )
+    // KEY
+    await ssh.client.execCommand(
+      `sudo openssl genrsa -out /root/certs/server-key.pem 4096`
+    )
+    // CSR
+    await ssh.client
+      .execCommand(`sudo openssl req -subj "/CN=${hostname}" -sha256 -new \
+    -key /root/certs/server-key.pem -out /root/certs/server.csr`)
+
+    await ssh.client.execCommand(`sudo echo subjectAltName = \
+    DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 >> extfile.cnf`)
+
+    await ssh.client.execCommand(
+      `sudo echo extendedKeyUsage = serverAuth >> /root/certs/extfile.cnf`
+    )
+
+    // Server Cert
+    await ssh.client
+      .execCommand(`sudo openssl x509 -req -days 365 -sha256 -in /root/certs/server.csr -CA /root/certs/ca.pem \
+    -CAkey /root/certs/ca-key.pem -CAcreateserial -out /root/certs/server-cert.pem -passin pass:`)
+
+    // Client Cert
+    await ssh.client.execCommand(
+      `sudo openssl genrsa -out /root/certs/key.pem 4096`
+    )
+
+    await ssh.client.execCommand(
+      `sudo openssl req -subj '/CN=client' -new -key /root/certs/key.pem -out /root/certs/client.csr`
+    )
+
+    await ssh.client.execCommand(
+      `sudo echo extendedKeyUsage = clientAuth > /root/certs/extfile-client.cnf`
+    )
+
+    await ssh.client.execCommand(
+      `sudo openssl x509 -req -days 365 -sha256 -in /root/certs/client.csr -CA /root/certs/ca.pem \
+      -CAkey /root/certs/ca-key.pem -CAcreateserial -out /root/certs/cert.pem \
+      -extfile /root/certs/extfile-client.cnf`
+    )
+  }
   async beginInitialization(id: string) {
     // Give each stage a number and set to a class so that if failed, we can simply re init from a stage instead of starting from scratch. Error will throw the stage we was on
     const server = (await db.managementDb
@@ -369,6 +469,14 @@ export default class ServerService {
 
     // Create nginx integration
     await this.#createNginxIntegration(nginxInfo as string)
+
+    // Check and install openssl
+    const openSSLVersion = await this.checkIfOpenSSLInstalled(ssh).catch(
+      () => false
+    )
+    if (!openSSLVersion) {
+      await this.installOpenSSL(ssh)
+    }
   }
   async finishInitialization(id: string, status: string) {
     let serverStatus = ""
