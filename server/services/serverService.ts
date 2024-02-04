@@ -143,7 +143,7 @@ export default class ServerService {
       throw new Error(result.stderr)
     }
 
-    // await this.secureDocker(ssh)
+    await this.secureDocker(ssh)
     await ssh.client.execCommand("sudo systemctl daemon-reload")
     await ssh.client.execCommand("sudo systemctl restart docker")
   }
@@ -371,7 +371,7 @@ export default class ServerService {
     -key /root/certs/server-key.pem -out /root/certs/server.csr`)
 
     await ssh.client.execCommand(`sudo echo subjectAltName = \
-    DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 >> extfile.cnf`)
+    DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 >> /root/certs/extfile.cnf`)
 
     await ssh.client.execCommand(
       `sudo echo extendedKeyUsage = serverAuth >> /root/certs/extfile.cnf`
@@ -397,8 +397,15 @@ export default class ServerService {
 
     await ssh.client.execCommand(
       `sudo openssl x509 -req -days 365 -sha256 -in /root/certs/client.csr -CA /root/certs/ca.pem \
-      -CAkey /root/certs/ca-key.pem -CAcreateserial -out /root/certs/cert.pem \
+      -CAkey /root/certs/ca-key.pem -passin pass: -CAcreateserial -out /root/certs/cert.pem \
       -extfile /root/certs/extfile-client.cnf`
+    )
+
+    // Copy certs to etc
+
+    // TODO; RENAME CERTS TO SOMETHING ELSE
+    await ssh.client.execCommand(
+      "sudo cp /root/certs/ca.pem /root/certs/server-cert.pem /root/certs/server-key.pem /etc/ssl/certs/"
     )
   }
   async beginInitialization(id: string) {
