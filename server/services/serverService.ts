@@ -78,7 +78,6 @@ export default class ServerService {
         data: { error: "Missing required params", missingParams },
       }
     }
-    const key = await fsp.readFile("/Users/keir/google", "utf8")
 
     const sshService = new SSHService({
       host: data.server_ip_address,
@@ -351,61 +350,63 @@ export default class ServerService {
     const serverPublicIp = `10.0.0.2`
     const serverPrivateIp = `10.0.0.1`
 
-    await ssh.client.execCommand("sudo mkdir -p /root/certs")
+    await ssh.client.execCommand("sudo mkdir -p /saascape/docker/certs")
+    await ssh.client.execCommand("sudo mkdir -p /etc/ssl/docker/")
 
     // CA KEY
     await ssh.client.execCommand(
-      "sudo openssl genrsa -aes256 -passout pass: -out /root/certs/ca-key.pem 4096"
+      "sudo openssl genrsa -aes256 -passout pass: -out /saascape/docker/certs/ca-key.pem 4096"
     )
     // CA
     await ssh.client.execCommand(
-      `sudo openssl req -new -x509 -days 365 -key /root/certs/ca-key.pem -sha256 -out /root/certs/ca.pem -passin pass: -subj "/C=UK/ST=London/L=London/O=${organization}/CN=${hostname}"`
+      `sudo openssl req -new -x509 -days 365 -key /saascape/docker/certs/ca-key.pem -sha256 -out /saascape/docker/certs/ca.pem -passin pass: -subj "/C=UK/ST=London/L=London/O=${organization}/CN=${hostname}"`
     )
     // KEY
     await ssh.client.execCommand(
-      `sudo openssl genrsa -out /root/certs/server-key.pem 4096`
+      `sudo openssl genrsa -out /saascape/docker/certs/server-key.pem 4096`
     )
     // CSR
     await ssh.client
       .execCommand(`sudo openssl req -subj "/CN=${hostname}" -sha256 -new \
-    -key /root/certs/server-key.pem -out /root/certs/server.csr`)
+    -key /saascape/docker/certs/server-key.pem -out /saascape/docker/certs/server.csr`)
 
+    // For some reason this step is not working correctly
     await ssh.client.execCommand(`sudo echo subjectAltName = \
-    DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 >> /root/certs/extfile.cnf`)
+    DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 >> /saascape/docker/certs/extfile.cnf`)
 
     await ssh.client.execCommand(
-      `sudo echo extendedKeyUsage = serverAuth >> /root/certs/extfile.cnf`
+      `sudo echo extendedKeyUsage = serverAuth >> /saascape/docker/certs/extfile.cnf`
     )
 
     // Server Cert
     await ssh.client
-      .execCommand(`sudo openssl x509 -req -days 365 -sha256 -in /root/certs/server.csr -CA /root/certs/ca.pem \
-    -CAkey /root/certs/ca-key.pem -CAcreateserial -out /root/certs/server-cert.pem -passin pass:`)
+      .execCommand(`sudo openssl x509 -req -days 365 -sha256 -in /saascape/docker/certs/server.csr -CA /saascape/docker/certs/ca.pem \
+    -CAkey /saascape/docker/certs/ca-key.pem -CAcreateserial -out /saascape/docker/certs/server-cert.pem -extfile /saascape/docker/certs/extfile.cnf -passin pass:`)
 
     // Client Cert
     await ssh.client.execCommand(
-      `sudo openssl genrsa -out /root/certs/key.pem 4096`
+      `sudo openssl genrsa -out /saascape/docker/certs/key.pem 4096`
     )
 
     await ssh.client.execCommand(
-      `sudo openssl req -subj '/CN=client' -new -key /root/certs/key.pem -out /root/certs/client.csr`
+      `sudo openssl req -subj '/CN=client' -new -key /saascape/docker/certs/key.pem -out /saascape/docker/certs/client.csr`
     )
 
     await ssh.client.execCommand(
-      `sudo echo extendedKeyUsage = clientAuth > /root/certs/extfile-client.cnf`
+      `sudo echo extendedKeyUsage = clientAuth > /saascape/docker/certs/extfile-client.cnf`
     )
 
     await ssh.client.execCommand(
-      `sudo openssl x509 -req -days 365 -sha256 -in /root/certs/client.csr -CA /root/certs/ca.pem \
-      -CAkey /root/certs/ca-key.pem -passin pass: -CAcreateserial -out /root/certs/cert.pem \
-      -extfile /root/certs/extfile-client.cnf`
+      `sudo openssl x509 -req -days 365 -sha256 -in /saascape/docker/certs/client.csr -CA /saascape/docker/certs/ca.pem \
+      -CAkey /saascape/docker/certs/ca-key.pem -passin pass: -CAcreateserial -out /saascape/docker/certs/cert.pem \
+      -extfile /saascape/docker/certs/extfile-client.cnf`
     )
 
     // Copy certs to etc
 
     // TODO; RENAME CERTS TO SOMETHING ELSE
     await ssh.client.execCommand(
-      "sudo cp /root/certs/ca.pem /root/certs/server-cert.pem /root/certs/server-key.pem /etc/ssl/certs/"
+      "sudo cp /saascape/docker/certs/ca.pem /saascape/docker/certs/server-cert.pem /saascape/docker/certs/server-key.pem /etc/ssl/docker/"
     )
   }
   async beginInitialization(id: string) {
