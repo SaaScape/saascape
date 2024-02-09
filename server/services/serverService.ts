@@ -351,6 +351,8 @@ export default class ServerService {
     const serverPrivateIp = `10.0.0.1`
 
     await ssh.client.execCommand("sudo mkdir -p /saascape/docker/certs")
+    await ssh.client.execCommand("sudo chmod -R u+rwx /saascape")
+    await ssh.client.execCommand("sudo chown -R root:root /saascape")
     await ssh.client.execCommand("sudo mkdir -p /etc/ssl/docker/")
 
     // CA KEY
@@ -371,11 +373,11 @@ export default class ServerService {
     -key /saascape/docker/certs/server-key.pem -out /saascape/docker/certs/server.csr`)
 
     // For some reason this step is not working correctly
-    await ssh.client.execCommand(`sudo echo subjectAltName = \
-    DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 >> /saascape/docker/certs/extfile.cnf`)
+    await ssh.client.execCommand(`echo subjectAltName = \
+    DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 | sudo tee /saascape/docker/certs/extfile.cnf`)
 
     await ssh.client.execCommand(
-      `sudo echo extendedKeyUsage = serverAuth >> /saascape/docker/certs/extfile.cnf`
+      `echo extendedKeyUsage = serverAuth | sudo tee -a /saascape/docker/certs/extfile.cnf`
     )
 
     // Server Cert
@@ -393,7 +395,7 @@ export default class ServerService {
     )
 
     await ssh.client.execCommand(
-      `sudo echo extendedKeyUsage = clientAuth > /saascape/docker/certs/extfile-client.cnf`
+      `sudo echo extendedKeyUsage = clientAuth | sudo tee /saascape/docker/certs/extfile-client.cnf`
     )
 
     await ssh.client.execCommand(
