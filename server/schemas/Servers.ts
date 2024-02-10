@@ -14,6 +14,24 @@ export interface IServer extends Document, ILinkedIdEnabledDocument {
   server_status: string
   availability: string
   availability_changed: Date
+  docker_data?: {
+    certs?: {
+      ca: IEncryptedData
+      server: {
+        cert: IEncryptedData
+        key: IEncryptedData
+      }
+      client: {
+        cert: IEncryptedData
+        key: IEncryptedData
+      }
+    }
+    availability: {
+      status: string
+      updated_at: Date
+      message: string
+    }
+  }
   created_at: Date
   updated_at: Date
 }

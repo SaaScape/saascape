@@ -13,11 +13,12 @@ import { db } from "../db"
 import { ObjectId } from "mongodb"
 import SSHService from "./sshService"
 import { IIntegration } from "../schemas/Integrations"
-import { ILinkedId } from "../interfaces/interfaces"
+import { IEncryptedData, ILinkedId } from "../interfaces/interfaces"
 import { IDomain } from "../schemas/Domains"
 
 export default class ServerService {
   _id?: ObjectId
+  server?: IServer
   constructor() {}
 
   async create(data: any) {
@@ -348,7 +349,7 @@ export default class ServerService {
     const osInfo = await ssh.getOsInfo()
     const { Hostname: hostname } = osInfo
     const organization = "SaaScape"
-    const serverPublicIp = `10.0.0.2`
+    const serverPublicIp = this.server?.server_ip_address
     const serverPrivateIp = `10.0.0.1`
 
     await ssh.execCommand("sudo mkdir -p /saascape/docker/certs")
@@ -403,11 +404,73 @@ export default class ServerService {
       -extfile /saascape/docker/certs/extfile-client.cnf`
     )
 
-    // Copy certs to etc
+    // Update certs in DB
+    const caCert = await ssh.execCommand(
+      `sudo cat /saascape/docker/certs/ca.pem`
+    )
+    const serverCert = await ssh.execCommand(
+      `sudo cat /saascape/docker/certs/server-cert.pem`
+    )
+    const serverKey = await ssh.execCommand(
+      `sudo cat /saascape/docker/certs/server-key.pem`
+    )
+    const clientCert = await ssh.execCommand(
+      `sudo cat /saascape/docker/certs/cert.pem`
+    )
+    const clientKey = await ssh.execCommand(
+      `sudo cat /saascape/docker/certs/key.pem`
+    )
 
-    // TODO; RENAME CERTS TO SOMETHING ELSE
+    const encryptedValues = {
+      ca: encryptData(caCert.stdout),
+      server: encryptData(serverCert.stdout),
+      serverKey: encryptData(serverKey.stdout),
+      client: encryptData(clientCert.stdout),
+      clientKey: encryptData(clientKey.stdout),
+    }
+    const certPayload: {
+      ca: IEncryptedData
+      server: { cert: IEncryptedData; key: IEncryptedData }
+      client: { cert: IEncryptedData; key: IEncryptedData }
+    } = {
+      ca: {
+        iv: encryptedValues.ca.iv,
+        encryptedData: encryptedValues.ca.encryptedData,
+      },
+      server: {
+        cert: {
+          iv: encryptedValues.server.iv,
+          encryptedData: encryptedValues.server.encryptedData,
+        },
+        key: {
+          iv: encryptedValues.serverKey.iv,
+          encryptedData: encryptedValues.serverKey.encryptedData,
+        },
+      },
+      client: {
+        cert: {
+          iv: encryptedValues.client.iv,
+          encryptedData: encryptedValues.client.encryptedData,
+        },
+        key: {
+          iv: encryptedValues.clientKey.iv,
+          encryptedData: encryptedValues.clientKey.encryptedData,
+        },
+      },
+    }
+
     await ssh.execCommand(
       "sudo cp /saascape/docker/certs/ca.pem /saascape/docker/certs/server-cert.pem /saascape/docker/certs/server-key.pem /etc/ssl/docker/"
+    )
+
+    await db.managementDb?.collection("servers").updateOne(
+      { _id: new ObjectId(this.server?._id) },
+      {
+        $set: {
+          "docker_data.certs": certPayload,
+          updated_at: new Date(),
+        },
+      }
     )
   }
   async beginInitialization(id: string) {
@@ -432,6 +495,7 @@ export default class ServerService {
     }
 
     this._id = new ObjectId(id)
+    this.server = server
 
     server.decipheredData = {
       admin_username: decipherData(
@@ -633,5 +697,31 @@ export default class ServerService {
     if (restartNginxResult.code !== 0) {
       throw new Error(restartNginxResult.stderr)
     }
+  }
+
+  async getSshClient(serverId: string | ObjectId) {
+    const server = await db.managementDb
+      ?.collection<IServer>("servers")
+      .findOne({ _id: new ObjectId(serverId) })
+    if (!server) throw new Error("Server not found")
+
+    const adminUsername = decipherData(
+      server.admin_username.encryptedData,
+      server.admin_username.iv
+    )
+    const privateKey = decipherData(
+      server.private_key.encryptedData,
+      server.private_key.iv
+    )
+
+    const ssh = new SSHService({
+      host: server.server_ip_address,
+      port: server.server_ssh_port,
+      username: adminUsername,
+      privateKey,
+    })
+
+    await ssh.connect()
+    return ssh
   }
 }
