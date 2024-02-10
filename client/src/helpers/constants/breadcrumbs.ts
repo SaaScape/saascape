@@ -107,6 +107,19 @@ export default {
       path: "/servers",
     },
   ],
+  VIEW_SERVER: (text: string, id: string) => {
+    return [
+      {
+        title: "Servers",
+        path: "/servers",
+      },
+      {
+        title: text,
+        path: `/servers/${id}`,
+        type: "server_select",
+      },
+    ]
+  },
   DOMAINS: [
     {
       title: "Domains",

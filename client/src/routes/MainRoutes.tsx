@@ -11,6 +11,7 @@ import ContactsContainer from "../pages/Contacts/ContactsContainer"
 import ViewContactContainer from "../pages/Contacts/ViewContactContainer"
 import ServersContainer from "../pages/Servers/ServersContainer"
 import SettingsRouter from "../pages/Settings/SettingsRouter"
+import ViewServerContainer from "../pages/Servers/ViewServerContainer"
 
 const MainRoutes = () => {
   return (
@@ -90,6 +91,15 @@ const MainRoutes = () => {
           element={
             <ProtectedRoute
               component={<ServersContainer />}
+              permissions={[permissions.SERVERS.VIEW_SERVERS]}
+            />
+          }
+        />
+        <Route
+          path={routes.SERVERS.VIEW_SERVER}
+          element={
+            <ProtectedRoute
+              component={<ViewServerContainer />}
               permissions={[permissions.SERVERS.VIEW_SERVERS]}
             />
           }

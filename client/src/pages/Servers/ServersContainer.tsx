@@ -8,6 +8,10 @@ import { FormInstance, Tag } from "antd"
 import { toast } from "react-toastify"
 import { IEncryptedData } from "../../interfaces/interfaces"
 import constants from "../../helpers/constants/constants"
+import { useNavigate } from "react-router-dom"
+import { useDispatch, useSelector } from "react-redux"
+import { IStore } from "../../store/store"
+import { setServers } from "../../store/slices/serverSlice"
 
 export interface IServer {
   _id: string
@@ -32,16 +36,15 @@ const ServersContainer = () => {
   const [loading, setLoading] = useState(false)
   const [testingConnection, setTestingConnection] = useState(false)
   const [showServerModal, setShowServerModal] = useState(false)
-  const [servers, setServers] = useState([])
+  const servers = useSelector((state: IStore) => state.servers)
+
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   const setBreadcrumbs = useSetBreadcrumbs()
 
   useEffect(() => {
     setBreadcrumbs(breadcrumbs.SERVERS)
-  }, [])
-
-  useEffect(() => {
-    getServers()
   }, [])
 
   const columns = [
@@ -100,7 +103,7 @@ const ServersContainer = () => {
       data: { data, success },
     } = await apiAxios.get("/servers")
     if (success) {
-      setServers(data?.servers)
+      dispatch(setServers(data?.servers))
     }
     setLoading(false)
   }
@@ -143,12 +146,19 @@ const ServersContainer = () => {
     setLoading(false)
   }
 
+  const onRow = (record: IServer) => ({
+    onClick: () => {
+      navigate(`/servers/${record?._id}`)
+    },
+  })
+
   const viewProps: IViewProps = {
     loading,
     columns,
     servers: servers,
     functions: {
       onManageServer,
+      onRow,
     },
   }
 
