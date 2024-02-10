@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { setConfigData } from "./store/slices/configData"
 import axios from "axios"
 import { setApplications } from "./store/slices/applicationSlice"
+import { setServers } from "./store/slices/serverSlice"
 // import socket from "./sockets/sockets"
 // import { IStore } from "./store/store"
 
@@ -15,7 +16,12 @@ const MainLayout = () => {
   // const user = useSelector((state: IStore) => state.user)
 
   useEffect(() => {
-    Promise.allSettled([getIntegrations(), getCurrencies(), getApplications()])
+    Promise.allSettled([
+      getIntegrations(),
+      getCurrencies(),
+      getApplications(),
+      getServers(),
+    ])
   }, [])
 
   const getCurrencies = async () => {
@@ -39,6 +45,16 @@ const MainLayout = () => {
     } = await apiAxios.get(`/applications`)
     if (success) {
       dispatch(setApplications(data?.applications))
+    }
+  }
+
+  const getServers = async () => {
+    const {
+      data: { data, success },
+    } = await apiAxios.get("/servers")
+
+    if (success) {
+      dispatch(setServers(data?.servers))
     }
   }
 

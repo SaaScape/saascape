@@ -7,6 +7,7 @@ import configDataReducer, { IConfigData } from "./slices/configData"
 import breadcrumbsReducer, { IBreadcrumbs } from "./slices/breadcrumbs"
 import layoutConfigReducer, { ILayoutConfig } from "./slices/layoutConfig"
 import applicationsReducer, { IApplication } from "./slices/applicationSlice"
+import serverReducer, { IServerState } from "./slices/serverSlice"
 
 export interface IStore {
   user: IUserState
@@ -18,6 +19,7 @@ export interface IStore {
     selectedApplication: IApplication | null
     applications: IApplication[]
   }
+  servers: IServerState[]
 }
 
 export const store = configureStore({
@@ -28,6 +30,7 @@ export const store = configureStore({
     breadcrumbs: breadcrumbsReducer,
     layoutConfig: layoutConfigReducer,
     applications: applicationsReducer,
+    servers: serverReducer,
   },
 })
 

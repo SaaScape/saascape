@@ -107,7 +107,8 @@ export default class ServerService {
         ],
         status: constants.STATUSES.ACTIVE_STATUS,
       })
-      .limit(1000)
+      .project({ admin_username: 0, private_key: 0, "docker_data.certs": 0 })
+      .limit(10000)
       .toArray()
 
     return { servers }
