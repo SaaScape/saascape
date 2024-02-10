@@ -49,3 +49,27 @@ export const decipherData = (data: string, iv: string) => {
   decrypted += decipher.final("utf8")
   return decrypted
 }
+
+type StorageUnits = "B" | "KB" | "MB" | "GB" | "TB" | "PB"
+export const convertUnit = (
+  value: number,
+  currentUnit: StorageUnits,
+  newUnit: StorageUnits
+) => {
+  const units: StorageUnits[] = ["B", "KB", "MB", "GB", "TB", "PB"]
+  if (!units.includes(currentUnit) || !units.includes(newUnit)) {
+    throw new Error("Invalid unit")
+  }
+  const byteMultipliers: { [key: string]: number } = {
+    B: 1,
+    KB: 1024,
+    MB: 1024 * 1024,
+    GB: 1024 * 1024 * 1024,
+    TB: 1024 * 1024 * 1024 * 1024,
+    PB: 1024 * 1024 * 1024 * 1024 * 1024,
+  }
+
+  const valueInBytes = value * byteMultipliers[currentUnit]
+  const newValue = valueInBytes / byteMultipliers?.[newUnit]
+  return newValue
+}

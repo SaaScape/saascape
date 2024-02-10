@@ -1,8 +1,8 @@
-import { Button } from "antd"
 import IntegrationsBar from "../../components/Applications/IntegrationsBar"
 import { IViewProps } from "./ViewServerContainer"
 import StatisticBanner from "../../components/StatisticBanner"
 import constants from "../../helpers/constants/constants"
+import { convertUnit } from "../../helpers/utils"
 
 const ViewServer = (props: IViewProps) => {
   console.log(props.server)
@@ -41,8 +41,23 @@ const ViewServer = (props: IViewProps) => {
           <div className='value'>{props?.server?.server_ip_address}</div>
         </div>
         <div>
-          <div className='title'>Availability</div>
-          <div className='value'>{props.server?.availability}</div>
+          <div className='title'>Cores</div>
+          <div className='value'>
+            {props.server?.system_info?.cpu_core_count}
+          </div>
+        </div>
+        <div>
+          <div className='title'>Storage</div>
+          <div className='value'>
+            <span>
+              {convertUnit(
+                props.server?.system_info?.storage?.totalStorage || 0,
+                "B",
+                "GB"
+              )}
+            </span>
+            <span> Gb</span>
+          </div>
         </div>
       </StatisticBanner>
     </section>

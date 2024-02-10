@@ -33,6 +33,30 @@ export interface IServerState extends ILinkedIdEnabledDocument {
       message: string
     }
   }
+  system_info?: {
+    os: string
+    cpu_model: string
+    cpu_core_count: number
+    architecture: string
+    storage: {
+      totalStorage: number // in bytes
+      disks: {
+        [diskName: string]: {
+          children: {
+            name: string
+            mountpoints: string[]
+            rm: boolean
+            ro: boolean
+            size: number //in bytes
+          }[]
+          mountpoints: string[]
+          rm: boolean
+          ro: boolean
+          size: number //in bytes
+        }
+      }
+    }
+  }
   created_at: Date
   updated_at: Date
 }

@@ -22,8 +22,10 @@ const ViewServerContainer = () => {
   const setBreadcrumbs = useSetBreadcrumbs()
 
   useEffect(() => {
-    setBreadcrumbs(breadcrumbs.VIEW_SERVER("Server Name", "server_id"))
-  }, [])
+    setBreadcrumbs(
+      breadcrumbs.VIEW_SERVER(server?.server_name || id || "", id || "")
+    )
+  }, [server])
 
   useEffect(() => {
     setLoading(true)
