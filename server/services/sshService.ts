@@ -42,4 +42,12 @@ export default class SSHService {
     const obj = JSON.parse(osInfo.stdout)
     return obj
   }
+
+  async execCommand(command: string) {
+    const sshResult = await this.client.execCommand(command)
+    if (sshResult.code !== 0) {
+      throw new Error(sshResult.stderr || sshResult.stdout)
+    }
+    return sshResult
+  }
 }

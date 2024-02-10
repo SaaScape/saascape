@@ -1,4 +1,11 @@
 export default {
+  SCRIPTS: {
+    DOCKER: {
+      DOCKER_INSTALL: {
+        UBUNTU: "installDockerUbuntu.sh",
+      },
+    },
+  },
   STATUSES: {
     ACTIVE_STATUS: "active",
     DELETED_STATUS: "deleted",
