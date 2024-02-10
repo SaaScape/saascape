@@ -13,6 +13,7 @@ import ServersContainer from "../pages/Servers/ServersContainer"
 import SettingsRouter from "../pages/Settings/SettingsRouter"
 import ViewServerContainer from "../pages/Servers/ViewServerContainer"
 import SettingsRouter from "../pages/Settings/SettingsRouter"
+import ViewServerContainer from "../pages/Servers/ViewServerContainer"
 
 const MainRoutes = () => {
   return (
