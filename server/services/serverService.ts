@@ -78,7 +78,6 @@ export default class ServerService {
         data: { error: "Missing required params", missingParams },
       }
     }
-    const key = await fsp.readFile("/Users/keir/google", "utf8")
 
     const sshService = new SSHService({
       host: data.server_ip_address,
@@ -114,7 +113,7 @@ export default class ServerService {
   }
 
   async #getDockerInfo(ssh: SSHService) {
-    const dockerInfo = await ssh.client
+    const dockerInfo = await ssh
       .execCommand("sudo docker info -f json")
       .catch((error) => {
         console.log(error)
@@ -130,10 +129,8 @@ export default class ServerService {
         encoding: "utf-8",
       }
     )
-    await ssh.client.execCommand(
-      `sudo mkdir -p /etc/systemd/system/docker.service.d`
-    )
-    const result = await ssh.client.execCommand(
+    await ssh.execCommand(`sudo mkdir -p /etc/systemd/system/docker.service.d`)
+    const result = await ssh.execCommand(
       'echo "' +
         overrideFile +
         '" | sudo tee /etc/systemd/system/docker.service.d/override.conf'
@@ -142,26 +139,31 @@ export default class ServerService {
     if (result.code !== 0) {
       throw new Error(result.stderr)
     }
-    await ssh.client.execCommand("sudo systemctl daemon-reload")
-    await ssh.client.execCommand("sudo systemctl restart docker")
+
+    await this.secureDocker(ssh)
+    await ssh.execCommand("sudo systemctl daemon-reload")
+    await ssh.execCommand("sudo systemctl restart docker")
   }
   async #installDocker(ssh: SSHService) {
     console.log("installing docker")
     const osInfo = await ssh.getOsInfo()
     if (osInfo?.OperatingSystemPrettyName.includes("Ubuntu")) {
-      await ssh.client.execCommand(
-        "for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done"
+      await ssh.execCommand("sudo mkdir -p /saascape/scripts/docker")
+      const dockerUbuntuInstallScript = await fsp.readFile(
+        path.join(
+          __dirname,
+          "../",
+          "scripts",
+          "docker",
+          constants.SCRIPTS.DOCKER.DOCKER_INSTALL.UBUNTU
+        ),
+        "utf-8"
       )
-      await ssh.client.execCommand(
-        "sudo apt-get update && sudo apt-get install ca-certificates curl gnupg && sudo install -m 0755 -d /etc/apt/keyrings && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg && sudo chmod a+r /etc/apt/keyrings/docker.gpg"
+      await ssh.execCommand(
+        `echo "${dockerUbuntuInstallScript}" | sudo tee /saascape/scripts/docker/${constants.SCRIPTS.DOCKER.DOCKER_INSTALL.UBUNTU}`
       )
-
-      await ssh.client.execCommand(`echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null`)
-      await ssh.client.execCommand(
-        "sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y"
+      await ssh.execCommand(
+        `sudo sh /saascape/scripts/docker/${constants.SCRIPTS.DOCKER.DOCKER_INSTALL.UBUNTU}`
       )
     } else {
       throw new Error("Only Ubuntu is supported")
@@ -218,7 +220,7 @@ export default class ServerService {
   }
   async #getNginxInfo(ssh: SSHService) {
     console.log("getting nginx info")
-    const nginxInfo = await ssh.client
+    const nginxInfo = await ssh
       .execCommand("sudo nginx -v 2>&1")
       .catch((error) => {
         console.log(error)
@@ -239,7 +241,7 @@ export default class ServerService {
     console.log("installing nginx")
     const osInfo = await ssh.getOsInfo()
     if (osInfo?.OperatingSystemPrettyName.includes("Ubuntu")) {
-      await ssh.client
+      await ssh
         .execCommand("sudo apt-get update && sudo apt-get install nginx -y")
         .catch((error) => {
           console.log(error)
@@ -298,8 +300,115 @@ export default class ServerService {
     const file = await fsp.readFile(localPath, "utf8")
 
     const remotePath = "/var/www/html/index.html"
-    await ssh.client.execCommand(`echo "${file}" | sudo tee ${remotePath}`)
-    await ssh.client.execCommand("sudo nginx -s reload")
+    await ssh.execCommand(`echo "${file}" | sudo tee ${remotePath}`)
+    await ssh.execCommand("sudo nginx -s reload")
+  }
+  async installOpenSSL(ssh: SSHService) {
+    // const exec1 = await ssh.execCommand(
+    //   "sudo apt-get update && sudo apt-get upgrade -y"
+    // )
+    // const exec2 = await ssh.execCommand(
+    //   "sudo apt install build-essential checkinstall zlib1g-dev -y"
+    // )
+    // const exec3 = await ssh.execCommand(
+    //   "cd /usr/local/src/ && wget https://www.openssl.org/source/old/1.1.1/openssl-1.1.1f.tar.gz"
+    // )
+    // const exec4 = await ssh.execCommand(
+    //   "cd /usr/local/src/ && tar -xvf openssl-1.1.1f.tar.gz"
+    // )
+    // const exec5 = await ssh.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1f && ./config && make && make install"
+    // )
+    // //     ./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib
+    // // make
+    // // make test
+    // const exec6 = await ssh.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1 &&./config --prefix=/usr/local/ssl --openssldir=/usr/local/ssl shared zlib"
+    // )
+    // const exec7 = await ssh.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1 && make"
+    // )
+    // const exec8 = await ssh.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1 && make test"
+    // )
+    // const exec9 = await ssh.execCommand(
+    //   "cd /usr/local/src/openssl-1.1.1 && make install"
+    // )
+  }
+
+  async checkIfOpenSSLInstalled(ssh: SSHService) {
+    const response = await ssh.execCommand("sudo openssl version")
+    if (response.code !== 0) throw new Error(response.stderr)
+    return response.stdout
+  }
+
+  async secureDocker(ssh: SSHService) {
+    // Get Server FQDN from info
+    console.log("securing docker")
+    const osInfo = await ssh.getOsInfo()
+    const { Hostname: hostname } = osInfo
+    const organization = "SaaScape"
+    const serverPublicIp = `10.0.0.2`
+    const serverPrivateIp = `10.0.0.1`
+
+    await ssh.execCommand("sudo mkdir -p /saascape/docker/certs")
+    await ssh.execCommand("sudo chmod -R u+rwx /saascape")
+    await ssh.execCommand("sudo chown -R root:root /saascape")
+    await ssh.execCommand("sudo mkdir -p /etc/ssl/docker/")
+
+    // CA KEY
+    await ssh.execCommand(
+      "sudo openssl genrsa -aes256 -passout pass: -out /saascape/docker/certs/ca-key.pem 4096"
+    )
+    // CA
+    await ssh.execCommand(
+      `sudo openssl req -new -x509 -days 365 -key /saascape/docker/certs/ca-key.pem -sha256 -out /saascape/docker/certs/ca.pem -passin pass: -subj "/C=UK/ST=London/L=London/O=${organization}/CN=${hostname}"`
+    )
+    // KEY
+    await ssh.execCommand(
+      `sudo openssl genrsa -out /saascape/docker/certs/server-key.pem 4096`
+    )
+    // CSR
+    await ssh.execCommand(`sudo openssl req -subj "/CN=${hostname}" -sha256 -new \
+    -key /saascape/docker/certs/server-key.pem -out /saascape/docker/certs/server.csr`)
+
+    // For some reason this step is not working correctly
+    await ssh.execCommand(`echo subjectAltName = \
+    DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 | sudo tee /saascape/docker/certs/extfile.cnf`)
+
+    await ssh.execCommand(
+      `echo extendedKeyUsage = serverAuth | sudo tee -a /saascape/docker/certs/extfile.cnf`
+    )
+
+    // Server Cert
+    await ssh.execCommand(`sudo openssl x509 -req -days 365 -sha256 -in /saascape/docker/certs/server.csr -CA /saascape/docker/certs/ca.pem \
+    -CAkey /saascape/docker/certs/ca-key.pem -CAcreateserial -out /saascape/docker/certs/server-cert.pem -extfile /saascape/docker/certs/extfile.cnf -passin pass:`)
+
+    // Client Cert
+    await ssh.execCommand(
+      `sudo openssl genrsa -out /saascape/docker/certs/key.pem 4096`
+    )
+
+    await ssh.execCommand(
+      `sudo openssl req -subj '/CN=client' -new -key /saascape/docker/certs/key.pem -out /saascape/docker/certs/client.csr`
+    )
+
+    await ssh.execCommand(
+      `sudo echo extendedKeyUsage = clientAuth | sudo tee /saascape/docker/certs/extfile-client.cnf`
+    )
+
+    await ssh.execCommand(
+      `sudo openssl x509 -req -days 365 -sha256 -in /saascape/docker/certs/client.csr -CA /saascape/docker/certs/ca.pem \
+      -CAkey /saascape/docker/certs/ca-key.pem -passin pass: -CAcreateserial -out /saascape/docker/certs/cert.pem \
+      -extfile /saascape/docker/certs/extfile-client.cnf`
+    )
+
+    // Copy certs to etc
+
+    // TODO; RENAME CERTS TO SOMETHING ELSE
+    await ssh.execCommand(
+      "sudo cp /saascape/docker/certs/ca.pem /saascape/docker/certs/server-cert.pem /saascape/docker/certs/server-key.pem /etc/ssl/docker/"
+    )
   }
   async beginInitialization(id: string) {
     // Give each stage a number and set to a class so that if failed, we can simply re init from a stage instead of starting from scratch. Error will throw the stage we was on
@@ -369,6 +478,14 @@ export default class ServerService {
 
     // Create nginx integration
     await this.#createNginxIntegration(nginxInfo as string)
+
+    // Check and install openssl
+    const openSSLVersion = await this.checkIfOpenSSLInstalled(ssh).catch(
+      () => false
+    )
+    if (!openSSLVersion) {
+      await this.installOpenSSL(ssh)
+    }
   }
   async finishInitialization(id: string, status: string) {
     let serverStatus = ""
@@ -455,7 +572,7 @@ export default class ServerService {
   }
 
   async nginxTest(ssh: SSHService) {
-    const nginxResult = await ssh.client.execCommand("sudo nginx -t")
+    const nginxResult = await ssh.execCommand("sudo nginx -t")
     if (nginxResult.code !== 0) {
       throw new Error(nginxResult.stderr)
     }
@@ -489,21 +606,21 @@ export default class ServerService {
 
     await ssh.connect()
 
-    const mkDirResult = await ssh.client.execCommand(
+    const mkDirResult = await ssh.execCommand(
       `sudo mkdir -p /var/www/${domain.domain_name}`
     )
     if (mkDirResult.code !== 0) {
       throw new Error(mkDirResult.stderr)
     }
 
-    const mkIndexResult = await ssh.client.execCommand(
+    const mkIndexResult = await ssh.execCommand(
       `sudo echo "${data.html}" | sudo tee /var/www/${domain.domain_name}/index.html`
     )
     if (mkIndexResult.code !== 0) {
       throw new Error(mkIndexResult.stderr)
     }
 
-    const nginxConfigFileResult = await ssh.client.execCommand(
+    const nginxConfigFileResult = await ssh.execCommand(
       `sudo echo "${data.configFile}" | sudo tee /etc/nginx/sites-enabled/${domain.domain_name}`
     )
     if (nginxConfigFileResult.code !== 0) {
@@ -512,9 +629,7 @@ export default class ServerService {
 
     const nginx = await this.nginxTest(ssh)
 
-    const restartNginxResult = await ssh.client.execCommand(
-      "sudo nginx -s reload"
-    )
+    const restartNginxResult = await ssh.execCommand("sudo nginx -s reload")
     if (restartNginxResult.code !== 0) {
       throw new Error(restartNginxResult.stderr)
     }
