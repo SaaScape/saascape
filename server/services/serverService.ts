@@ -15,6 +15,7 @@ import SSHService from "./sshService"
 import { IIntegration } from "../schemas/Integrations"
 import { IEncryptedData, ILinkedId } from "../interfaces/interfaces"
 import { IDomain } from "../schemas/Domains"
+import { camelCase } from "lodash"
 
 export default class ServerService {
   _id?: ObjectId
@@ -474,6 +475,48 @@ export default class ServerService {
       }
     )
   }
+
+  async getCpuInfo(ssh: SSHService) {
+    const cpuInfo = await ssh.execCommand("sudo lscpu --json")
+    const dataArray = JSON.parse(cpuInfo.stdout)?.lscpu
+    const obj: { [key: string]: string } = {}
+    for (const item of dataArray) {
+      obj[camelCase(item.field)] = item?.data
+    }
+
+    return obj
+  }
+
+  async getDiskInfo(ssh: SSHService) {
+    const diskInfo = await ssh.execCommand("sudo lsblk --bytes --json")
+    const dataArray = JSON.parse(diskInfo.stdout)?.blockdevices
+    const obj: { [key: string]: any } = {}
+
+    let totalStorage = 0
+
+    for (const item of dataArray) {
+      if (item.type !== "disk") continue
+      totalStorage += +item.size
+      obj[camelCase(item.name)] = {
+        size: item.size,
+        ro: item.ro,
+        rm: item.rm,
+        mountpoints: item.mountpoints,
+        children: [],
+      }
+      for (const child of item?.children || []) {
+        obj[camelCase(item.name)].children.push({
+          name: child.name,
+          size: child.size,
+          ro: child.ro,
+          rm: child.rm,
+          mountpoints: child.mountpoints,
+        })
+      }
+    }
+
+    return { disks: obj, totalStorage }
+  }
   async beginInitialization(id: string) {
     // Give each stage a number and set to a class so that if failed, we can simply re init from a stage instead of starting from scratch. Error will throw the stage we was on
     const server = (await db.managementDb
@@ -521,6 +564,31 @@ export default class ServerService {
     const osInfo = await ssh.getOsInfo()
     if (!osInfo?.OperatingSystemPrettyName.includes("Ubuntu"))
       throw new Error("Only Ubuntu is supported at this time")
+
+    const cpuInfo = await this.getCpuInfo(ssh)
+    const { totalStorage, disks } = await this.getDiskInfo(ssh)
+
+    const systemInfo = {
+      os: osInfo.OperatingSystemPrettyName,
+      architecture: cpuInfo.architecture,
+      cpu_core_count: cpuInfo.cpuS,
+      cpu_model: cpuInfo?.modelName,
+      storage: {
+        totalStorage,
+        disks,
+      },
+    }
+
+    // Update OS info
+    await db.managementDb?.collection("servers").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          system_info: systemInfo,
+          updated_at: new Date(),
+        },
+      }
+    )
 
     let dockerInfo = await this.#getDockerInfo(ssh).catch(() => false)
     if (!dockerInfo) {
