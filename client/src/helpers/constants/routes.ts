@@ -27,4 +27,10 @@ export default {
     ALL_SERVERS: "/servers",
     VIEW_SERVER: "/servers/:id",
   },
+  SETTINGS: {
+    VIEW_SETTINGS: "/settings/*",
+    GENERAL: "/general",
+    DOCKER: "/docker",
+    APPLICATION_SETTINGS: "/application-settings",
+  },
 }

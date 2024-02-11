@@ -10,6 +10,7 @@ import ApplicationRouteHandler from "../pages/Applications/ApplicationRouteHandl
 import ContactsContainer from "../pages/Contacts/ContactsContainer"
 import ViewContactContainer from "../pages/Contacts/ViewContactContainer"
 import ServersContainer from "../pages/Servers/ServersContainer"
+import SettingsRouter from "../pages/Settings/SettingsRouter"
 
 const MainRoutes = () => {
   return (
@@ -94,6 +95,15 @@ const MainRoutes = () => {
           }
         />
       </Route>
+      <Route
+        path={routes.SETTINGS.VIEW_SETTINGS}
+        element={
+          <ProtectedRoute
+            component={<SettingsRouter />}
+            permissions={[permissions.SETTINGS.VIEW_SETTINGS]}
+          />
+        }
+      />
       <Route path='*' element={<div>404</div>} />
     </Routes>
   )

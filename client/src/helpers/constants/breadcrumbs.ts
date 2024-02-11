@@ -143,4 +143,10 @@ export default {
       },
     ]
   },
+  SETTINGS: [
+    {
+      title: "Settings",
+      path: "/settings",
+    },
+  ],
 }
