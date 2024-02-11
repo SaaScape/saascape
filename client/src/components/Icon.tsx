@@ -63,6 +63,8 @@ const iconsObj: IIconsObj = {
   },
   brands: {
     DOCKER: brands.faDocker,
+    STRIPE: brands.faStripe,
+    DOCKER_HUB: brands.faDocker,
   },
 }
 

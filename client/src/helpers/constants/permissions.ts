@@ -43,4 +43,10 @@ export default {
     UPDATE_SERVERS: "update_servers",
     DELETE_SERVERS: "delete_servers",
   },
+
+  // SETTINGS
+  SETTINGS: {
+    VIEW_SETTINGS: "view_settings",
+    UPDATE_SETTINGS: "update_settings",
+  },
 }
