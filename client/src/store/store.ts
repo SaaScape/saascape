@@ -8,6 +8,7 @@ import breadcrumbsReducer, { IBreadcrumbs } from "./slices/breadcrumbs"
 import layoutConfigReducer, { ILayoutConfig } from "./slices/layoutConfig"
 import applicationsReducer, { IApplication } from "./slices/applicationSlice"
 import serverReducer, { IServerState } from "./slices/serverSlice"
+import swarmReducer, { ISwarm } from "./slices/swarmSlice"
 
 export interface IStore {
   user: IUserState
@@ -20,6 +21,7 @@ export interface IStore {
     applications: IApplication[]
   }
   servers: IServerState[]
+  swarms: ISwarm[]
 }
 
 export const store = configureStore({
@@ -31,6 +33,7 @@ export const store = configureStore({
     layoutConfig: layoutConfigReducer,
     applications: applicationsReducer,
     servers: serverReducer,
+    swarms: swarmReducer,
   },
 })
 

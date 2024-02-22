@@ -1,5 +1,7 @@
-import { Button, Form, Input, Modal, Select } from "antd"
+import { Button, Form, Input, Modal, Radio, Select, Space } from "antd"
 import TextArea from "antd/es/input/TextArea"
+import { ISwarm } from "../../store/slices/swarmSlice"
+import { useEffect, useState } from "react"
 
 interface IProps {
   onCancel: () => void
@@ -8,10 +10,14 @@ interface IProps {
   testConnection?: (...args: any[]) => any
   onSave: (...args: any[]) => any
   loading: boolean
+  swarms: ISwarm[]
 }
 
 const ManageServerModal = (props: IProps) => {
-  const { onCancel, open, server, testConnection, loading, onSave } = props
+  const { onCancel, open, server, testConnection, loading, onSave, swarms } =
+    props
+
+  const [showExistingSwarms, setShowExistingSwarms] = useState(!!swarms?.length)
 
   const title = (
     <div className='top-bar'>
@@ -21,6 +27,10 @@ const ManageServerModal = (props: IProps) => {
   )
 
   const [form] = Form.useForm()
+
+  useEffect(() => {
+    setShowExistingSwarms(!!swarms?.length)
+  }, [swarms])
 
   const onSubmit = (values: any) => {
     onSave?.(values, form)
@@ -56,7 +66,11 @@ const ManageServerModal = (props: IProps) => {
     testConnection?.(values, form)
   }
 
-  const initialValues = {}
+  const initialValues = {
+    create_swarm: swarms?.length ? false : true,
+    swarm_id: swarms?.length ? swarms[0]._id : null,
+    node_type: "worker",
+  }
 
   return (
     <Modal
@@ -73,6 +87,7 @@ const ManageServerModal = (props: IProps) => {
         layout='vertical'
         initialValues={initialValues}
         onFinish={onSubmit}
+        preserve={false}
       >
         <div className='grid c-2'>
           <Form.Item
@@ -129,6 +144,61 @@ const ManageServerModal = (props: IProps) => {
             </Button>
           </div>
         </div>
+
+        <Form.Item
+          label='Swarm'
+          name={"create_swarm"}
+          required
+          rules={[{ required: true }]}
+        >
+          <Radio.Group
+            onChange={(e) => {
+              setShowExistingSwarms(!e?.target?.value)
+            }}
+          >
+            <Space direction='vertical'>
+              <Radio value={true}>Create New Swarm</Radio>
+              {swarms?.length && (
+                <Radio value={false}>Join Existing Swarm</Radio>
+              )}
+            </Space>
+          </Radio.Group>
+        </Form.Item>
+
+        {showExistingSwarms && (
+          <div className='grid c-2'>
+            <Form.Item
+              label='Swarm to Join'
+              name='swarm_id'
+              required
+              rules={[{ required: true }]}
+            >
+              <Select
+                allowClear
+                options={swarms?.map((swarm) => ({
+                  value: swarm._id,
+                  label: swarm.name,
+                }))}
+              />
+            </Form.Item>
+            <div className='grid c-3'>
+              <Form.Item
+                label='Node Type'
+                name='node_type'
+                required
+                rules={[{ required: true }]}
+              >
+                <Select
+                  allowClear
+                  options={[
+                    { label: "Master", value: "master" },
+                    { label: "Worker", value: "worker" },
+                  ]}
+                />
+              </Form.Item>
+            </div>
+          </div>
+        )}
 
         <div className='d-flex justify-end'>
           <Button loading={loading} className='m-r-10' onClick={onCancel}>
