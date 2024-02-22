@@ -5,7 +5,7 @@ import DockerService from "../../services/dockerService"
 import { IDockerClients } from "../../interfaces/clients"
 
 const clients: { docker: IDockerClients } = { docker: {} }
-const initializeDockerClients = async () => {
+export const initializeDockerClients = async () => {
   console.log("Initializing docker clients")
   const servers = await db.managementDb
     ?.collection<IServer>("servers")

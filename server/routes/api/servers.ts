@@ -15,6 +15,11 @@ export default (app: Router, use: any) => {
     use(withPerms([permissions.SERVERS.VIEW_SERVERS])),
     use(findMany)
   )
+  router.get(
+    "/swarms",
+    use(withPerms([permissions.SERVERS.VIEW_SERVERS])),
+    use(findSwarms)
+  )
   router.post(
     "/",
     use(withPerms([permissions.SERVERS.CREATE_SERVERS])),
@@ -46,4 +51,10 @@ const findMany = async (req: Request, res: Response) => {
   const serverService = new ServerService()
   const { servers } = await serverService.findMany(req.query)
   sendSuccessResponse({ servers }, req, res)
+}
+
+const findSwarms = async (req: Request, res: Response) => {
+  const serverService = new ServerService()
+  const { swarms } = await serverService.findSwarms()
+  sendSuccessResponse({ swarms }, req, res)
 }

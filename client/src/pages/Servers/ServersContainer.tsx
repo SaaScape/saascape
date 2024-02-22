@@ -6,14 +6,17 @@ import ManageServerModal from "../../components/Servers/ManageServerModal"
 import { apiAxios } from "../../helpers/axios"
 import { FormInstance, Tag } from "antd"
 import { toast } from "react-toastify"
-import { IEncryptedData } from "../../interfaces/interfaces"
+import {
+  IEncryptedData,
+  ILinkedIdEnabledDocument,
+} from "../../interfaces/interfaces"
 import constants from "../../helpers/constants/constants"
 import { useNavigate } from "react-router-dom"
 import { useDispatch, useSelector } from "react-redux"
 import { IStore } from "../../store/store"
 import { setServers } from "../../store/slices/serverSlice"
 
-export interface IServer {
+export interface IServer extends ILinkedIdEnabledDocument {
   _id: string
   server_ip_address: string
   ssh_port: number
@@ -37,6 +40,8 @@ const ServersContainer = () => {
   const [testingConnection, setTestingConnection] = useState(false)
   const [showServerModal, setShowServerModal] = useState(false)
   const servers = useSelector((state: IStore) => state.servers)
+  const swarms = useSelector((state: IStore) => state.swarms)
+  const { integrations } = useSelector((state: IStore) => state.configData)
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -47,6 +52,26 @@ const ServersContainer = () => {
     setBreadcrumbs(breadcrumbs.SERVERS)
   }, [])
 
+  const getSwarm = (record: IServer) => {
+    const dockerLinkedId = record?.linked_ids?.find(
+      (linkedIdObj) => linkedIdObj.name === constants.INTEGRATIONS.DOCKER
+    )
+
+    const { integration_id } = dockerLinkedId || {}
+
+    const dockerIntegration = integrations?.docker?.find(
+      (integration) => integration._id === integration_id
+    )
+
+    if (!dockerIntegration) return
+
+    const swarm = swarms?.find(
+      (swarm) => swarm._id === dockerIntegration?.config?.swarm?.swarm_id
+    )
+    const nodeType = dockerIntegration?.config?.swarm?.node_type
+    console.log(swarm)
+    return { swarm, nodeType }
+  }
   const columns = [
     {
       title: "Server Name",
@@ -89,6 +114,26 @@ const ServersContainer = () => {
           default:
             return text
         }
+      },
+    },
+    {
+      title: "Swarm",
+      render: (_: any, record: IServer) => {
+        const { swarm, nodeType } = getSwarm(record) || {}
+
+        const tagColor = nodeType === "manager" ? "blue" : "green"
+
+        return (
+          <span>
+            {swarm?.name ? (
+              <span>
+                {swarm?.name} <Tag color={tagColor}>{nodeType}</Tag>
+              </span>
+            ) : (
+              "-"
+            )}
+          </span>
+        )
       },
     },
   ]
@@ -170,6 +215,7 @@ const ServersContainer = () => {
     open: showServerModal,
     onSave,
     loading: loading || testingConnection,
+    swarms,
   }
 
   return (

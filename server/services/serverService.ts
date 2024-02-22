@@ -16,6 +16,9 @@ import { IIntegration } from "../schemas/Integrations"
 import { IEncryptedData, ILinkedId } from "../interfaces/interfaces"
 import { IDomain } from "../schemas/Domains"
 import { camelCase } from "lodash"
+import { initializeDockerClients } from "../background/init/clients"
+import DockerService from "./dockerService"
+import { ISwarm } from "../schemas/Swarms"
 
 export default class ServerService {
   _id?: ObjectId
@@ -42,7 +45,14 @@ export default class ServerService {
       throw { showError: "Server already exists" }
     }
 
+    const temp_config: IServer["temp_config"] = {
+      create_swarm: data.create_swarm,
+      swarm_id: data?.swarm_id ? new ObjectId(data?.swarm_id) : undefined,
+      node_type: data?.node_type,
+    }
+
     const payload: IServer = {
+      temp_config,
       server_ip_address: data.server_ip_address,
       ssh_port: data.ssh_port,
       admin_username: encryptData(data.admin_username),
@@ -619,6 +629,22 @@ export default class ServerService {
     if (!openSSLVersion) {
       await this.installOpenSSL(ssh)
     }
+
+    await initializeDockerClients()
+    // Join/Create Swarm
+    const dockerService = new DockerService(id)
+
+    const {
+      create_swarm,
+      swarm_id,
+      node_type = "worker",
+    } = this?.server?.temp_config || {}
+
+    if (!create_swarm && swarm_id) {
+      await dockerService.joinSwarm(swarm_id, node_type)
+    } else {
+      await dockerService.createSwarm()
+    }
   }
   async finishInitialization(id: string, status: string) {
     let serverStatus = ""
@@ -642,6 +668,14 @@ export default class ServerService {
         $set: {
           server_status: serverStatus,
           updated_at: new Date(),
+        },
+      }
+    )
+    await db.managementDb?.collection<IServer>("servers").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $unset: {
+          temp_config: 1,
         },
       }
     )
@@ -792,5 +826,17 @@ export default class ServerService {
 
     await ssh.connect()
     return ssh
+  }
+
+  async findSwarms() {
+    const swarms = await db.managementDb
+      ?.collection<ISwarm>("swarms")
+      .find(
+        {},
+        { projection: { _id: 1, name: 1, ID: 1, created_at: 1, updated_at: 1 } }
+      )
+      .toArray()
+
+    return { swarms }
   }
 }

@@ -8,6 +8,7 @@ import { setConfigData } from "./store/slices/configData"
 import axios from "axios"
 import { setApplications } from "./store/slices/applicationSlice"
 import { setServers } from "./store/slices/serverSlice"
+import { setSwarms } from "./store/slices/swarmSlice"
 // import socket from "./sockets/sockets"
 // import { IStore } from "./store/store"
 
@@ -21,6 +22,7 @@ const MainLayout = () => {
       getCurrencies(),
       getApplications(),
       getServers(),
+      getSwarms(),
     ])
   }, [])
 
@@ -55,6 +57,16 @@ const MainLayout = () => {
 
     if (success) {
       dispatch(setServers(data?.servers))
+    }
+  }
+
+  const getSwarms = async () => {
+    const {
+      data: { data, success },
+    } = await apiAxios.get("/servers/swarms")
+
+    if (success) {
+      dispatch(setSwarms(data?.swarms))
     }
   }
 

@@ -12,7 +12,6 @@ import ViewContactContainer from "../pages/Contacts/ViewContactContainer"
 import ServersContainer from "../pages/Servers/ServersContainer"
 import ViewServerContainer from "../pages/Servers/ViewServerContainer"
 import SettingsRouter from "../pages/Settings/SettingsRouter"
-import ViewServerContainer from "../pages/Servers/ViewServerContainer"
 
 const MainRoutes = () => {
   return (

@@ -28,11 +28,15 @@ const initializeInitServerQueue = async () => {
     })
   })
   queue.on("completed", async (job) => {
-    const serverService = new ServerService()
-    serverService.finishInitialization(
-      job.data?._id,
-      constants.STATUSES.COMPLETED_STATUS
-    )
+    try {
+      const serverService = new ServerService()
+      await serverService.finishInitialization(
+        job.data?._id,
+        constants.STATUSES.COMPLETED_STATUS
+      )
+    } catch (err) {
+      console.warn(err)
+    }
   })
 }
 
