@@ -19,6 +19,8 @@ import { camelCase } from "lodash"
 import { initializeDockerClients } from "../background/init/clients"
 import DockerService from "./dockerService"
 import { ISwarm } from "../schemas/Swarms"
+import moment from "moment"
+import DomainService from "./domainsService"
 
 export default class ServerService {
   _id?: ObjectId
@@ -74,6 +76,36 @@ export default class ServerService {
     if (!result?.insertedId) throw { showError: "Server could not be created" }
 
     return { _id: result.insertedId }
+  }
+
+  async reInitialize(serverId: string) {
+    const server = await db.managementDb
+      ?.collection<IServer>("servers")
+      .findOne({
+        _id: new ObjectId(serverId),
+        status: constants.STATUSES.ACTIVE_STATUS,
+      })
+
+    if (!server) throw { showError: "Server not found" }
+
+    if (
+      server.server_status !== constants.SERVER_STATUSES.FAILED_INITIALIZATION
+    )
+      throw { showError: "Server is not in failed initialization state" }
+
+    const serverUpdated = await db.managementDb
+      ?.collection<IServer>("servers")
+      .findOneAndUpdate(
+        { _id: new ObjectId(serverId) },
+        {
+          $set: {
+            server_status: constants.SERVER_STATUSES.PENDING_INITIALIZATION,
+          },
+        },
+        { returnDocument: "after" }
+      )
+
+    return { server: serverUpdated }
   }
 
   async testConnection(data: any) {
@@ -645,6 +677,9 @@ export default class ServerService {
     } else {
       await dockerService.createSwarm()
     }
+
+    // Sync existing domains
+    await this.syncDomains(server?._id)
   }
   async finishInitialization(id: string, status: string) {
     let serverStatus = ""
@@ -671,14 +706,15 @@ export default class ServerService {
         },
       }
     )
-    await db.managementDb?.collection<IServer>("servers").updateOne(
-      { _id: new ObjectId(id) },
-      {
-        $unset: {
-          temp_config: 1,
-        },
-      }
-    )
+    status === constants.STATUSES.COMPLETED_STATUS &&
+      (await db.managementDb?.collection<IServer>("servers").updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $unset: {
+            temp_config: 1,
+          },
+        }
+      ))
 
     // Emit task to main server to notify of completion, server will then notify fe
   }
@@ -838,5 +874,47 @@ export default class ServerService {
       .toArray()
 
     return { swarms }
+  }
+
+  async syncDomains(server_id: ObjectId, ignoreLastSync: boolean = false) {
+    const server = await db.managementDb
+      ?.collection<IServer>("servers")
+      .findOne({
+        _id: server_id,
+      })
+
+    if (!server) throw new Error("Server not found")
+
+    const elemMatch = {
+      $elemMatch: {
+        server_id,
+        ...(ignoreLastSync
+          ? {}
+          : {
+              last_sync: { $gt: moment().subtract(5, "minutes").toDate() },
+            }),
+      },
+    }
+
+    const findObj = {
+      ...(ignoreLastSync
+        ? {}
+        : {
+            linked_servers: {
+              $not: elemMatch,
+            },
+          }),
+    }
+    const domains = await db.managementDb
+      ?.collection<IDomain>("domains")
+      .find(findObj)
+      .toArray()
+
+    if (!domains?.length) return
+
+    for (const domain of domains) {
+      const domainService = new DomainService()
+      domainService.addDomainToServer([server], domain)
+    }
   }
 }

@@ -57,6 +57,7 @@ const iconsObj: IIconsObj = {
     CONFIG: solid.faCogs,
     CONTACTS: solid.faAddressBook,
     TRASH: solid.faTrash,
+    MENU: solid.faEllipsisVertical,
   },
   regular: {
     BELL: regular.faBell,

@@ -6,6 +6,8 @@ import { IDomain } from "../schemas/Domains"
 import ServerService from "./serverService"
 import { IServer } from "../schemas/Servers"
 import { getDomainConfigFile } from "../modules/nginx"
+import { logError } from "../helpers/error"
+import queues from "../helpers/queues"
 
 export default class DomainService {
   async findMany(query: any) {
@@ -58,13 +60,9 @@ export default class DomainService {
       domain_name: data.domain_name,
       status: constants.STATUSES.ACTIVE_STATUS,
       description: data.description,
+      linked_servers: [],
       created_at: new Date(),
       updated_at: new Date(),
-      initialization_status: {
-        status: constants.STATUSES.PENDING_STATUS,
-        active_servers: [],
-        pending_servers: [],
-      },
     }
     const domain = await db.managementDb
       ?.collection("domains")
@@ -98,13 +96,7 @@ export default class DomainService {
 
     const domain = await db.managementDb
       ?.collection<IDomain>("domains")
-      .findOneAndUpdate(
-        { _id: new ObjectId(id) },
-        {
-          $set: { "initialization_status.status": { status: "initializing" } },
-        },
-        { returnDocument: "after" }
-      )
+      .findOne({ _id: new ObjectId(id) })
 
     if (!domain) throw new Error("Domain not found")
 
@@ -115,20 +107,24 @@ export default class DomainService {
       .find({ status: constants.STATUSES.ACTIVE_STATUS })
       .toArray()
 
+    await this.addDomainToServer(servers || [], domain)
+  }
+
+  async addDomainToServer(servers: IServer[], domain: IDomain) {
     const serverService = new ServerService()
 
-    const failedServers: ObjectId[] = []
-    const successfulServers: ObjectId[] = []
+    const newLinkedServers: IDomain["linked_servers"] = []
 
     for (const server of servers || []) {
+      console.log("adding domain to server")
       try {
         if (
           !server?._id ||
           server?.availability === constants.AVAILABILITY.OFFLINE
         ) {
-          failedServers.push(server._id)
           continue
         }
+
         const configFile = await getDomainConfigFile(domain)
 
         await serverService.addDomain(server?._id.toString(), {
@@ -136,20 +132,46 @@ export default class DomainService {
           html: this.#generateBaseIndexHTMLFile(domain),
           configFile,
         })
+
+        newLinkedServers.push({
+          server_id: server?._id,
+          status: constants.STATUSES.ACTIVE_STATUS,
+          last_sync: new Date(),
+        })
       } catch (err) {
-        console.warn(err)
-        failedServers.push(server._id)
+        const errorObj = {
+          message: "Failed to initialize domain on server: " + server?._id,
+          rawError: err,
+        }
+        await logError({
+          error: JSON.stringify(errorObj),
+          entityId: domain?._id,
+          status: constants.STATUSES.FAILED_STATUS,
+          module: constants.MODULES.DOMAIN,
+          event: queues.DOMAIN.INITIALIZE_DOMAIN,
+        })
       }
     }
 
     await db.managementDb?.collection<IDomain>("domains").updateOne(
-      { _id: new ObjectId(id) },
+      { _id: new ObjectId(domain?._id) },
       {
-        $set: {
-          initialization_status: {
-            status: "initialized",
-            active_servers: successfulServers,
-            pending_servers: failedServers,
+        $pull: {
+          linked_servers: {
+            server_id: {
+              $in: newLinkedServers.map((server) => server?.server_id),
+            },
+          },
+        },
+      }
+    )
+
+    await db.managementDb?.collection<IDomain>("domains").updateOne(
+      { _id: new ObjectId(domain?._id) },
+      {
+        $push: {
+          linked_servers: {
+            $each: newLinkedServers,
           },
         },
       }

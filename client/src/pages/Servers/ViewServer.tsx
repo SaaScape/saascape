@@ -1,12 +1,14 @@
 import IntegrationsBar from "../../components/Applications/IntegrationsBar"
-import { IViewProps } from "./ViewServerContainer"
+import { IViewProps, ServerMenu } from "./ViewServerContainer"
 import StatisticBanner from "../../components/StatisticBanner"
 import constants from "../../helpers/constants/constants"
 import { convertUnit } from "../../helpers/utils"
+import MenuContainer from "../../components/MenuContainer"
+import MenuIcon from "../../components/MenuIcon"
 
 const ViewServer = (props: IViewProps) => {
-  console.log(props.server)
-  console.log(props.loading)
+  const { serverMenuItems } = props
+
   return (
     <section className='sub-section view-plan'>
       <div className='top-bar-container'>
@@ -23,7 +25,13 @@ const ViewServer = (props: IViewProps) => {
               />
             </div>
           </div>
-          <div className='right'></div>
+          <div className='right'>
+            <MenuContainer
+              MenuComponent={<ServerMenu serverMenuItems={serverMenuItems} />}
+            >
+              <MenuIcon />
+            </MenuContainer>
+          </div>
         </div>
       </div>
 

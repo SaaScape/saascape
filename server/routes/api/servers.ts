@@ -30,6 +30,11 @@ export default (app: Router, use: any) => {
     use(withPerms([permissions.SERVERS.CREATE_SERVERS])),
     use(testConnection)
   )
+  router.put(
+    "/re-initialize/:serverId",
+    use(withPerms([permissions.SERVERS.CREATE_SERVERS])),
+    use(reInitialize)
+  )
 }
 
 const testConnection = async (req: Request, res: Response) => {
@@ -57,4 +62,15 @@ const findSwarms = async (req: Request, res: Response) => {
   const serverService = new ServerService()
   const { swarms } = await serverService.findSwarms()
   sendSuccessResponse({ swarms }, req, res)
+}
+
+const reInitialize = async (req: Request, res: Response) => {
+  const serverService = new ServerService()
+  const { server } = await serverService.reInitialize(req.params?.serverId)
+  io.io
+    ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+    .emit(constants.SOCKET_EVENTS.SERVER_INITIALIZE, {
+      _id: req.params?.serverId,
+    })
+  sendSuccessResponse({ server }, req, res)
 }
