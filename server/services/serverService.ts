@@ -16,7 +16,11 @@ import { IIntegration } from "../schemas/Integrations"
 import { IEncryptedData, ILinkedId } from "../interfaces/interfaces"
 import { IDomain } from "../schemas/Domains"
 import { camelCase } from "lodash"
-import { initializeDockerClients } from "../background/init/clients"
+import {
+  clients,
+  initializeDockerClients,
+  initializeSSHClients,
+} from "../clients/clients"
 import DockerService from "./dockerService"
 import { ISwarm } from "../schemas/Swarms"
 import moment from "moment"
@@ -26,6 +30,17 @@ export default class ServerService {
   _id?: ObjectId
   server?: IServer
   constructor() {}
+
+  private async getSSHClient(serverId: ObjectId | string) {
+    let ssh = clients.ssh?.[serverId?.toString()]
+    if (!ssh) {
+      await initializeSSHClients()
+      ssh = clients.ssh?.[serverId?.toString()]
+      if (!ssh) throw new Error("SSH client not found")
+    }
+
+    return ssh
+  }
 
   async create(data: any) {
     checkForMissingParams(data, [
@@ -594,12 +609,7 @@ export default class ServerService {
       ),
     }
 
-    const ssh = new SSHService({
-      host: server.server_ip_address,
-      port: server.ssh_port,
-      username: server.decipheredData.admin_username,
-      privateKey: server.decipheredData.private_key,
-    })
+    const ssh = await this.getSSHClient(server?._id)
 
     await ssh.connect()
 
@@ -791,23 +801,7 @@ export default class ServerService {
 
     const { domain } = data
 
-    const adminUsername = decipherData(
-      server.admin_username.encryptedData,
-      server.admin_username.iv
-    )
-    const privateKey = decipherData(
-      server.private_key.encryptedData,
-      server.private_key.iv
-    )
-
-    const ssh = new SSHService({
-      host: server.server_ip_address,
-      port: server.server_ssh_port,
-      username: adminUsername,
-      privateKey,
-    })
-
-    await ssh.connect()
+    const ssh = await this.getSSHClient(serverId)
 
     const mkDirResult = await ssh.execCommand(
       `sudo mkdir -p /var/www/${domain.domain_name}`
@@ -836,32 +830,6 @@ export default class ServerService {
     if (restartNginxResult.code !== 0) {
       throw new Error(restartNginxResult.stderr)
     }
-  }
-
-  async getSshClient(serverId: string | ObjectId) {
-    const server = await db.managementDb
-      ?.collection<IServer>("servers")
-      .findOne({ _id: new ObjectId(serverId) })
-    if (!server) throw new Error("Server not found")
-
-    const adminUsername = decipherData(
-      server.admin_username.encryptedData,
-      server.admin_username.iv
-    )
-    const privateKey = decipherData(
-      server.private_key.encryptedData,
-      server.private_key.iv
-    )
-
-    const ssh = new SSHService({
-      host: server.server_ip_address,
-      port: server.server_ssh_port,
-      username: adminUsername,
-      privateKey,
-    })
-
-    await ssh.connect()
-    return ssh
   }
 
   async findSwarms() {
@@ -912,8 +880,11 @@ export default class ServerService {
 
     if (!domains?.length) return
 
+    const domainService = new DomainService()
     for (const domain of domains) {
-      const domainService = new DomainService()
+      await new Promise((resolve, reject) => {
+        setTimeout(resolve, 2000)
+      })
       domainService.addDomainToServer([server], domain)
     }
   }

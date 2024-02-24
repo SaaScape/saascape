@@ -1,5 +1,5 @@
 import { CronJob } from "cron"
-import { clients } from "../init/clients"
+import { clients } from "../../clients/clients"
 import { db } from "../../db"
 import { IServer } from "../../schemas/Servers"
 import { ObjectId } from "mongodb"

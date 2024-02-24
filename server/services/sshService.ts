@@ -20,7 +20,6 @@ export default class SSHService {
       console.log(error)
       throw { showError: error.message }
     })
-    return "hey"
   }
 
   async testAdmin() {
@@ -44,6 +43,10 @@ export default class SSHService {
   }
 
   async execCommand(command: string) {
+    const connected = this.client.isConnected()
+    if (!connected) {
+      await this.connect()
+    }
     const sshResult = await this.client.execCommand(command)
     if (sshResult.code !== 0) {
       throw new Error(sshResult.stderr || sshResult.stdout)

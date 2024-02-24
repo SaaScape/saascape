@@ -116,7 +116,6 @@ export default class DomainService {
     const newLinkedServers: IDomain["linked_servers"] = []
 
     for (const server of servers || []) {
-      console.log("adding domain to server")
       try {
         if (
           !server?._id ||

@@ -1,4 +1,4 @@
-import initializeDockerCrons from "../crons/dockerCronts"
+import initializeDockerCrons from "../crons/dockerCrons"
 import initializeServerCrons from "../crons/serverCrons"
 
 const handleError = (err: any) => {
