@@ -1,4 +1,9 @@
 export default {
+  NODE_ENV: {
+    PRODUCTION: "production",
+    DEVELOPMENT: "development",
+    STAGING: "staging",
+  },
   SCRIPTS: {
     DOCKER: {
       DOCKER_INSTALL: {
@@ -52,5 +57,13 @@ export default {
   SWARM_NODE_TYPES: {
     MANAGER: "manager",
     WORKER: "worker",
+  },
+  SSL_STATUSES: {
+    ACTIVE: "active",
+    EXPIRING: "expiring",
+    EXPIRED: "expired",
+    PENDING: "pending",
+    PENDING_INITIALIZATION: "pending_initialization",
+    INITIALIZING: "initializing",
   },
 }

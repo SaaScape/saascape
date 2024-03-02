@@ -25,13 +25,15 @@ import DockerService from "./dockerService"
 import { ISwarm } from "../schemas/Swarms"
 import moment from "moment"
 import DomainService from "./domainsService"
+import { logError } from "../helpers/error"
+import { updateNginxConfigFile } from "../modules/nginx"
 
 export default class ServerService {
   _id?: ObjectId
   server?: IServer
   constructor() {}
 
-  private async getSSHClient(serverId: ObjectId | string) {
+  async getSSHClient(serverId: ObjectId | string) {
     let ssh = clients.ssh?.[serverId?.toString()]
     if (!ssh) {
       await initializeSSHClients()
@@ -817,19 +819,10 @@ export default class ServerService {
       throw new Error(mkIndexResult.stderr)
     }
 
-    const nginxConfigFileResult = await ssh.execCommand(
-      `sudo echo "${data.configFile}" | sudo tee /etc/nginx/sites-enabled/${domain.domain_name}`
-    )
-    if (nginxConfigFileResult.code !== 0) {
-      throw new Error(nginxConfigFileResult.stderr)
-    }
-
-    const nginx = await this.nginxTest(ssh)
-
-    const restartNginxResult = await ssh.execCommand("sudo nginx -s reload")
-    if (restartNginxResult.code !== 0) {
-      throw new Error(restartNginxResult.stderr)
-    }
+    await updateNginxConfigFile(ssh, {
+      location: `/etc/nginx/sites-enabled/${domain.domain_name}`,
+      newContent: data.configFile,
+    })
   }
 
   async findSwarms() {
@@ -882,10 +875,118 @@ export default class ServerService {
 
     const domainService = new DomainService()
     for (const domain of domains) {
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve) => {
         setTimeout(resolve, 2000)
       })
       domainService.addDomainToServer([server], domain)
     }
+  }
+
+  async addDomainAuthFile(
+    challengeKey: string,
+    challengeToken: string,
+    domainId: ObjectId
+  ) {
+    const domain = await db.managementDb
+      ?.collection<IDomain>("domains")
+      .findOne({ _id: domainId })
+
+    if (!domain) throw new Error("Domain not found")
+
+    const servers = await db.managementDb
+      ?.collection<IServer>("servers")
+      .find({
+        status: constants.STATUSES.ACTIVE_STATUS,
+      })
+      .toArray()
+
+    if (!servers?.length) throw new Error("No servers found")
+
+    for (const server of servers) {
+      try {
+        const ssh = await this.getSSHClient(server._id.toString())
+
+        await ssh.execCommand(
+          `sudo mkdir -p /var/www/${domain?.domain_name}/.well-known/acme-challenge`
+        )
+
+        const authFileResult = await ssh.execCommand(
+          `sudo echo "${challengeKey}" | sudo tee /var/www/${domain?.domain_name}/.well-known/acme-challenge/${challengeToken}`
+        )
+
+        if (authFileResult.code !== 0) {
+          throw new Error(authFileResult.stderr)
+        }
+      } catch (err) {
+        console.warn(err)
+        await logError({
+          error: JSON.stringify(err),
+          entityId: domain?._id,
+          status: constants.STATUSES.FAILED_STATUS,
+          module: constants.MODULES.DOMAIN,
+          event: "ADD_DOMAIN_AUTH_FILE",
+        })
+      }
+    }
+  }
+
+  async addDomainSSL(domain: IDomain) {
+    const servers = await db.managementDb
+      ?.collection<IServer>("servers")
+      .find({
+        status: constants.STATUSES.ACTIVE_STATUS,
+      })
+      .toArray()
+
+    if (!servers?.length) throw new Error("No servers found")
+
+    const { certificates } = domain?.SSL || {}
+
+    const decipheredCerts = {
+      cert:
+        certificates?.cert &&
+        decipherData(certificates?.cert?.encryptedData, certificates?.cert?.iv),
+      key:
+        certificates?.key &&
+        decipherData(certificates?.key?.encryptedData, certificates?.key?.iv),
+    }
+
+    const appliedServers = []
+
+    for (const server of servers) {
+      try {
+        const ssh = await this.getSSHClient(server._id.toString())
+
+        await ssh.execCommand(`sudo mkdir -p /saascape/certificates/domains`)
+
+        const certResult = await ssh.execCommand(
+          `echo "${decipheredCerts.cert}" | sudo tee /saascape/certificates/domains/${domain.domain_name}.crt`
+        )
+        const keyResult = await ssh.execCommand(
+          `echo "${decipheredCerts.key}" | sudo tee /saascape/certificates/domains/${domain.domain_name}.key`
+        )
+
+        if (certResult.code !== 0) {
+          throw new Error(certResult.stdout || certResult.stderr)
+        }
+
+        if (keyResult.code !== 0) {
+          throw new Error(keyResult.stdout || keyResult.stderr)
+        }
+
+        appliedServers.push(server)
+      } catch (err) {
+        console.warn(err)
+        await logError({
+          error: JSON.stringify(err),
+          entityId: domain?._id,
+          status: constants.STATUSES.FAILED_STATUS,
+          module: constants.MODULES.DOMAIN,
+          event: "ADD_DOMAIN_SSL",
+        })
+      }
+    }
+
+    return { servers: appliedServers }
   }
 }

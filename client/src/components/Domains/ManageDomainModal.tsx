@@ -1,4 +1,4 @@
-import { Button, Form, Input, Modal } from "antd"
+import { Button, Form, Input, Modal, Switch } from "antd"
 import { IDomain } from "../../pages/Domains/DomainsContainer"
 import TextArea from "antd/es/input/TextArea"
 
@@ -58,6 +58,16 @@ const ManageDomainModal = (props: IProps) => {
         <div className='grid c-2'>
           <Form.Item name={"description"} label={"Description"}>
             <TextArea rows={4} placeholder='Description' />
+          </Form.Item>
+        </div>
+
+        <div className='grid c-2'>
+          <Form.Item
+            name={"enable_ssl"}
+            label={"Enable SSL"}
+            valuePropName={"checked"}
+          >
+            <Switch></Switch>
           </Form.Item>
         </div>
 

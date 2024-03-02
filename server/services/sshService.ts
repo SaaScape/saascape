@@ -53,4 +53,13 @@ export default class SSHService {
     }
     return sshResult
   }
+
+  async checkIfFileExists(file: string) {
+    const result = await this.execCommand(
+      `if sudo test -f "${file}"; then echo true; else echo false; fi`
+    )
+    if (result.code !== 0) throw new Error(result.stderr)
+    const exists = !!(result.stdout === "true")
+    return exists
+  }
 }

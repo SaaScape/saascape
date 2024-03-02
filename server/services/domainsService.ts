@@ -2,12 +2,13 @@ import { ObjectId } from "mongodb"
 import { db } from "../db"
 import constants from "../helpers/constants"
 import Pagination from "../helpers/pagination"
-import { IDomain } from "../schemas/Domains"
+import { DomainSSLStatus, IDomain } from "../schemas/Domains"
 import ServerService from "./serverService"
 import { IServer } from "../schemas/Servers"
 import { getDomainConfigFile } from "../modules/nginx"
 import { logError } from "../helpers/error"
 import queues from "../helpers/queues"
+import SSL from "../modules/ssl"
 
 export default class DomainService {
   async findMany(query: any) {
@@ -60,6 +61,11 @@ export default class DomainService {
       domain_name: data.domain_name,
       status: constants.STATUSES.ACTIVE_STATUS,
       description: data.description,
+      enable_ssl: data?.enable_ssl,
+      SSL: {
+        status: constants.SSL_STATUSES
+          .PENDING_INITIALIZATION as DomainSSLStatus,
+      },
       linked_servers: [],
       created_at: new Date(),
       updated_at: new Date(),
@@ -84,6 +90,7 @@ export default class DomainService {
     const payload = {
       description: data.description,
       updated_at: new Date(),
+      enable_ssl: data?.enable_ssl,
     }
     const domain = await db.managementDb
       ?.collection("domains")
@@ -124,13 +131,60 @@ export default class DomainService {
           continue
         }
 
-        const configFile = await getDomainConfigFile(domain)
+        const ssh = await serverService.getSSHClient(server?._id.toString())
 
-        await serverService.addDomain(server?._id.toString(), {
-          domain,
-          html: this.#generateBaseIndexHTMLFile(domain),
-          configFile,
-        })
+        const { SSL } = domain
+
+        let isSSLDomain =
+          !!domain?.enable_ssl &&
+          !!SSL?.certificates?.cert &&
+          !!SSL?.certificates?.key
+
+        const certFileExistence = {
+          cert: await ssh.checkIfFileExists(
+            `/saascape/certificates/domains/${domain?.domain_name}.crt`
+          ),
+          key: await ssh.checkIfFileExists(
+            `/saascape/certificates/domains/${domain?.domain_name}.key`
+          ),
+        }
+
+        isSSLDomain =
+          isSSLDomain && certFileExistence.cert && certFileExistence.key
+
+        const configFiles = {
+          secure: await getDomainConfigFile(domain, true),
+          insecure: await getDomainConfigFile(domain, false),
+        }
+
+        await serverService
+          .addDomain(server?._id.toString(), {
+            domain,
+            html: this.#generateBaseIndexHTMLFile(domain),
+            configFile: configFiles?.[isSSLDomain ? "secure" : "insecure"],
+          })
+          .catch(async (err) => {
+            if (isSSLDomain) {
+              // Attempt to apply insecure nginx config
+              await serverService.addDomain(server?._id.toString(), {
+                domain,
+                html: this.#generateBaseIndexHTMLFile(domain),
+                configFile: configFiles?.insecure,
+              })
+              await logError({
+                error: JSON.stringify({
+                  message: `Failed to update NGINX config on server: ${server?._id}`,
+                  reason: (err as any)?.message,
+                }),
+                entityId: domain?._id,
+                status: "Applied http config on https enabled domain",
+                module: constants.MODULES.DOMAIN,
+                event: queues.DOMAIN.INITIALIZE_DOMAIN,
+              })
+            } else {
+              throw err
+            }
+          })
 
         newLinkedServers.push({
           server_id: server?._id,
@@ -140,7 +194,7 @@ export default class DomainService {
       } catch (err) {
         const errorObj = {
           message: "Failed to initialize domain on server: " + server?._id,
-          rawError: err,
+          reason: (err as any)?.message,
         }
         await logError({
           error: JSON.stringify(errorObj),
@@ -192,5 +246,33 @@ export default class DomainService {
     </html>`
 
     return html
+  }
+
+  async initializeSSL(_id: string) {
+    const ssl = new SSL(_id)
+    await ssl.initializeSSL()
+  }
+
+  async applySSLCer(domainId: ObjectId) {
+    const domain = await db.managementDb
+      ?.collection<IDomain>("domains")
+      .findOne({ _id: domainId })
+    if (!domain) throw new Error("Domain not found")
+
+    const { certificates, status } = domain?.SSL || {}
+    if (
+      ![
+        constants.SSL_STATUSES.ACTIVE,
+        constants.SSL_STATUSES.EXPIRING,
+        constants.SSL_STATUSES.EXPIRED,
+      ].includes(status || "")
+    )
+      throw new Error("Domain SSL is not ready to be applied")
+    if (!certificates) throw new Error("No SSL certificates found")
+
+    const serverService = new ServerService()
+    const { servers } = await serverService.addDomainSSL(domain)
+
+    await this.addDomainToServer(servers, domain)
   }
 }

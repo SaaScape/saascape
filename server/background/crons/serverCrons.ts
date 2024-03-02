@@ -3,6 +3,9 @@ import ServerService from "../../services/serverService"
 import { db } from "../../db"
 import { IServer } from "../../schemas/Servers"
 import constants from "../../helpers/constants"
+import { logError } from "../../helpers/error"
+
+const crons: { [key: string]: CronJob } = {}
 
 const initializeServerCrons = (use: Function) => {
   const serverAvailabilityCron = new CronJob(
@@ -13,6 +16,9 @@ const initializeServerCrons = (use: Function) => {
 
   const syncDomainsCron = new CronJob("*/30 * * * * *", use(syncDomains))
   syncDomainsCron.start()
+
+  crons["serverAvailabilityCron"] = serverAvailabilityCron
+  crons["syncDomainsCron"] = syncDomainsCron
 }
 
 const getServerAvailability = async () => {
@@ -22,6 +28,7 @@ const getServerAvailability = async () => {
 
 const syncDomains = async () => {
   console.log("syncing domains")
+  crons?.["syncDomainsCron"].stop()
   const serverService = new ServerService()
   const servers = await db.managementDb
     ?.collection<IServer>("servers")
@@ -33,11 +40,12 @@ const syncDomains = async () => {
 
   for (const server of servers) {
     try {
-      await serverService.syncDomains(server?._id)
+      await serverService.syncDomains(server?._id, true)
     } catch (err) {
       console.warn(err)
     }
   }
+  crons?.["syncDomainsCron"].start()
 }
 
 export default initializeServerCrons

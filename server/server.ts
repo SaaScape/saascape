@@ -23,7 +23,7 @@ import initializeClients from "./clients/clients"
   await db.init().then(async () => await db.connect())
   initSockets(webServer)
   initExpressRoutes(app)
-  await initializeClients()
+  initializeClients()
 
   webServer.listen(HOST_PORT, () => {
     console.log(`Listening on port ${HOST_PORT}`)
