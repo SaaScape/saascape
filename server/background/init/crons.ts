@@ -1,4 +1,5 @@
 import initializeDockerCrons from "../crons/dockerCrons"
+import initializeDomainCrons from "../crons/domainCrons"
 import initializeServerCrons from "../crons/serverCrons"
 
 const handleError = (err: any) => {
@@ -10,7 +11,11 @@ const use = (fn: Function) => async () => {
 }
 
 const initializeCrons = () => {
-  Promise.allSettled([initializeServerCrons(use), initializeDockerCrons(use)])
+  Promise.allSettled([
+    initializeServerCrons(use),
+    initializeDockerCrons(use),
+    initializeDomainCrons(use),
+  ])
 
   console.log("Crons have been initialized")
 }

@@ -22,6 +22,8 @@ export interface IDomain extends Document {
       key: IEncryptedData
       csr: IEncryptedData
     }
+    start_date?: Date
+    end_date?: Date
   }
   created_at?: Date
   updated_at: Date

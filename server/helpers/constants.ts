@@ -65,5 +65,13 @@ export default {
     PENDING: "pending",
     PENDING_INITIALIZATION: "pending_initialization",
     INITIALIZING: "initializing",
+    FAILED: "failed",
+  },
+
+  SSL_RENEWAL_ERROR: "ssl_renewal_error",
+
+  EVENTS: {
+    SSL_RENEWAL: "ssl_renewal",
+    SSL_INITIALIZE: "ssl_initialize",
   },
 }
