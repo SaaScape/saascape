@@ -8,12 +8,13 @@ import { IDomain } from "../../schemas/Domains"
 import { ObjectId } from "mongodb"
 import SSL from "../../modules/ssl"
 import moment from "moment"
+import DomainService from "../../services/domainsService"
 
 const crons: { [key: string]: CronJob } = {}
 
 const initializeDomainCrons = (use: Function) => {
-  const renewDomainsCron = new CronJob("* 2 * * *", use(renewDomains))
-  const bulkApplySSLCron = new CronJob("*/30 * * * * *", use(bulkApplySSLCer))
+  const renewDomainsCron = new CronJob("0 2 * * *", use(renewDomains))
+  const bulkApplySSLCron = new CronJob("0 */1 * * *", use(bulkApplySSLCer))
 
   //  Start crons
   bulkApplySSLCron.start()
@@ -100,6 +101,29 @@ const renewDomains = async () => {
 const bulkApplySSLCer = async () => {
   console.log("bulk applying ssl cer")
   crons?.["bulkApplySSLCron"]?.stop()
+
+  const domains = await db.managementDb
+    ?.collection<IDomain>("domains")
+    .find({
+      "SSL.status": {
+        $in: [constants.SSL_STATUSES.EXPIRING, constants.SSL_STATUSES.ACTIVE],
+      },
+    })
+    .toArray()
+
+  if (!domains?.length) {
+    crons?.["bulkApplySSLCron"]?.start()
+    return
+  }
+
+  for (const domain of domains) {
+    try {
+      const domainService = new DomainService()
+      await domainService.applySSLCer(domain?._id)
+    } catch (err) {
+      console.warn(err)
+    }
+  }
 
   crons?.["bulkApplySSLCron"]?.start()
 }
