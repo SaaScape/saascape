@@ -23,4 +23,13 @@ export default {
     MONTH: "month",
     ANNUAL: "annual",
   },
+  SSL_STATUSES: {
+    ACTIVE: "active",
+    EXPIRING: "expiring",
+    EXPIRED: "expired",
+    PENDING: "pending",
+    PENDING_INITIALIZATION: "pending_initialization",
+    INITIALIZING: "initializing",
+    FAILED: "failed",
+  },
 }

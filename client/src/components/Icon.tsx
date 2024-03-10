@@ -58,6 +58,9 @@ const iconsObj: IIconsObj = {
     CONTACTS: solid.faAddressBook,
     TRASH: solid.faTrash,
     MENU: solid.faEllipsisVertical,
+    NEW_TAB: solid.faUpRightFromSquare,
+    SECURE: solid.faLock,
+    INSECURE: solid.faUnlock,
   },
   regular: {
     BELL: regular.faBell,

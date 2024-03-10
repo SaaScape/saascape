@@ -9,6 +9,7 @@ import { getDomainConfigFile } from "../modules/nginx"
 import { logError } from "../helpers/error"
 import queues from "../helpers/queues"
 import SSL from "../modules/ssl"
+import dns from "node:dns"
 
 export default class DomainService {
   async findMany(query: any) {
@@ -65,6 +66,10 @@ export default class DomainService {
       SSL: {
         status: constants.SSL_STATUSES
           .PENDING_INITIALIZATION as DomainSSLStatus,
+      },
+      DNS: {
+        a_record: "",
+        last_updated: new Date(),
       },
       linked_servers: [],
       created_at: new Date(),
@@ -274,5 +279,55 @@ export default class DomainService {
     const { servers } = await serverService.addDomainSSL(domain)
 
     await this.addDomainToServer(servers, domain)
+  }
+
+  async checkDnsData(domainName: string) {
+    dns.setServers(["8.8.8.8", "1.1.1.1"])
+    const results = await new Promise<String[]>((resolve, reject) => {
+      dns.resolve(domainName, "A", (err, addresses) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(addresses)
+        }
+      })
+    })
+    return results
+  }
+
+  async cronCheckDnsData() {
+    const domains = await db.managementDb
+      ?.collection<IDomain>("domains")
+      .find({ status: constants.STATUSES.ACTIVE_STATUS })
+      .toArray()
+
+    if (!domains?.length) return
+
+    const bulkUpdates = []
+
+    for (const domain of domains) {
+      const result = await this.checkDnsData(domain?.domain_name).catch(
+        (err) => {
+          return
+        }
+      )
+      if (!result) continue
+
+      bulkUpdates.push({
+        updateOne: {
+          filter: { _id: new ObjectId(domain?._id) },
+          update: {
+            $set: {
+              "DNS.a_record": result?.[0],
+              "DNS.last_updated": new Date(),
+            },
+          },
+        },
+      })
+    }
+
+    await db?.managementDb
+      ?.collection<IDomain>("domains")
+      .bulkWrite(bulkUpdates)
   }
 }

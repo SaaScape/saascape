@@ -8,11 +8,47 @@ import usePaginatedTable, {
 import ManageDomainModal from "../../components/Domains/ManageDomainModal"
 import { apiAxios } from "../../helpers/axios"
 import { toast } from "react-toastify"
+import { Popover, TableColumnProps } from "antd"
+import { IEncryptedData } from "../../interfaces/interfaces"
+import { serverLookupByIp } from "../../helpers/utils"
+import RecordLink from "../../components/RecordLink"
+import constants from "../../helpers/constants/constants"
+import Icon from "../../components/Icon"
+import moment from "moment"
 
+export type DomainSSLStatus =
+  | "active"
+  | "pending_initialization"
+  | "initializing"
+  | "expiring"
+  | "expired"
 export interface IDomain {
   _id: string
   domain_name: string
+  status: string
+  description: string
+  linked_servers: { server_id: string; status: string; last_sync: Date }[]
+  enable_ssl: boolean
+  DNS: {
+    a_record: string
+    last_updated: Date
+  }
+  SSL?: {
+    status: DomainSSLStatus
+    challenge_token?: string
+    challenge_auth_key?: string
+    certificates?: {
+      cert: IEncryptedData
+      key: IEncryptedData
+      csr: IEncryptedData
+    }
+    start_date?: Date
+    end_date?: Date
+  }
+  created_at: Date
+  updated_at: Date
 }
+
 export interface IViewProps extends IPaginatedViewProps {
   loading: boolean
   columns: any[]
@@ -41,10 +77,6 @@ export const DomainsContainer = () => {
   const [showManageDomainModal, setShowManageDomainModal] = useState(false)
   const [domain, setDomain] = useState<IDomain | null>(null)
   const [loading, setLoading] = useState(false)
-
-  // TODODODODODO
-  // When showing domnains in table, show where it resolves to ip address and if ip is one of our serversm we will set it to the server name and a record link. If not we will issue a warning
-  // Domain ssl will be controlled by SaaScape, a file will be added to each servers domain directory. Allowing for file based auth to be implemented
 
   const onDomainSave = async (values: any) => {
     console.log(values)
@@ -80,8 +112,92 @@ export const DomainsContainer = () => {
     setShowManageDomainModal(false)
   }
 
-  const columns = [
+  const columns: TableColumnProps<IDomain>[] = [
     { title: "Domain Name", dataIndex: "domain_name", key: "domain_name" },
+    {
+      title: "DNS Host",
+      key: "dns_host",
+      render: (_, record) => {
+        // DNS Host will either be a server, load balancer or and ip
+
+        const serverIp = record?.DNS?.a_record
+        const server = serverLookupByIp(serverIp)
+
+        if (server?.server_name) {
+          return (
+            <RecordLink
+              entity='server'
+              label={server?.server_name}
+              link={`/servers/${server?._id}`}
+            >
+              {server?.server_name}
+            </RecordLink>
+          )
+        }
+
+        return serverIp || "N/A"
+      },
+    },
+    {
+      title: "SSL",
+      key: "ssl_status",
+      render: (_, record) => {
+        const sslEnabled = record?.enable_ssl
+
+        const status = record?.SSL?.status
+
+        const colorMap = {
+          [constants.SSL_STATUSES.ACTIVE]: "green",
+          [constants.SSL_STATUSES.PENDING_INITIALIZATION]: "orange",
+          [constants.SSL_STATUSES.INITIALIZING]: "blue",
+          [constants.SSL_STATUSES.EXPIRING]: "orange",
+          [constants.SSL_STATUSES.EXPIRED]: "red",
+          [constants.SSL_STATUSES.FAILED]: "red",
+        }
+
+        const secure = [
+          constants.SSL_STATUSES.ACTIVE,
+          constants.SSL_STATUSES.EXPIRING,
+        ].includes(status || "")
+
+        const popoverMessage = {
+          [constants.SSL_STATUSES.ACTIVE]: (
+            <div>
+              Expires On: {moment(record?.SSL?.end_date).format("DD-MM-YYYY")}
+            </div>
+          ),
+          [constants.SSL_STATUSES.EXPIRING]: (
+            <div>
+              Expires On: {moment(record?.SSL?.end_date).format("DD-MM-YYYY")}
+            </div>
+          ),
+          [constants.SSL_STATUSES.EXPIRED]: (
+            <div>
+              Expired On: {moment(record?.SSL?.end_date).format("DD-MM-YYYY")}
+            </div>
+          ),
+          [constants.SSL_STATUSES.FAILED]: (
+            <div>
+              <div>Failed to initialize SSL</div>
+              <div>Reason: </div>
+            </div>
+          ),
+        }
+
+        return sslEnabled ? (
+          <Popover
+            title={`SSL Status: ${status}`}
+            content={popoverMessage?.[status || ""]}
+          >
+            <span style={{ color: colorMap?.[status || ""] }}>
+              <Icon icon={secure ? "SECURE" : "INSECURE"} />
+            </span>
+          </Popover>
+        ) : (
+          "Not Enabled"
+        )
+      },
+    },
   ]
 
   const viewProps: IViewProps = {

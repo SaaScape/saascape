@@ -85,3 +85,12 @@ export const convertUnit = (
   const newValue = valueInBytes / byteMultipliers?.[newUnit]
   return newValue
 }
+
+export const serverLookupByIp = (
+  ip: string,
+  type: "public" | "private" = "public"
+) => {
+  const { servers = [] } = store.getState()
+
+  return servers.find((server) => server?.server_ip_address === ip)
+}

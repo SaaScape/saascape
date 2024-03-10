@@ -13,6 +13,10 @@ export interface IDomain extends Document {
   description: string
   linked_servers: { server_id: ObjectId; status: string; last_sync: Date }[]
   enable_ssl: boolean
+  DNS: {
+    a_record: string
+    last_updated: Date
+  }
   SSL?: {
     status: DomainSSLStatus
     challenge_token?: string

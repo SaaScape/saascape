@@ -15,14 +15,17 @@ const crons: { [key: string]: CronJob } = {}
 const initializeDomainCrons = (use: Function) => {
   const renewDomainsCron = new CronJob("0 2 * * *", use(renewDomains))
   const bulkApplySSLCron = new CronJob("0 */1 * * *", use(bulkApplySSLCer))
+  const getDNSDataCron = new CronJob("*/30 * * * * *", use(getDNSData))
 
   //  Start crons
   bulkApplySSLCron.start()
   renewDomainsCron.start()
+  getDNSDataCron.start()
 
   //  Store crons
   crons["bulkApplySSLCron"] = bulkApplySSLCron
   crons["renewDomainsCron"] = renewDomainsCron
+  crons["getDNSDataCron"] = getDNSDataCron
 }
 
 const renewDomains = async () => {
@@ -126,6 +129,13 @@ const bulkApplySSLCer = async () => {
   }
 
   crons?.["bulkApplySSLCron"]?.start()
+}
+
+const getDNSData = async () => {
+  const domainService = new DomainService()
+  crons?.["getDNSDataCron"]?.stop()
+  await domainService.cronCheckDnsData().catch((err) => console.log(err))
+  crons?.["getDNSDataCron"]?.start()
 }
 
 export default initializeDomainCrons
