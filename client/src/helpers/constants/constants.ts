@@ -32,4 +32,10 @@ export default {
     INITIALIZING: "initializing",
     FAILED: "failed",
   },
+
+  CONFIG_MODULES: {
+    CUSTOM_FIELDS: "custom_fields",
+    SECRETS: "secrets",
+    ENV_VARS: "env_vars",
+  },
 }

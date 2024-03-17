@@ -74,4 +74,10 @@ export default {
     SSL_RENEWAL: "ssl_renewal",
     SSL_INITIALIZE: "ssl_initialize",
   },
+
+  CONFIG_MODULES: {
+    CUSTOM_FIELDS: "custom_fields",
+    SECRETS: "secrets",
+    ENV_VARS: "env_vars",
+  },
 }

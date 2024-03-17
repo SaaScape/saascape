@@ -101,6 +101,23 @@ export default {
       },
     ]
   },
+  VIEW_APPLICATION_CONFIGURATION: (text: string, id: string) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: text,
+        path: `/applications/${id}`,
+        type: "application_select",
+      },
+      {
+        title: "Configuration",
+        path: `/applications/${id}/configuration`,
+      },
+    ]
+  },
   SERVERS: [
     {
       title: "Servers",
