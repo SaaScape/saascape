@@ -5,6 +5,7 @@ import DockerService from "../services/dockerService"
 import { IDockerClients, ISSHClients } from "../interfaces/clients"
 import SSHService from "../services/sshService"
 import { decipherData } from "../helpers/utils"
+import Dockerode from "dockerode"
 
 const clients: { docker: IDockerClients; ssh: ISSHClients } = {
   docker: {},
@@ -77,5 +78,37 @@ const initializeClients = async () => {
   console.log("Clients have been initialized")
 }
 
-export { clients }
+const getClient = async (
+  type: "docker" | "ssh",
+  swarmRole?: "manager" | "worker"
+): Promise<Dockerode | SSHService | undefined> => {
+  for (const client of Object.values(clients[type])) {
+    try {
+      switch (type) {
+        case "docker":
+          const dockerClient = client as Dockerode
+
+          await dockerClient.ping()
+          if (swarmRole) {
+            const dockerInfo = await dockerClient.info()
+            const { NodeID, RemoteManagers } = dockerInfo?.Swarm
+            const isManager = RemoteManagers?.some(
+              (manager: any) => manager?.NodeID === NodeID
+            )
+
+            if (swarmRole === "manager" && !isManager) continue
+            if (swarmRole === "worker" && isManager) continue
+          }
+
+          return client
+        case "ssh":
+          return client
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }
+}
+
+export { clients, getClient }
 export default initializeClients

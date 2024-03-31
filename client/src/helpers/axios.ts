@@ -20,4 +20,25 @@ const authAxios = defaultAxios.create({
   baseURL: `/auth`,
 })
 
-export { apiAxios, authAxios }
+const apiAxiosToast = (toastId: any) => {
+  const apiAxios = defaultAxios.create({
+    baseURL: `/api`,
+  })
+
+  apiAxios.interceptors.response.use(
+    (response: ApiResponse<any>) => response,
+    (error) => {
+      toast.update(toastId, {
+        type: "error",
+        render: error?.response?.data?.error,
+        isLoading: false,
+        autoClose: 3000,
+      })
+      return error?.response
+    }
+  )
+
+  return apiAxios
+}
+
+export { apiAxios, authAxios, apiAxiosToast }
