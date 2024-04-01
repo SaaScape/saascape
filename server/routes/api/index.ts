@@ -10,7 +10,6 @@ import plans from "./plans"
 import contacts from "./contacts"
 import servers from "./servers"
 import domains from "./domains"
-import versions from "./versions"
 
 export type routeFunction = (
   req: Request,
@@ -40,7 +39,6 @@ export default (app: express.Application) => {
   contacts(router, use)
   servers(router, use)
   domains(router, use)
-  versions(router, use)
 
   router.use(catchError)
 }

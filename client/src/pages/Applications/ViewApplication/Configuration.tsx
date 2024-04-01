@@ -1,9 +1,7 @@
 import { IProps } from "./ConfigurationContainer"
 import { Tabs } from "antd"
 
-const Configuration = (props: IProps) => {
-  const { configTabs } = props
-
+const Configuration = ({ configTabs }: IProps) => {
   return (
     <section className='view-application-configuration p-relative'>
       <div className='top-bar-container'>

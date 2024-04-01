@@ -4,10 +4,12 @@ import permissions from "../../helpers/permissions"
 import ApplicationService from "../../services/applicationService"
 import { sendSuccessResponse } from "../../helpers/responses"
 import { API } from "../../types/types"
+import versions from "./versions"
 
 export default (app: Router, use: any) => {
   const router = Router()
   app.use("/applications", router)
+  versions(router, use)
 
   router.get(
     "/",

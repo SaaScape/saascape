@@ -1,9 +1,19 @@
-import { Button, Card, Table } from "antd"
+import { Button } from "antd"
+import Search from "antd/es/input/Search"
 import { IVersionProps } from "./VersionsContainer"
 import StatisticBanner from "../../../components/StatisticBanner"
+import PaginatedTable from "../../../components/PaginatedTable"
 
 const Versions = (props: IVersionProps) => {
-  const { versionColumns, loading, versions, functions } = props
+  const {
+    versionColumns,
+    loading,
+    functions,
+    tableConfig,
+    paginatedData,
+    onTableChange,
+    dataFetching,
+  } = props
 
   return (
     <section className='sub-section versions p-relative'>
@@ -36,15 +46,23 @@ const Versions = (props: IVersionProps) => {
         </div>
       </StatisticBanner>
 
+      <div className='search-container'>
+        <Search
+          disabled={loading}
+          placeholder='Search for version'
+          onSearch={functions?.onSearch}
+        />
+      </div>
+
       <div className='table-container'>
-        <Table
-          dataSource={versions}
-          onChange={props?.functions?.onTableChange}
-          loading={loading}
+        <PaginatedTable
+          loading={dataFetching}
           columns={versionColumns}
-          rowKey={(record) => record._id}
-          onRow={functions?.onRow}
-        ></Table>
+          tableConfig={tableConfig}
+          paginatedData={paginatedData}
+          onTableChange={onTableChange}
+          functions={functions}
+        />
       </div>
     </section>
   )

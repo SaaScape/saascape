@@ -37,5 +37,6 @@ export default {
     CUSTOM_FIELDS: "custom_fields",
     SECRETS: "secrets",
     ENV_VARS: "env_vars",
+    VERSION_CONFIG: "version_config",
   },
 }

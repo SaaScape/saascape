@@ -10,6 +10,9 @@ import { IApplicationProps } from "../ApplicationRouteHandler"
 import ManageVersionModal from "../../../components/Applications/ManageVersionModal"
 import { apiAxios, apiAxiosToast } from "../../../helpers/axios"
 import { toast } from "react-toastify"
+import usePaginatedTable from "../../../hooks/usePaginatedTable"
+import { Popover, TableColumnProps } from "antd"
+import moment from "moment"
 
 export interface IVersion {
   _id: string
@@ -26,24 +29,63 @@ export interface IVersionProps {
     [functionName: string]: (...args: any[]) => any
   }
   versionColumns: any
-  versions: IVersion[]
+  tableConfig: any
+  onTableChange: any
+  paginatedData: any
+  dataFetching: boolean
 }
 
-const versionColumns = [
+const versionColumns: TableColumnProps<IVersion>[] = [
   {
     title: "Version",
-    dataIndex: "version",
     key: "version",
+    render: (_, record) => {
+      const { namespace, repository, tag } = record
+      let text = ""
+      namespace && (text += `${namespace}/`)
+      repository && (text += `${repository}:`)
+      tag && (text += tag)
+      return text
+    },
   },
   {
-    title: "Latest Push",
-    dataIndex: "latest_push",
-    key: "latest_push",
+    title: "Namespace",
+    dataIndex: "namespace",
+    key: "namespace",
   },
   {
-    title: "Latest Commit",
-    dataIndex: "latest_commit",
-    key: "latest_commit",
+    title: "Repository",
+    dataIndex: "repository",
+    key: "repository",
+  },
+  {
+    title: "Tag",
+    dataIndex: "tag",
+    key: "tag",
+  },
+  {
+    title: "Created",
+    dataIndex: "created_at",
+    key: "created_at",
+    render: (_, record) => (
+      <Popover
+        content={<span>{moment(record?.created_at).format("LLL")}</span>}
+      >
+        {moment(record.created_at).fromNow()}
+      </Popover>
+    ),
+  },
+  {
+    title: "Updated",
+    dataIndex: "updated_at",
+    key: "updated_at",
+    render: (_, record) => (
+      <Popover
+        content={<span>{moment(record?.updated_at).format("LLL")}</span>}
+      >
+        {moment(record.updated_at).fromNow()}
+      </Popover>
+    ),
   },
   {
     title: "Actions",
@@ -58,15 +100,26 @@ const VersionsContainer = (props: IApplicationProps) => {
   const { selectedApplication } = useSelector(
     (state: IStore) => state.applications
   )
-  const [versions, setVersions] = useState<IVersion[]>([])
   const [showManageVersionModal, setShowManageVersionModal] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const { id } = useParams()
   const setBreadcrumbs = useSetBreadcrumbs()
 
+  const apiUrl = `/applications/${id}/versions`
+
+  const {
+    tableConfig,
+    paginatedData,
+    onSearch,
+    dataFetching,
+    reload,
+    onTableChange,
+  } = usePaginatedTable({ apiUrl })
+
   useEffect(() => {
     props.setId(id)
+    reload()
   }, [id])
 
   useEffect(() => {
@@ -93,7 +146,10 @@ const VersionsContainer = (props: IApplicationProps) => {
     const toastSaving = toast.info("Creating version...", {
       isLoading: true,
     })
-    const { data } = await apiAxiosToast(toastSaving)?.post(`/versions`, values)
+    const { data } = await apiAxiosToast(toastSaving)?.post(
+      `/applications/${id}/versions`,
+      values
+    )
     if (data?.success) {
       toast.update(toastSaving, {
         isLoading: false,
@@ -102,19 +158,23 @@ const VersionsContainer = (props: IApplicationProps) => {
         autoClose: 2000,
       })
       onManageVersionClose()
+      reload()
     }
     setSaving(false)
     console.log(data)
-    setVersions((curr) => [...curr, data.data])
   }
 
   const versionProps: IVersionProps = {
     loading,
     selectedApplication,
     versionColumns,
-    versions,
+    tableConfig,
+    paginatedData,
+    onTableChange,
+    dataFetching,
     functions: {
       openManageVersionModal,
+      onSearch,
     },
   }
 

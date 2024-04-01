@@ -44,7 +44,7 @@ const PaginatedTable = (props: IProps) => {
       onChange={onTableChange}
       loading={loading}
       columns={columns}
-      rowKey={(record) => record._id}
+      rowKey={(record) => record?._id}
       onRow={functions?.onRow}
     />
   )

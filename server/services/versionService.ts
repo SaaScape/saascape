@@ -3,6 +3,10 @@ import { getClient } from "../clients/clients"
 import IVersion from "../schemas/Versions"
 import { ObjectId } from "mongodb"
 import { db } from "../db"
+import { IApplication } from "../schemas/Applications"
+import { decipherData } from "../helpers/utils"
+import Pagination from "../helpers/pagination"
+import constants from "../helpers/constants"
 
 interface IClientData {
   namespace: string
@@ -10,11 +14,38 @@ interface IClientData {
   tag: string
 }
 export default class VersionService {
-  async getVersions(): Promise<IVersion[]> {
-    return []
+  applicationId: string
+  constructor(applicationId: string) {
+    this.applicationId = applicationId
+  }
+  async getVersions(query: any): Promise<{ data: any }> {
+    const pagination = new Pagination(query)
+
+    const findObj: any = {
+      status: constants.STATUSES.ACTIVE_STATUS,
+      application_id: new ObjectId(this.applicationId),
+    }
+
+    if (query?.searchValue) {
+      findObj["$or"] = [
+        { namespace: { $regex: query.searchValue, $options: "i" } },
+        { tag: { $regex: query.searchValue, $options: "i" } },
+        { repository: { $regex: query.searchValue, $options: "i" } },
+      ]
+    }
+
+    const versions = await pagination.runPaginatedQuery({
+      collection: db.managementDb?.collection("versions"),
+      findObj,
+    })
+
+    return {
+      data: versions,
+    }
   }
 
   pullImage(
+    application: IApplication,
     dockerClient: Dockerode,
     namespace: string,
     repository: string,
@@ -29,7 +60,27 @@ export default class VersionService {
         const dockerImage = `${repo}:${tag}`
         const newImageTag = `${tag}-${Date.now()}`
 
-        dockerClient.pull(dockerImage, {}, (err, stream) => {
+        const encryptedData = {
+          username: application.config?.version_config?.docker_hub_username,
+          password: application.config?.version_config?.docker_hub_password,
+        }
+
+        const authconfig = {
+          username:
+            encryptedData.username &&
+            decipherData(
+              encryptedData.username?.encryptedData,
+              encryptedData.username?.iv
+            ),
+          password:
+            encryptedData.password &&
+            decipherData(
+              encryptedData.password?.encryptedData,
+              encryptedData.password?.iv
+            ),
+        }
+
+        dockerClient.pull(dockerImage, { authconfig }, (err, stream) => {
           if (err) {
             reject(err)
           }
@@ -62,7 +113,13 @@ export default class VersionService {
     const dockerClient = (await getClient("docker", "manager")) as Dockerode
     if (!dockerClient) throw { showError: "Docker client not found" }
 
+    const application = await db.managementDb
+      ?.collection<IApplication>("applications")
+      .findOne({ _id: new ObjectId(this.applicationId) })
+    if (!application) throw { showError: "Application not found" }
+
     const imagePullResult = await this.pullImage(
+      application,
       dockerClient,
       data.namespace,
       data.repository,
@@ -78,6 +135,8 @@ export default class VersionService {
       namespace: data.namespace,
       repository: data.repository,
       tag: data.tag,
+      application_id: new ObjectId(this.applicationId),
+      status: constants.STATUSES.ACTIVE_STATUS,
       created_at: new Date(),
       updated_at: new Date(),
     }

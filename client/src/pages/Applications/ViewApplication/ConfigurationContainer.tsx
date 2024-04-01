@@ -10,6 +10,7 @@ import { IApplication } from "../../../store/slices/applicationSlice"
 import { IBreadcrumbs } from "../../../store/slices/breadcrumbs"
 import { TabsProps } from "antd"
 import CustomFields from "../../../components/Applications/configuration/CustomFields"
+import VersionConfig from "../../../components/Applications/configuration/VersionConfig"
 
 export interface IProps {
   loading: boolean
@@ -54,6 +55,11 @@ const ConfigurationContainer = (props: IApplicationProps) => {
       key: "custom-fields",
       label: "Custom Fields",
       children: <CustomFields application={application} loading={loading} />,
+    },
+    {
+      key: "versions-config",
+      label: "Versions",
+      children: <VersionConfig application={application} />,
     },
   ]
 
