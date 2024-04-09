@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit"
+import { ILinkedIdEnabledDocument } from "../../interfaces/interfaces"
 
 export interface ICustomField {
   _id: string
@@ -7,13 +8,32 @@ export interface ICustomField {
   label: string
   options?: string[]
 }
-export interface IApplication {
-  application_name: string
-  created_at: Date
-  updated_at: Date
+
+export type ContactType = "tenant" | "lead"
+
+export interface ICustomField {
   _id: string
+  field: string
+  type: string
+  label: string
+  options?: string[]
+}
+
+export interface IApplicationConfig {
+  version_config: {
+    docker_hub_webhooks?: boolean
+  }
+}
+
+export interface IApplication extends ILinkedIdEnabledDocument {
+  _id: string
+  application_name: string
+  status: string
   description: string
   custom_fields: ICustomField[]
+  config: IApplicationConfig
+  created_at: Date
+  updated_at: Date
 }
 
 const initialState: {

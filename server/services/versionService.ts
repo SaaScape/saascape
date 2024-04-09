@@ -106,29 +106,26 @@ export default class VersionService {
       }
     )
   }
-  async createVersion(data: IClientData) {
-    console.log(data)
-    // Right now we are retrieving the docker client but without the ability to specify from which swarm. This will be vital when we have more than one swarm
-
-    const dockerClient = (await getClient("docker", "manager")) as Dockerode
-    if (!dockerClient) throw { showError: "Docker client not found" }
-
+  async createVersion(data: IClientData, isWebhook?: boolean) {
     const application = await db.managementDb
       ?.collection<IApplication>("applications")
       .findOne({ _id: new ObjectId(this.applicationId) })
     if (!application) throw { showError: "Application not found" }
 
-    const imagePullResult = await this.pullImage(
-      application,
-      dockerClient,
-      data.namespace,
-      data.repository,
-      data.tag
-    ).catch((err) => {
-      throw { showError: "Unable to pull image" }
-    })
-
-    console.log(imagePullResult?.image)
+    if (!isWebhook) {
+      // Right now we are retrieving the docker client but without the ability to specify from which swarm. This will be vital when we have more than one swarm
+      const dockerClient = (await getClient("docker", "manager")) as Dockerode
+      if (!dockerClient) throw { showError: "Docker client not found" }
+      const imagePullResult = await this.pullImage(
+        application,
+        dockerClient,
+        data.namespace,
+        data.repository,
+        data.tag
+      ).catch((err) => {
+        throw { showError: "Unable to pull image" }
+      })
+    }
 
     const versionPayload: IVersion = {
       _id: new ObjectId(),

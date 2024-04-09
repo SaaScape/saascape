@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb"
 import { db } from "../db"
 import constants from "../helpers/constants"
 import { IApplication, ICustomField } from "../schemas/Applications"
-import { encryptData } from "../helpers/utils"
+import { cleanVersionConfig, encryptData } from "../helpers/utils"
 
 interface IUpdateConfigData {
   configModule: "custom_fields" | "secrets" | "env_vars"
@@ -15,18 +15,35 @@ export default class ApplicationService {
 
   async findMany() {
     const applications = await db.managementDb
-      ?.collection("applications")
+      ?.collection<IApplication>("applications")
       .find({
         status: { $nin: [constants.STATUSES.DELETED_STATUS] },
       })
       .toArray()
 
+    if (!applications) throw { showError: "Applications not found" }
+
+    for (const application of applications) {
+      cleanVersionConfig(application, [
+        "docker_hub_password",
+        "docker_hub_username",
+      ])
+    }
+
     return { applications }
   }
   async findOne(id: string) {
     const application = await db.managementDb
-      ?.collection("applications")
+      ?.collection<IApplication>("applications")
       .findOne({ _id: new ObjectId(id) })
+
+    if (!application) throw { showError: "Application not found" }
+
+    cleanVersionConfig(application, [
+      "docker_hub_password",
+      "docker_hub_username",
+    ])
+
     return { application }
   }
   async deleteOne(id: string) {
@@ -166,24 +183,57 @@ export default class ApplicationService {
       ?.collection<IApplication>("applications")
       ?.findOne({ _id: new ObjectId(id) })
 
+    if (!latestApplication) throw { showError: "Application not found" }
+
+    cleanVersionConfig(latestApplication, [
+      "docker_hub_password",
+      "docker_hub_username",
+    ])
+
     return latestApplication
   }
 
   private async updateVersionConfig(id: string, data: IUpdateConfigData) {
-    const { docker_hub_username, docker_hub_password } = data
+    const {
+      docker_hub_username,
+      docker_hub_password,
+      docker_hub_webhooks,
+      namespace,
+      repository,
+    } = data
 
-    const encryptedData = {
-      docker_hub_username: encryptData(docker_hub_username),
-      docker_hub_password: encryptData(docker_hub_password),
+    const payload: any = {}
+
+    Object.keys(data).includes("docker_hub_username") &&
+      (payload.docker_hub_username = encryptData(docker_hub_username))
+    Object.keys(data).includes("docker_hub_password") &&
+      (payload.docker_hub_password = encryptData(docker_hub_password))
+    Object.keys(data).includes("docker_hub_webhooks") &&
+      (payload.docker_hub_webhooks = docker_hub_webhooks)
+    Object.keys(data).includes("namespace") && (payload.namespace = namespace)
+    Object.keys(data).includes("repository") &&
+      (payload.repository = repository)
+
+    const updateObj: any = {}
+
+    for (const key in payload) {
+      updateObj[`config.version_config.${key}`] = payload?.[key]
     }
 
     const application = await db.managementDb
       ?.collection<IApplication>("applications")
       ?.findOneAndUpdate(
         { _id: new ObjectId(id) },
-        { $set: { config: { version_config: encryptedData } } },
+        { $set: updateObj },
         { returnDocument: "after" }
       )
+
+    if (!application) throw { showError: "Application not found" }
+
+    cleanVersionConfig(application, [
+      "docker_hub_password",
+      "docker_hub_username",
+    ])
 
     return application
   }

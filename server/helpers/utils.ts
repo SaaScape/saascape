@@ -1,4 +1,5 @@
 import crypto from "crypto"
+import { IApplication } from "../schemas/Applications"
 const algorithm = "aes-256-cbc"
 
 export const checkForMissingParams = (
@@ -72,4 +73,20 @@ export const convertUnit = (
   const valueInBytes = value * byteMultipliers[currentUnit]
   const newValue = valueInBytes / byteMultipliers?.[newUnit]
   return newValue
+}
+
+export const cleanVersionConfig = (
+  application: IApplication,
+  configFieldsToRemove: string[]
+) => {
+  const { config } = application
+  const { version_config } = config || {}
+
+  if (!version_config) return
+
+  for (const field in version_config) {
+    if (configFieldsToRemove.includes(field)) {
+      delete (version_config as any)[field]
+    }
+  }
 }

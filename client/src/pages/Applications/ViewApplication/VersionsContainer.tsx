@@ -115,7 +115,7 @@ const VersionsContainer = (props: IApplicationProps) => {
     dataFetching,
     reload,
     onTableChange,
-  } = usePaginatedTable({ apiUrl })
+  } = usePaginatedTable({ apiUrl, sortField: "updated_at" })
 
   useEffect(() => {
     props.setId(id)

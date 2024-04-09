@@ -10,10 +10,12 @@ export interface IPaginatedViewProps {
 }
 interface IProps {
   apiUrl: string
+  sortField?: string
+  order?: number
 }
 const usePaginatedTable = (props: IProps) => {
   // TODO: IMPLEMENT INITIAL REQUEST DATE FEATURE
-  const { apiUrl } = props
+  const { apiUrl, sortField = "created_at", order = -1 } = props
 
   const [dataFetching, setDataFetching] = useState(false)
 
@@ -68,6 +70,8 @@ const usePaginatedTable = (props: IProps) => {
         page: tableConfig?.current,
         limit: tableConfig?.pageSize,
         searchValue: value,
+        sortField,
+        order,
       })}`
     )
 

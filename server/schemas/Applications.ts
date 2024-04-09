@@ -16,8 +16,11 @@ export interface ICustomField {
 
 export interface IApplicationConfig {
   version_config: {
-    docker_hub_username: IEncryptedData
-    docker_hub_password: IEncryptedData
+    docker_hub_username?: IEncryptedData
+    docker_hub_password?: IEncryptedData
+    docker_hub_webhooks?: boolean
+    namespace?: string
+    repository?: string
   }
 }
 
