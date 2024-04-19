@@ -22,6 +22,20 @@ export interface IApplicationConfig {
     namespace?: string
     repository?: string
   }
+  secrets_config: {
+    [key: string]: {
+      _id: ObjectId
+      name: string
+      value: IEncryptedData
+    }
+  }
+  environment_config: {
+    [key: string]: {
+      _id: ObjectId
+      name: string
+      value: string
+    }
+  }
 }
 
 export interface IApplication extends Document, ILinkedIdEnabledDocument {

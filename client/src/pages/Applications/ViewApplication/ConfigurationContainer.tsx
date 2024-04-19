@@ -11,6 +11,8 @@ import { IBreadcrumbs } from "../../../store/slices/breadcrumbs"
 import { TabsProps } from "antd"
 import CustomFields from "../../../components/Applications/configuration/CustomFields"
 import VersionConfig from "../../../components/Applications/configuration/VersionConfig"
+import SecretsConfig from "../../../components/Applications/configuration/SecretsConfig"
+import EnvironmentConfig from "../../../components/Applications/configuration/EnvironmentConfig"
 
 export interface IProps {
   loading: boolean
@@ -60,6 +62,16 @@ const ConfigurationContainer = (props: IApplicationProps) => {
       key: "versions-config",
       label: "Versions",
       children: <VersionConfig application={application} />,
+    },
+    {
+      key: "secrets-config",
+      label: "Secrets",
+      children: application && <SecretsConfig application={application} />,
+    },
+    {
+      key: "environment-config",
+      label: "Environment",
+      children: application && <EnvironmentConfig application={application} />,
     },
   ]
 

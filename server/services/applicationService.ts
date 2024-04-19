@@ -2,7 +2,12 @@ import { ObjectId } from "mongodb"
 import { db } from "../db"
 import constants from "../helpers/constants"
 import { IApplication, ICustomField } from "../schemas/Applications"
-import { cleanVersionConfig, encryptData } from "../helpers/utils"
+import {
+  cleanVersionConfig,
+  decryptClientTransport,
+  encryptData,
+  prepareApplicationPayloadForTransport,
+} from "../helpers/utils"
 
 interface IUpdateConfigData {
   configModule: "custom_fields" | "secrets" | "env_vars"
@@ -28,6 +33,7 @@ export default class ApplicationService {
         "docker_hub_password",
         "docker_hub_username",
       ])
+      await prepareApplicationPayloadForTransport(application)
     }
 
     return { applications }
@@ -43,6 +49,7 @@ export default class ApplicationService {
       "docker_hub_password",
       "docker_hub_username",
     ])
+    await prepareApplicationPayloadForTransport(application)
 
     return { application }
   }
@@ -190,6 +197,130 @@ export default class ApplicationService {
       "docker_hub_username",
     ])
 
+    await prepareApplicationPayloadForTransport(latestApplication)
+
+    return latestApplication
+  }
+
+  private async updateVariables(
+    id: string,
+    data: IUpdateConfigData,
+    type: string
+  ) {
+    const { fields } = data
+
+    if (!Object.keys(fields || {}).length)
+      throw { showError: "No fields have been changed!" }
+
+    const bulkWrites = []
+
+    for (const _id in fields) {
+      switch (_id) {
+        case "newFields":
+          for (const newField in fields[_id]) {
+            const insertObj: any = {
+              updateOne: {
+                filter: {
+                  _id: new ObjectId(id),
+                },
+                update: {
+                  $set: {},
+                },
+              },
+            }
+            const newFieldData = fields?.[_id]?.[newField]
+            const newId = new ObjectId()
+
+            const value = fields?.[_id]?.[newField]?.value
+            if (!value) continue
+
+            const decipheredValue = await decryptClientTransport(value)
+            const payload = {
+              _id: newId,
+              name: newFieldData?.name,
+              value:
+                type === "secrets_config"
+                  ? encryptData(decipheredValue)
+                  : newFieldData?.value,
+            }
+            insertObj.updateOne.update.$set[
+              `config.${type}.${newId.toString()}`
+            ] = payload
+            bulkWrites.push(insertObj)
+          }
+          break
+        case "deleted":
+          const deletedIds = Object.keys(fields[_id])?.map(
+            (id) => new ObjectId(id)
+          )
+          const deleteObj: any = {
+            updateOne: {
+              filter: {
+                _id: new ObjectId(id),
+              },
+              update: {
+                $unset: {},
+              },
+            },
+          }
+          for (const _id of deletedIds) {
+            deleteObj.updateOne.update.$unset[
+              `config.${type}.${_id.toString()}`
+            ] = true
+          }
+          bulkWrites.push(deleteObj)
+          break
+        default:
+          const updateObj: any = {
+            updateOne: {
+              filter: {
+                _id: new ObjectId(id),
+              },
+              update: {
+                $set: {},
+              },
+            },
+          }
+
+          for (const fieldKey in fields[_id]) {
+            const updatePath = `config.${type}.${_id.toString()}.${fieldKey}`
+
+            const value = fields?.[_id]?.[fieldKey]
+
+            switch (fieldKey) {
+              case "value":
+                const decipheredValue = await decryptClientTransport(
+                  value || ""
+                )
+                updateObj.updateOne.update.$set[updatePath] =
+                  encryptData(decipheredValue)
+                break
+
+              default:
+                updateObj.updateOne.update.$set[updatePath] = value
+            }
+          }
+          bulkWrites.push(updateObj)
+          break
+      }
+    }
+
+    await db.managementDb
+      ?.collection<IApplication>("applications")
+      ?.bulkWrite(bulkWrites)
+
+    const latestApplication = await db.managementDb
+      ?.collection<IApplication>("applications")
+      ?.findOne({ _id: new ObjectId(id) })
+
+    if (!latestApplication) throw { showError: "Application not found" }
+
+    cleanVersionConfig(latestApplication, [
+      "docker_hub_password",
+      "docker_hub_username",
+    ])
+    await prepareApplicationPayloadForTransport(latestApplication)
+
     return latestApplication
   }
 
@@ -234,6 +365,7 @@ export default class ApplicationService {
       "docker_hub_password",
       "docker_hub_username",
     ])
+    await prepareApplicationPayloadForTransport(application)
 
     return application
   }
@@ -256,9 +388,19 @@ export default class ApplicationService {
         result = await this.updateCustomFields(id, data)
         return { application: result }
       case constants.CONFIG_MODULES.ENV_VARS:
-        return { application }
+        result = await this.updateVariables(
+          id,
+          data,
+          constants.CONFIG_MODULES.ENV_VARS
+        )
+        return { application: result }
       case constants.CONFIG_MODULES.SECRETS:
-        return { application }
+        result = await this.updateVariables(
+          id,
+          data,
+          constants.CONFIG_MODULES.SECRETS
+        )
+        return { application: result }
       case constants.CONFIG_MODULES.VERSION_CONFIG:
         result = await this.updateVersionConfig(id, data)
         return { application: result }

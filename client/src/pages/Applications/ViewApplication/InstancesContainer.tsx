@@ -7,9 +7,19 @@ import breadcrumbs from "../../../helpers/constants/breadcrumbs"
 import { IStore } from "../../../store/store"
 import { useSelector } from "react-redux"
 import { IApplication } from "../../../store/slices/applicationSlice"
+import { IEnvironmentVariable } from "../../../components/Applications/configuration/EnvironmentConfig"
 
 export interface IProps {
   selectedApplication: IApplication | null
+}
+
+export interface IInstance {
+  _id: string
+  config: {
+    environment_variables: {
+      [id: string]: IEnvironmentVariable
+    }
+  }
 }
 
 const InstancesContainer = (props: IApplicationProps) => {

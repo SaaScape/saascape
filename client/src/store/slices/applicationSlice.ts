@@ -23,6 +23,20 @@ export interface IApplicationConfig {
   version_config: {
     docker_hub_webhooks?: boolean
   }
+  secrets_config: {
+    [key: string]: {
+      _id: string
+      name: string
+      value: string
+    }
+  }
+  environment_config: {
+    [key: string]: {
+      _id: string
+      name: string
+      value: string
+    }
+  }
 }
 
 export interface IApplication extends ILinkedIdEnabledDocument {

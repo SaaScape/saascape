@@ -77,8 +77,8 @@ export default {
 
   CONFIG_MODULES: {
     CUSTOM_FIELDS: "custom_fields",
-    SECRETS: "secrets",
-    ENV_VARS: "env_vars",
+    SECRETS: "secrets_config",
+    ENV_VARS: "environment_config",
     VERSION_CONFIG: "version_config",
   },
 }

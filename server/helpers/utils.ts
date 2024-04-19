@@ -1,5 +1,7 @@
 import crypto from "crypto"
 import { IApplication } from "../schemas/Applications"
+import fsp from "fs/promises"
+import path from "path"
 const algorithm = "aes-256-cbc"
 
 export const checkForMissingParams = (
@@ -51,6 +53,44 @@ export const decipherData = (data: string, iv: string) => {
   return decrypted
 }
 
+export const encryptClientTransport = async (data: string) => {
+  const { TRANSPORT_KEY_PATH } = process.env
+  if (!TRANSPORT_KEY_PATH) throw new Error("Missing TRANSPORT_KEY_PATH")
+
+  const publicKey = await fsp.readFile(
+    path.join(TRANSPORT_KEY_PATH, "publicKey.pem")
+  )
+
+  const encryptedData = crypto.publicEncrypt(
+    {
+      key: publicKey,
+      padding: crypto.constants.RSA_PKCS1_PADDING,
+    },
+    Buffer.from(data, "utf-8")
+  )
+
+  return encryptedData.toString("base64")
+}
+
+export const decryptClientTransport = async (data: string) => {
+  const { TRANSPORT_KEY_PATH } = process.env
+  if (!TRANSPORT_KEY_PATH) throw new Error("Missing TRANSPORT_KEY_PATH")
+
+  const privateKey = await fsp.readFile(
+    path.join(TRANSPORT_KEY_PATH, "privateKey.pem")
+  )
+
+  const decryptedData = crypto.privateDecrypt(
+    {
+      key: privateKey,
+      padding: crypto.constants.RSA_PKCS1_PADDING,
+    },
+    Buffer.from(data, "base64")
+  )
+
+  return decryptedData.toString("utf-8")
+}
+
 type StorageUnits = "B" | "KB" | "MB" | "GB" | "TB" | "PB"
 export const convertUnit = (
   value: number,
@@ -89,4 +129,34 @@ export const cleanVersionConfig = (
       delete (version_config as any)[field]
     }
   }
+}
+
+export const prepareApplicationPayloadForTransport = async (
+  application: IApplication
+) => {
+  const { config } = application
+  if (!config) return
+  const { secrets_config } = config
+
+  const preparedSecrets: { [key: string]: any } = {}
+
+  for (const secret of Object.values(secrets_config)) {
+    try {
+      const decipheredValue = decipherData(
+        secret?.value?.encryptedData,
+        secret?.value?.iv
+      )
+
+      const encryptedTransportValue = await encryptClientTransport(
+        decipheredValue
+      )
+
+      preparedSecrets[secret?._id?.toString()] = {
+        ...secret,
+        value: encryptedTransportValue,
+      }
+    } catch (err) {}
+  }
+
+  application.config.secrets_config = preparedSecrets
 }

@@ -6,6 +6,8 @@ import {
 import { store } from "../store/store"
 import { apiAxios } from "./axios"
 import constants from "./constants/constants"
+import publicKeyJson from "../data/clientTransportKeys/publicKey.json"
+import JSEncrypt from "jsencrypt"
 
 export const queryParamBuilder = (query: {
   [key: string]: string | number | undefined
@@ -84,6 +86,32 @@ export const convertUnit = (
   const valueInBytes = value * byteMultipliers[currentUnit]
   const newValue = valueInBytes / byteMultipliers?.[newUnit]
   return newValue
+}
+
+export const decryptServerTransport = async (data: any) => {
+  const { privateKey } = publicKeyJson
+  if (!privateKey) throw new Error("Private key not found")
+
+  let formattedPrivateKey = privateKey.replace(/\\n/g, "\n")
+
+  const jsEncrypt = new JSEncrypt()
+  jsEncrypt.setPrivateKey(formattedPrivateKey)
+
+  const decryptedData = jsEncrypt.decrypt(data)
+  return decryptedData
+}
+
+export const encryptServerTransport = async (data: any) => {
+  const { publicKey } = publicKeyJson
+  if (!publicKey) throw new Error("Public key not found")
+
+  let formattedPublicKey = publicKey.replace(/\\n/g, "\n")
+
+  const jsEncrypt = new JSEncrypt()
+  jsEncrypt.setPublicKey(formattedPublicKey)
+
+  const encryptedData = jsEncrypt.encrypt(data)
+  return encryptedData
 }
 
 export const serverLookupByIp = (
