@@ -61,6 +61,8 @@ const iconsObj: IIconsObj = {
     NEW_TAB: solid.faUpRightFromSquare,
     SECURE: solid.faLock,
     INSECURE: solid.faUnlock,
+    PEN: solid.faPen,
+    ROTATE: solid.faRotate,
   },
   regular: {
     BELL: regular.faBell,

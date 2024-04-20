@@ -5,11 +5,13 @@ import ApplicationService from "../../services/applicationService"
 import { sendSuccessResponse } from "../../helpers/responses"
 import { API } from "../../types/types"
 import versions from "./versions"
+import instances from "./instances"
 
 export default (app: Router, use: any) => {
   const router = Router()
   app.use("/applications", router)
   versions(router, use)
+  instances(router, use)
 
   router.get(
     "/",

@@ -1,5 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit"
-import { ILinkedIdEnabledDocument } from "../../interfaces/interfaces"
+import {
+  IEncryptedData,
+  ILinkedIdEnabledDocument,
+} from "../../interfaces/interfaces"
 
 export interface ICustomField {
   _id: string
@@ -19,24 +22,33 @@ export interface ICustomField {
   options?: string[]
 }
 
+export interface ISecret {
+  _id: string
+  name: string
+  value: IEncryptedData
+}
+
+export interface IEnvironmentVariable {
+  _id: string
+  name: string
+  value: string
+}
+
+export interface IEnvironmentVariablesConfig {
+  [key: string]: IEnvironmentVariable
+}
+
+export interface ISecretsConfig {
+  [key: string]: ISecret
+}
+
 export interface IApplicationConfig {
   version_config: {
     docker_hub_webhooks?: boolean
   }
-  secrets_config: {
-    [key: string]: {
-      _id: string
-      name: string
-      value: string
-    }
-  }
-  environment_config: {
-    [key: string]: {
-      _id: string
-      name: string
-      value: string
-    }
-  }
+  secrets_config: ISecretsConfig
+
+  environment_config: IEnvironmentVariablesConfig
 }
 
 export interface IApplication extends ILinkedIdEnabledDocument {

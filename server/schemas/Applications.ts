@@ -14,6 +14,26 @@ export interface ICustomField {
   options?: string[]
 }
 
+export interface ISecret {
+  _id: ObjectId
+  name: string
+  value: IEncryptedData
+}
+
+export interface IEnvironmentVariable {
+  _id: ObjectId
+  name: string
+  value: string
+}
+
+export interface IEnvironmentVariablesConfig {
+  [key: string]: IEnvironmentVariable
+}
+
+export interface ISecretsConfig {
+  [key: string]: ISecret
+}
+
 export interface IApplicationConfig {
   version_config: {
     docker_hub_username?: IEncryptedData
@@ -22,20 +42,8 @@ export interface IApplicationConfig {
     namespace?: string
     repository?: string
   }
-  secrets_config: {
-    [key: string]: {
-      _id: ObjectId
-      name: string
-      value: IEncryptedData
-    }
-  }
-  environment_config: {
-    [key: string]: {
-      _id: ObjectId
-      name: string
-      value: string
-    }
-  }
+  secrets_config: ISecretsConfig
+  environment_config: IEnvironmentVariablesConfig
 }
 
 export interface IApplication extends Document, ILinkedIdEnabledDocument {
