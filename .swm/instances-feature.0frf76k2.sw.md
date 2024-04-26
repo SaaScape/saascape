@@ -1,7 +1,6 @@
 ---
 title: Instances Feature
 ---
-
 <SwmSnippet path="/client/src/pages/Applications/ViewApplication/ViewInstance.tsx" line="17">
 
 ---
@@ -9,30 +8,30 @@ title: Instances Feature
 Here we will show a banner with just an overview of the instance
 
 ```tsx
-<StatisticBanner loading={false}>
-  <div>
-    <div className='title'>Replicas</div>
-    <div className='value'>{1}</div>
-  </div>
-  <div>
-    <div>
-      <div className='title'>CPU Usage</div>
-      <div className='value'>{`22%`}</div>
-    </div>
-  </div>
-  <div>
-    <div>
-      <div className='title'>Memory</div>
-      <div className='value'>{"424 Mb"}</div>
-    </div>
-  </div>
-  <div>
-    <div>
-      <div className='title'>Version</div>
-      <div className='value'>{instance?.version?.tag}</div>
-    </div>
-  </div>
-</StatisticBanner>
+      <StatisticBanner loading={false}>
+        <div>
+          <div className='title'>Replicas</div>
+          <div className='value'>{1}</div>
+        </div>
+        <div>
+          <div>
+            <div className='title'>CPU Usage</div>
+            <div className='value'>{`22%`}</div>
+          </div>
+        </div>
+        <div>
+          <div>
+            <div className='title'>Memory</div>
+            <div className='value'>{"424 Mb"}</div>
+          </div>
+        </div>
+        <div>
+          <div>
+            <div className='title'>Version</div>
+            <div className='value'>{instance?.version?.tag}</div>
+          </div>
+        </div>
+      </StatisticBanner>
 ```
 
 ---
