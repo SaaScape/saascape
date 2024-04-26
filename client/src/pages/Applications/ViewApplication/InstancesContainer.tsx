@@ -26,6 +26,7 @@ export interface IProps {
   closeCreateInstanceModal: () => void
   openCreateInstanceModal: () => void
   onInstanceCreate: (values: any) => void
+  onRow: (record: IInstance) => any
 }
 
 export type serviceStatus =
@@ -40,11 +41,15 @@ export type serviceStatus =
 
 export interface IInstance {
   _id: string
-  version_id: string
+  service_status: serviceStatus
+  name: string
+  is_custom_database: boolean
+  database: string | string
   config: {
     environment_variables: IEnvironmentVariablesConfig
     secrets_config: ISecretsConfig
   }
+  version_id: string
   version?: IVersion
   application_id: string
   status: string
@@ -163,6 +168,15 @@ const InstancesContainer = (props: IApplicationProps) => {
     navigate(`/applications/${selectedApplication?._id}/instances/${data?._id}`)
   }
 
+  const onRow = (record: IInstance) => {
+    return {
+      onClick: () =>
+        navigate(
+          `/applications/${selectedApplication?._id}/instances/${record?._id}`
+        ),
+    }
+  }
+
   const instanceProps: IProps = {
     selectedApplication,
     loading,
@@ -173,6 +187,7 @@ const InstancesContainer = (props: IApplicationProps) => {
     closeCreateInstanceModal,
     openCreateInstanceModal,
     onInstanceCreate,
+    onRow,
   }
 
   return <Instances {...instanceProps} />

@@ -68,8 +68,38 @@ export default class InstanceService {
   }
 
   async findOne(instanceId: ObjectId) {
+    const instance = (
+      await db.managementDb
+        ?.collection<IInstance>("instances")
+        .aggregate([
+          {
+            $match: {
+              _id: instanceId,
+              status: constants.STATUSES.ACTIVE_STATUS,
+            },
+          },
+          { $limit: 1 },
+          {
+            $lookup: {
+              from: "versions",
+              localField: "version_id",
+              foreignField: "_id",
+              as: "version",
+            },
+          },
+          {
+            $set: {
+              version: { $first: "$version" },
+            },
+          },
+        ])
+        .toArray()
+    )?.[0]
+
+    // Do client transport encryption for instance config
+
     return {
-      instance: {},
+      instance,
     }
   }
 

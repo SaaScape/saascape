@@ -275,6 +275,12 @@ export default class ServerService {
       ?.collection<IServer>("servers")
       .updateOne(
         { _id: new ObjectId(serverId) },
+        { $pull: { linked_ids: { name: constants.INTEGRATIONS.DOCKER } } }
+      )
+    await db.managementDb
+      ?.collection<IServer>("servers")
+      .updateOne(
+        { _id: new ObjectId(serverId) },
         { $push: { linked_ids: linkedIdObj } }
       )
 
@@ -434,7 +440,6 @@ export default class ServerService {
     await ssh.execCommand(`sudo openssl req -subj "/CN=${hostname}" -sha256 -new \
     -key /saascape/docker/certs/server-key.pem -out /saascape/docker/certs/server.csr`)
 
-    // For some reason this step is not working correctly
     await ssh.execCommand(`echo subjectAltName = \
     DNS:${hostname},IP:${serverPublicIp},IP:${serverPrivateIp},IP:127.0.0.1 | sudo tee /saascape/docker/certs/extfile.cnf`)
 

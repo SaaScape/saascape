@@ -13,6 +13,7 @@ const Instances = ({
   closeCreateInstanceModal,
   openCreateInstanceModal,
   onInstanceCreate,
+  onRow,
 }: IProps) => {
   return (
     <>
@@ -65,7 +66,8 @@ const Instances = ({
             loading={loading}
             columns={columns}
             rowKey={(record) => record._id}
-          ></Table>
+            onRow={onRow}
+          />
         </div>
       </section>
       <CreateInstanceModal

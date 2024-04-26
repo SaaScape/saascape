@@ -101,6 +101,32 @@ export default {
       },
     ]
   },
+  VIEW_APPLICATION_INSTANCE: (
+    appText: string,
+    appId: string,
+    instanceId: string,
+    instanceText: string
+  ) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: appText,
+        path: `/applications/${appId}`,
+        type: "application_select",
+      },
+      {
+        title: "Instances",
+        path: `/applications/${appId}/instances`,
+      },
+      {
+        title: instanceText,
+        path: `/applications/${appId}/instances/${instanceId}`,
+      },
+    ]
+  },
   VIEW_APPLICATION_CONFIGURATION: (text: string, id: string) => {
     return [
       {
