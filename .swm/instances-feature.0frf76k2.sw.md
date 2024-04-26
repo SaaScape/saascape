@@ -1,42 +1,9 @@
 ---
 title: Instances Feature
 ---
-<SwmSnippet path="/client/src/pages/Applications/ViewApplication/ViewInstance.tsx" line="17">
+# What is an instance
 
----
-
-Here we will show a banner with just an overview of the instance
-
-```tsx
-      <StatisticBanner loading={false}>
-        <div>
-          <div className='title'>Replicas</div>
-          <div className='value'>{1}</div>
-        </div>
-        <div>
-          <div>
-            <div className='title'>CPU Usage</div>
-            <div className='value'>{`22%`}</div>
-          </div>
-        </div>
-        <div>
-          <div>
-            <div className='title'>Memory</div>
-            <div className='value'>{"424 Mb"}</div>
-          </div>
-        </div>
-        <div>
-          <div>
-            <div className='title'>Version</div>
-            <div className='value'>{instance?.version?.tag}</div>
-          </div>
-        </div>
-      </StatisticBanner>
-```
-
----
-
-</SwmSnippet>
+An instance in SaaScape is virtualized container powered by Docker Swarm, an instance can have multiple replicas across multiple nodes.
 
 &nbsp;
 
