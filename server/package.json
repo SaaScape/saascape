@@ -5,10 +5,10 @@
   "main": "server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "startd": "nodemon -r dotenv/config server.ts",
-    "startd-bg": "nodemon -r dotenv/config background/server.ts",
-    "start": "ts-node -r dotenv/config server.ts",
-    "start-bg": "ts-node -r dotenv/config background/server.ts"
+    "startd": "nodemon -r tsconfig-paths/register -r dotenv/config server.ts",
+    "startd-bg": "nodemon -r tsconfig-paths/register -r dotenv/config background/server.ts",
+    "start": "ts-node -r tsconfig-paths/register -r dotenv/config server.ts",
+    "start-bg": "ts-node -r tsconfig-paths/register -r dotenv/config background/server.ts"
   },
   "author": "Keir Davie",
   "license": "GPL-3.0",
@@ -41,6 +41,7 @@
     "node-ssh": "^13.1.0",
     "ping": "^0.4.4",
     "socket.io": "^4.7.2",
-    "socket.io-client": "^4.7.3"
+    "socket.io-client": "^4.7.3",
+    "tsconfig-paths": "^4.2.0"
   }
 }

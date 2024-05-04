@@ -16,9 +16,11 @@
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+
+    "baseUrl": "../", // Assuming your types directory is inside the src folder
+    "paths": {
+      "types/*": ["types/*"] // Maps all imports starting with 'types/' to the corresponding files in the 'types' directory
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
