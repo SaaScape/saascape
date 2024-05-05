@@ -1,5 +1,5 @@
 import { Button, Card, Form, Input, Popconfirm, Table } from "antd"
-import { IInstance } from "../../../pages/Applications/ViewApplication/InstancesContainer"
+import IInstance from "types/schemas/Instances"
 import {
   IApplication,
   updateApplication,
@@ -29,7 +29,7 @@ export interface IEnvironmentVariable extends ILinkedIdEnabledDocument {
 // Any imported ids will have same _id as the application config.
 // So when name is changed in app config then we will update it for all instances showing warning and ask user to confirm.
 
-const SecretsConfig = ({ application, instance }: IProps) => {
+const EnvironmentConfig = ({ application, instance }: IProps) => {
   const [loading, setLoading] = useState(false)
   //   Secrets below will either be the application config secrets or the instance secrets. If instance is defined then we will use instance secrets
   const [environmentVariables, setEnvironmentVariables] = useState<any>([])
@@ -41,7 +41,7 @@ const SecretsConfig = ({ application, instance }: IProps) => {
     setEnvironmentVariables(
       Object.values(
         instance?._id
-          ? instance?.config?.environment_variables
+          ? instance?.config?.environment_config
           : application?.config?.environment_config || {}
       )
     )
@@ -103,7 +103,7 @@ const SecretsConfig = ({ application, instance }: IProps) => {
     })
 
     const route = instance
-      ? `/instances/${instance?._id}/config`
+      ? `/applications/${application?._id}/instances/${instance?._id}/config`
       : `/applications/${application?._id}/config`
 
     const { data } = await apiAxiosToast(toastId).put(route, {
@@ -202,4 +202,4 @@ const SecretsConfig = ({ application, instance }: IProps) => {
   )
 }
 
-export default SecretsConfig
+export default EnvironmentConfig

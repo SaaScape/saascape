@@ -7,6 +7,7 @@ export default (app: Router, use: Function) => {
   app.use("/:application_id/versions", router)
 
   router.get("/", use(findMany))
+  router.get("/:version_id", use(findOne))
   router.post("/", use(insertOne))
 }
 
@@ -15,6 +16,13 @@ const findMany = async (req: Request, res: Response) => {
   const { data } = await versionService.getVersions(req.query)
   sendSuccessResponse({ data }, req, res)
 }
+
+const findOne = async (req: Request, res: Response) => {
+  const versionService = new VersionService(req.params.application_id)
+  const { version } = await versionService.getVersionById(req.params.version_id)
+  sendSuccessResponse({ version }, req, res)
+}
+
 const insertOne = async (req: Request, res: Response) => {
   const versionService = new VersionService(req.params.application_id)
   const { version } = await versionService.createVersion(req.body)

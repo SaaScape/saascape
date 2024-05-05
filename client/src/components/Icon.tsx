@@ -63,6 +63,9 @@ const iconsObj: IIconsObj = {
     INSECURE: solid.faUnlock,
     PEN: solid.faPen,
     ROTATE: solid.faRotate,
+    INSTANCE: solid.faCircleNodes,
+    PLUG: solid.faPlug,
+    TAG: solid.faTag,
   },
   regular: {
     BELL: regular.faBell,

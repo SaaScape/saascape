@@ -1,5 +1,5 @@
 import { Button, Card, Form, Input, Popconfirm, Table } from "antd"
-import { IInstance } from "../../../pages/Applications/ViewApplication/InstancesContainer"
+import IInstance from "types/schemas/Instances"
 import {
   IApplication,
   updateApplication,
@@ -38,7 +38,9 @@ const SecretsConfig = ({ application, instance }: IProps) => {
     ;(async () => {
       const secrets = []
       for (const secret of Object.values(
-        application?.config?.secrets_config || {}
+        instance?.config?.secrets_config ||
+          application?.config?.secrets_config ||
+          {}
       )) {
         secrets.push({
           ...secret,
@@ -107,7 +109,7 @@ const SecretsConfig = ({ application, instance }: IProps) => {
     })
 
     const route = instance
-      ? `/instances/${instance?._id}/config`
+      ? `/applications/${application?._id}/instances/${instance?._id}/config`
       : `/applications/${application?._id}/config`
 
     const fields: { [key: string]: any } = {}

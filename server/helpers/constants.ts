@@ -80,5 +80,6 @@ export default {
     SECRETS: "secrets_config",
     ENV_VARS: "environment_config",
     VERSION_CONFIG: "version_config",
+    TAGS: "tags",
   },
 }

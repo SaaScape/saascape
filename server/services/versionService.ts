@@ -145,4 +145,16 @@ export default class VersionService {
     if (!version?.insertedId) throw { showError: "Unable to create version" }
     return { version: versionPayload }
   }
+
+  async getVersionById(versionId: string) {
+    const version = await db.managementDb
+      ?.collection<IVersion>("versions")
+      .findOne({
+        application_id: new ObjectId(this.applicationId),
+        _id: new ObjectId(versionId),
+      })
+
+    if (!version) throw { showError: "Version not found" }
+    return { version }
+  }
 }

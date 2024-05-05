@@ -2,6 +2,7 @@ import crypto from "crypto"
 import { IApplication } from "../schemas/Applications"
 import fsp from "fs/promises"
 import path from "path"
+import IInstance from "types/schemas/Instances"
 const algorithm = "aes-256-cbc"
 
 export const checkForMissingParams = (
@@ -132,9 +133,9 @@ export const cleanVersionConfig = (
 }
 
 export const prepareApplicationPayloadForTransport = async (
-  application: IApplication
+  entity: IApplication | IInstance
 ) => {
-  const { config } = application
+  const { config } = entity
   if (!config) return
   const { secrets_config } = config
 
@@ -158,5 +159,5 @@ export const prepareApplicationPayloadForTransport = async (
     } catch (err) {}
   }
 
-  application.config.secrets_config = preparedSecrets
+  entity.config.secrets_config = preparedSecrets
 }

@@ -1,3 +1,7 @@
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
 @import "./header.less";
 @import "./aside.less";
 @import "./menuContainer.less";
@@ -103,5 +107,23 @@
         margin-bottom: 24px;
       }
     }
+  }
+}
+
+// TAGS
+.tag-interface {
+  .title {
+    font-size: 14px;
+  }
+  .footer-bar {
+    background-color: @light-gray;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+.tag-container {
+  flex-wrap: wrap;
+  .ant-tag {
+    margin-bottom: 8px;
   }
 }

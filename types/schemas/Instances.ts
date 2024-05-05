@@ -1,6 +1,9 @@
 import { ObjectId } from "mongodb"
-import { IEnvironmentVariablesConfig, ISecretsConfig } from "./Applications"
-import IVersion from "./Versions"
+import {
+  IEnvironmentVariablesConfig,
+  ISecretsConfig,
+} from "../../server/schemas/Applications"
+import IVersion from "../../server/schemas/Versions"
 
 export type serviceStatus =
   | "running" // Instance is running
@@ -18,15 +21,19 @@ export default interface IInstance {
   name: string
   is_custom_database: boolean
   database: string | ObjectId
+  port: number
   config: {
-    environment_variables: IEnvironmentVariablesConfig
+    environment_config: IEnvironmentVariablesConfig
     secrets_config: ISecretsConfig
   }
+  tenant?: ObjectId | string
   version_id: ObjectId
   version?: IVersion
   application_id: ObjectId
   status: string
-  swarm_id: ObjectId
+  swarm_id: ObjectId | string
+  deployed_at?: Date | null
+  tags?: string[]
   created_at: Date
   updated_at: Date
 }

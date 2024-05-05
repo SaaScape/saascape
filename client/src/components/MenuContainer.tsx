@@ -1,20 +1,32 @@
 import React, { useEffect, useRef, useState } from "react"
 import { CSSTransition } from "react-transition-group"
 
+interface IMenuContainerRef {
+  closeMenu?: () => void
+}
 interface IProps {
   children: React.ReactNode[] | React.ReactNode
   MenuComponent: JSX.Element
   onChange?: (value: boolean) => void
+  width?: number
+  menuContainer?: IMenuContainerRef
+}
+
+export const useMenuContainer = () => {
+  return {} as IMenuContainerRef
 }
 
 const MenuContainer = (props: IProps) => {
-  const { MenuComponent } = props
+  const { MenuComponent, menuContainer } = props
   const [showMenu, setShowMenu] = useState(false)
 
   const menuRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const { onChange } = props
+
+  const style: { [key: string]: any } = {}
+  props.width && (style.width = props.width)
 
   const toggleMenu = (e: React.MouseEvent) => {
     if (menuRef.current?.contains(e.target as Node)) return
@@ -24,6 +36,11 @@ const MenuContainer = (props: IProps) => {
   const closeMenu = () => {
     setShowMenu(false)
   }
+
+  useEffect(() => {
+    if (!menuContainer) return
+    Object.assign(menuContainer, { closeMenu })
+  }, [menuContainer])
 
   useEffect(() => {
     if (!showMenu) return
@@ -57,7 +74,7 @@ const MenuContainer = (props: IProps) => {
         unmountOnExit={true}
         nodeRef={menuRef}
       >
-        <div ref={menuRef} className='component-menu'>
+        <div ref={menuRef} className='component-menu' style={style}>
           {MenuComponent}
         </div>
       </CSSTransition>

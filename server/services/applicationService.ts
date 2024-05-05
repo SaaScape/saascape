@@ -212,7 +212,16 @@ export default class ApplicationService {
     if (!Object.keys(fields || {}).length)
       throw { showError: "No fields have been changed!" }
 
-    const bulkWrites = []
+    const bulkWrites = [
+      {
+        updateOne: {
+          filter: { _id: new ObjectId(id) },
+          update: { $set: { updated_at: new Date() } },
+        },
+      },
+    ]
+
+    const isSecret = type === constants.CONFIG_MODULES.SECRETS
 
     for (const _id in fields) {
       switch (_id) {
@@ -234,14 +243,14 @@ export default class ApplicationService {
             const value = fields?.[_id]?.[newField]?.value
             if (!value) continue
 
-            const decipheredValue = await decryptClientTransport(value)
+            const decipheredValue =
+              isSecret && (await decryptClientTransport(value))
             const payload = {
               _id: newId,
               name: newFieldData?.name,
-              value:
-                type === "secrets_config"
-                  ? encryptData(decipheredValue)
-                  : newFieldData?.value,
+              value: isSecret
+                ? encryptData(decipheredValue || "")
+                : newFieldData?.value,
             }
             insertObj.updateOne.update.$set[
               `config.${type}.${newId.toString()}`
@@ -289,12 +298,14 @@ export default class ApplicationService {
 
             switch (fieldKey) {
               case "value":
-                const decipheredValue = await decryptClientTransport(
-                  value || ""
-                )
-                updateObj.updateOne.update.$set[updatePath] =
-                  encryptData(decipheredValue)
-                break
+                if (isSecret) {
+                  const decipheredValue = await decryptClientTransport(
+                    value || ""
+                  )
+                  updateObj.updateOne.update.$set[updatePath] =
+                    encryptData(decipheredValue)
+                  break
+                }
 
               default:
                 updateObj.updateOne.update.$set[updatePath] = value
@@ -345,7 +356,7 @@ export default class ApplicationService {
     Object.keys(data).includes("repository") &&
       (payload.repository = repository)
 
-    const updateObj: any = {}
+    const updateObj: any = { updated_at: new Date() }
 
     for (const key in payload) {
       updateObj[`config.version_config.${key}`] = payload?.[key]

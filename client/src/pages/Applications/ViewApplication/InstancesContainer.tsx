@@ -13,8 +13,8 @@ import {
 } from "../../../store/slices/applicationSlice"
 import { TableColumnProps } from "antd"
 import { apiAxios, apiAxiosToast } from "../../../helpers/axios"
-import { IVersion } from "./VersionsContainer"
 import { toast } from "react-toastify"
+import IInstance from "types/schemas/Instances"
 
 export interface IProps {
   selectedApplication: IApplication | null
@@ -27,35 +27,6 @@ export interface IProps {
   openCreateInstanceModal: () => void
   onInstanceCreate: (values: any) => void
   onRow: (record: IInstance) => any
-}
-
-export type serviceStatus =
-  | "running" // Instance is running
-  | "stopped" // Instance has stopped
-  | "failed" // Instance has failed
-  | "creating" // New instance has been picked up by queue and is being created
-  | "pending" // After creating a new instance after fully configured
-  | "pre-configured" // when creating a new instance before fully configured
-  | "creation-failed" // when creating a new instance failed
-  | "creation-success"
-
-export interface IInstance {
-  _id: string
-  service_status: serviceStatus
-  name: string
-  is_custom_database: boolean
-  database: string | string
-  config: {
-    environment_variables: IEnvironmentVariablesConfig
-    secrets_config: ISecretsConfig
-  }
-  version_id: string
-  version?: IVersion
-  application_id: string
-  status: string
-  swarm_id: string
-  created_at: Date
-  updated_at: Date
 }
 
 const columns: TableColumnProps<IInstance>[] = [

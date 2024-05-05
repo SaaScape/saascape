@@ -1,10 +1,19 @@
+import { Avatar, Card, Tabs } from "antd"
 import StatisticBanner from "../../../components/StatisticBanner"
-import { IViewProps } from "./ViewInstanceContainer"
+import { IViewProps, InstanceMenu } from "./ViewInstanceContainer"
+import Icon from "../../../components/Icon"
+import moment from "moment"
+import MenuContainer from "../../../components/MenuContainer"
+import MenuIcon from "../../../components/MenuIcon"
 
-const ViewInstance = ({ instance }: IViewProps) => {
+const ViewInstance = ({
+  instance,
+  instanceTabs,
+  instanceMenuItems,
+}: IViewProps) => {
   return (
     <section className='view-instance p-relative'>
-      <div className='top-bar-container'>
+      {/* <div className='top-bar-container'>
         <div className='top-bar d-flex justify-between align-center'>
           <div>
             <h1>{instance?.name}</h1>
@@ -12,32 +21,32 @@ const ViewInstance = ({ instance }: IViewProps) => {
           </div>
           <div className='right'></div>
         </div>
-      </div>
+      </div> */}
 
-      <StatisticBanner loading={false}>
-        <div>
-          <div className='title'>Replicas</div>
-          <div className='value'>{1}</div>
-        </div>
-        <div>
-          <div>
-            <div className='title'>CPU Usage</div>
-            <div className='value'>{`22%`}</div>
+      <Card className='m-b-20'>
+        <div className='instance-details d-flex justify-between align-center'>
+          <div className='left d-flex justify-start align-start'>
+            <Avatar size={40} icon={<Icon icon='INSTANCE' />} />
+            <div>
+              <h3>
+                <strong>{instance?.name}</strong> | {instance?.version?.tag}
+              </h3>
+              <span className='weak'>
+                Last modified {moment(instance?.updated_at).fromNow()}
+              </span>
+            </div>
+          </div>
+          <div className='right'>
+            <MenuContainer
+              MenuComponent={
+                <InstanceMenu instanceMenuItems={instanceMenuItems} />
+              }
+            >
+              <MenuIcon />
+            </MenuContainer>
           </div>
         </div>
-        <div>
-          <div>
-            <div className='title'>Memory</div>
-            <div className='value'>{"424 Mb"}</div>
-          </div>
-        </div>
-        <div>
-          <div>
-            <div className='title'>Version</div>
-            <div className='value'>{instance?.version?.tag}</div>
-          </div>
-        </div>
-      </StatisticBanner>
+      </Card>
 
       {/* 
      
@@ -58,6 +67,8 @@ const ViewInstance = ({ instance }: IViewProps) => {
     
 
      */}
+
+      <Tabs items={instanceTabs} className='instance-nav' />
     </section>
   )
 }
