@@ -2,13 +2,13 @@
  * Copyright SaaScape (c) 2024.
  */
 
-@import "./header.less";
-@import "./aside.less";
-@import "./menuContainer.less";
-@import "./userMenu.less";
-@import "./notificationMenu.less";
-@import "./breadcrumbs.less";
-@import "./statisticBanner.less";
+@import './header.less';
+@import './aside.less';
+@import './menuContainer.less';
+@import './userMenu.less';
+@import './notificationMenu.less';
+@import './breadcrumbs.less';
+@import './statisticBanner.less';
 
 .custom-component {
   &.integrations-bar {
@@ -110,6 +110,20 @@
   }
 }
 
+form {
+  .database-selection-container {
+    width: 100%;
+    .ant-form-item {
+      width: 100%;
+      padding-right: 10px;
+    }
+    .icon {
+      width: 30px;
+      margin-bottom: 24px;
+    }
+  }
+}
+
 // TAGS
 .tag-interface {
   .title {
@@ -125,5 +139,95 @@
   flex-wrap: wrap;
   .ant-tag {
     margin-bottom: 8px;
+  }
+}
+
+/**
+  Full Side Menu Component
+ */
+@keyframes overlay-dark {
+  0% {
+    background: transparent;
+  }
+  100% {
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+@keyframes remove-overlay-dark {
+  0% {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    background: transparent;
+  }
+}
+@keyframes slide-from-right {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes slide-to-right {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.custom-component.full-side-menu-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  //background: rgba(0,0,0,0.5);
+  width: 100%;
+  animation: overlay-dark 0.3s forwards;
+
+  &.overlay-animation-container-exit {
+    animation: remove-overlay-dark 0.3s forwards;
+  }
+
+  .full-side-menu {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    background-color: white;
+    width: auto;
+    box-shadow: @box-shadow;
+    width: 400px;
+    &.visible {
+      animation: slide-from-right 0.3s forwards;
+    }
+    &.hidden {
+      animation: slide-to-right 0.3s forwards;
+    }
+
+    display: grid;
+    grid-template-rows: 1fr;
+      &:has(.full-side-menu-header) {
+        grid-template-rows: 50px 1fr;
+      }
+
+    .full-side-menu-header {
+      padding: 10px;
+      border-bottom: 1px solid @gray-border;
+    }
+  }
+}
+
+.edit-instance-container{
+  height: 100%;
+  .body{}
+  .footer{
+    border-top: 1px solid @gray-border;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
   }
 }

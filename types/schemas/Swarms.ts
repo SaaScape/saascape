@@ -1,5 +1,9 @@
-import { Document } from "mongodb"
-import { IEncryptedData } from "../interfaces/interfaces"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+import { Document } from 'mongodb'
+import { IEncryptedData } from '../../server/interfaces/interfaces'
 
 export interface ISwarm extends Document {
   name: string

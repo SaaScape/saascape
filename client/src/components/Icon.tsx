@@ -16,13 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { IconDefinition } from "@fortawesome/free-solid-svg-icons"
-import * as solid from "@fortawesome/free-solid-svg-icons"
-import * as regular from "@fortawesome/free-regular-svg-icons"
-import * as brands from "@fortawesome/free-brands-svg-icons"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { IconDefinition } from '@fortawesome/free-solid-svg-icons'
+import * as solid from '@fortawesome/free-solid-svg-icons'
+import * as regular from '@fortawesome/free-regular-svg-icons'
+import * as brands from '@fortawesome/free-brands-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
-export type IconStyles = "solid" | "regular" | "brands"
+export type IconStyles = 'solid' | 'regular' | 'brands'
 
 interface IProps {
   icon: string
@@ -66,6 +66,7 @@ const iconsObj: IIconsObj = {
     INSTANCE: solid.faCircleNodes,
     PLUG: solid.faPlug,
     TAG: solid.faTag,
+    CLOSE: solid.faClose,
   },
   regular: {
     BELL: regular.faBell,
@@ -78,7 +79,7 @@ const iconsObj: IIconsObj = {
 }
 
 const Icon = (props: IProps) => {
-  const { icon, style = "solid" } = props
+  const { icon, style = 'solid' } = props
 
   return <FontAwesomeIcon icon={iconsObj?.[style]?.[icon]} />
 }

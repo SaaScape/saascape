@@ -1,23 +1,26 @@
-import { Link, useNavigate, useParams } from "react-router-dom"
-import { IApplicationProps } from "../ApplicationRouteHandler"
-import ViewInstance from "./ViewInstance"
-import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
-import { useEffect, useState } from "react"
-import breadcrumbs from "../../../helpers/constants/breadcrumbs"
-import { useSelector } from "react-redux"
-import { IStore } from "../../../store/store"
-import IInstance, { serviceStatus } from "types/schemas/Instances"
-import { apiAxios } from "../../../helpers/axios"
-import { Popconfirm, TabsProps } from "antd"
-import Icon from "../../../components/Icon"
-import EnvironmentConfig from "../../../components/Applications/configuration/EnvironmentConfig"
-import SecretsConfig from "../../../components/Applications/configuration/SecretsConfig"
-import InstanceOverview from "../../../components/Applications/Instances/InstanceOverview"
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { IApplicationProps } from '../ApplicationRouteHandler'
+import ViewInstance from './ViewInstance'
+import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
+import { useEffect, useState } from 'react'
+import breadcrumbs from '../../../helpers/constants/breadcrumbs'
+import { useSelector } from 'react-redux'
+import { IStore } from '../../../store/store'
+import IInstance, { serviceStatus } from 'types/schemas/Instances'
+import { apiAxios } from '../../../helpers/axios'
+import { Popconfirm, TabsProps } from 'antd'
+import Icon from '../../../components/Icon'
+import EnvironmentConfig from '../../../components/Applications/configuration/EnvironmentConfig'
+import SecretsConfig from '../../../components/Applications/configuration/SecretsConfig'
+import InstanceOverview from '../../../components/Applications/Instances/InstanceOverview'
+import SideFullMenu from '../../../components/SideFullMenu.tsx'
+import EditInstanceMenu from '../../../components/Applications/Instances/EditInstanceMenu.tsx'
 
 export interface IViewProps {
   instance?: IInstance
-  instanceTabs: TabsProps["items"]
+  instanceTabs: TabsProps['items']
   instanceMenuItems: instanceMenuItem
+  toggleInstanceEdit: (open: boolean) => void
 }
 
 type instanceMenuItem = {
@@ -32,20 +35,17 @@ const instanceStatusMap: {
   stopped: serviceStatus[]
   preConfig: serviceStatus[]
 } = {
-  running: ["running"],
-  failed: ["creation-failed", "failed"],
-  stopped: ["stopped"],
-  preConfig: ["pre-configured"],
+  running: ['running'],
+  failed: ['creation-failed', 'failed'],
+  stopped: ['stopped'],
+  preConfig: ['pre-configured'],
 }
 
 const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   const [instance, setInstance] = useState<IInstance>()
-  const [instanceMenuItems, setInstanceMenuItems] = useState<instanceMenuItem>(
-    []
-  )
-  const { selectedApplication } = useSelector(
-    (state: IStore) => state.applications
-  )
+  const [instanceMenuItems, setInstanceMenuItems] = useState<instanceMenuItem>([])
+  const [showEditInstance, setShowEditInstance] = useState(false)
+  const { selectedApplication } = useSelector((state: IStore) => state.applications)
   const { id, instanceId } = useParams()
   const setBreadcrumbs = useSetBreadcrumbs()
   const navigate = useNavigate()
@@ -61,8 +61,8 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
         selectedApplication?.application_name || id,
         id,
         instanceId,
-        instance?.name || instanceId
-      )
+        instance?.name || instanceId,
+      ),
     )
   }, [selectedApplication, instance])
 
@@ -87,21 +87,19 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
     ]
 
     if (!instance?.tenant) {
-      instanceMenuItems.unshift([
-        { text: "Allocate Tenant", onClick: () => {} },
-      ])
+      instanceMenuItems.unshift([{ text: 'Allocate Tenant', onClick: () => {} }])
     }
 
     if (instanceStatusMap.running.includes(instance.service_status)) {
       const runningItems: instanceMenuItem = [
-        [{ text: "Deploy Version", onClick: () => {} }],
+        [{ text: 'Deploy Version', onClick: () => {} }],
         [
           {
-            text: "Stop Instance",
+            text: 'Stop Instance',
             onClick: () => {},
           },
           {
-            text: "Restart",
+            text: 'Restart',
             onClick: () => {},
           },
         ],
@@ -111,7 +109,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
       const items: instanceMenuItem = [
         [
           {
-            text: "Re-Initialize Instance",
+            text: 'Re-Initialize Instance',
             onClick: () => {},
           },
         ],
@@ -121,16 +119,14 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
       const items: instanceMenuItem = [
         [
           {
-            text: "Start Instance",
+            text: 'Start Instance',
             onClick: () => {},
           },
         ],
       ]
       instanceMenuItems.unshift(...items)
     } else if (instanceStatusMap.preConfig.includes(instance.service_status)) {
-      const items: instanceMenuItem = [
-        [{ text: "Deploy Instance", onClick: () => {} }],
-      ]
+      const items: instanceMenuItem = [[{ text: 'Deploy Instance', onClick: () => {} }]]
       instanceMenuItems.unshift(...items)
     }
     setInstanceMenuItems(instanceMenuItems)
@@ -166,47 +162,67 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   //   }
   // }
 
+  const toggleInstanceEdit = (open: boolean) => {
+    setShowEditInstance(open)
+  }
+
   const instanceTabs = [
     {
-      key: "overview",
-      label: "Overview",
+      key: 'overview',
+      label: 'Overview',
       children: selectedApplication && (
         <InstanceOverview
           application={selectedApplication}
           instance={instance}
           setInstance={setInstance}
+          toggleInstanceEdit={toggleInstanceEdit}
         />
       ),
     },
     {
-      key: "config",
-      label: "Environment Config",
-      children: selectedApplication && (
-        <EnvironmentConfig
-          application={selectedApplication}
-          instance={instance}
-        />
-      ),
+      key: 'config',
+      label: 'Environment Config',
+      children: selectedApplication && <EnvironmentConfig application={selectedApplication} instance={instance} />,
     },
     {
-      key: "secrets",
-      label: "Secrets",
-      children: selectedApplication && (
-        <SecretsConfig application={selectedApplication} instance={instance} />
-      ),
+      key: 'secrets',
+      label: 'Secrets',
+      children: selectedApplication && <SecretsConfig application={selectedApplication} instance={instance} />,
     },
     {
-      key: "logs",
-      label: "Logs",
+      key: 'logs',
+      label: 'Logs',
     },
   ]
 
+  /**
+   * TODO: When editing an instance changes will be submitted to the database but the docker service will
+   * not be updated with the new configuration until the instance is redeployed
+   */
+
   return (
-    <ViewInstance
-      instance={instance}
-      instanceTabs={instanceTabs}
-      instanceMenuItems={instanceMenuItems}
-    />
+    <>
+      <ViewInstance
+        toggleInstanceEdit={toggleInstanceEdit}
+        instance={instance}
+        instanceTabs={instanceTabs}
+        instanceMenuItems={instanceMenuItems}
+      />
+      <SideFullMenu
+        onClose={() => {
+          toggleInstanceEdit(false)
+        }}
+        title={'Edit Instance'}
+        visible={showEditInstance}
+      >
+        <EditInstanceMenu
+          instance={instance}
+          onClose={() => {
+            toggleInstanceEdit(false)
+          }}
+        />
+      </SideFullMenu>
+    </>
   )
 }
 
@@ -224,7 +240,7 @@ export const InstanceMenu = (props: IInstanceMenuProps) => {
             return (
               <li key={itemIndex}>
                 <Link
-                  to={"#"}
+                  to={'#'}
                   onClick={(e) => {
                     if (item?.onClick) {
                       e.preventDefault()
