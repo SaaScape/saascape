@@ -1,3 +1,7 @@
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { IApplicationProps } from '../ApplicationRouteHandler'
 import ViewInstance from './ViewInstance'
@@ -6,8 +10,8 @@ import { useEffect, useState } from 'react'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs'
 import { useSelector } from 'react-redux'
 import { IStore } from '../../../store/store'
-import IInstance, { serviceStatus } from 'types/schemas/Instances'
-import { apiAxios } from '../../../helpers/axios'
+import IInstance, { instanceServiceStatus } from 'types/schemas/Instances'
+import { apiAxios, apiAxiosToast } from '../../../helpers/axios'
 import { Popconfirm, TabsProps } from 'antd'
 import Icon from '../../../components/Icon'
 import EnvironmentConfig from '../../../components/Applications/configuration/EnvironmentConfig'
@@ -15,12 +19,17 @@ import SecretsConfig from '../../../components/Applications/configuration/Secret
 import InstanceOverview from '../../../components/Applications/Instances/InstanceOverview'
 import SideFullMenu from '../../../components/SideFullMenu.tsx'
 import EditInstanceMenu from '../../../components/Applications/Instances/EditInstanceMenu.tsx'
+import { IMenuContainerRef, useMenuContainer } from '../../../components/MenuContainer.tsx'
+import VersionSelectionModal from '../../../components/Applications/Instances/VersionSelectionModal.tsx'
+import { ConfigModules } from 'types/enums.ts'
+import { toast } from 'react-toastify'
 
 export interface IViewProps {
   instance?: IInstance
   instanceTabs: TabsProps['items']
   instanceMenuItems: instanceMenuItem
   toggleInstanceEdit: (open: boolean) => void
+  instanceMenuContainer: IMenuContainerRef
 }
 
 type instanceMenuItem = {
@@ -30,25 +39,30 @@ type instanceMenuItem = {
 }[][]
 
 const instanceStatusMap: {
-  running: serviceStatus[]
-  failed: serviceStatus[]
-  stopped: serviceStatus[]
-  preConfig: serviceStatus[]
+  running: instanceServiceStatus[]
+  failed: instanceServiceStatus[]
+  stopped: instanceServiceStatus[]
+  preConfig: instanceServiceStatus[]
 } = {
-  running: ['running'],
-  failed: ['creation-failed', 'failed'],
-  stopped: ['stopped'],
-  preConfig: ['pre-configured'],
+  running: [instanceServiceStatus.RUNNING],
+  failed: [instanceServiceStatus.CREATION_FAILED, instanceServiceStatus.FAILED],
+  stopped: [instanceServiceStatus.STOPPED],
+  preConfig: [instanceServiceStatus.PRE_CONFIGURED],
 }
 
 const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   const [instance, setInstance] = useState<IInstance>()
   const [instanceMenuItems, setInstanceMenuItems] = useState<instanceMenuItem>([])
   const [showEditInstance, setShowEditInstance] = useState(false)
+  const [showVersionSelectionModal, setShowVersionSelectionModal] = useState(false)
+  const [saving, setSaving] = useState(false)
+
   const { selectedApplication } = useSelector((state: IStore) => state.applications)
+
   const { id, instanceId } = useParams()
   const setBreadcrumbs = useSetBreadcrumbs()
   const navigate = useNavigate()
+  const instanceMenuContainer = useMenuContainer()
 
   useEffect(() => {
     setId(id)
@@ -73,6 +87,15 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   useEffect(() => {
     if (!instance) return
     const instanceMenuItems: instanceMenuItem = [
+      [
+        {
+          text: 'Configure',
+          onClick: () => {
+            instanceMenuContainer?.closeMenu?.()
+            toggleInstanceEdit(true)
+          },
+        },
+      ],
       [
         {
           text: (
@@ -126,7 +149,20 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
       ]
       instanceMenuItems.unshift(...items)
     } else if (instanceStatusMap.preConfig.includes(instance.service_status)) {
-      const items: instanceMenuItem = [[{ text: 'Deploy Instance', onClick: () => {} }]]
+      const items: instanceMenuItem = [
+        [
+          {
+            text: 'Deploy Instance',
+            onClick: () => {},
+          },
+          {
+            text: 'Select Version',
+            onClick: () => {
+              toggleVersionSelectionModal(true)
+            },
+          },
+        ],
+      ]
       instanceMenuItems.unshift(...items)
     }
     setInstanceMenuItems(instanceMenuItems)
@@ -166,6 +202,10 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
     setShowEditInstance(open)
   }
 
+  const toggleVersionSelectionModal = (open: boolean) => {
+    setShowVersionSelectionModal(open)
+  }
+
   const instanceTabs = [
     {
       key: 'overview',
@@ -200,6 +240,42 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
    * not be updated with the new configuration until the instance is redeployed
    */
 
+  const onInstanceSave = async (values: any) => {
+    setSaving(true)
+    const toastId = toast('Updating instance...', { isLoading: true })
+    const { data } = await apiAxiosToast(toastId).put(`/applications/${id}/instances/${instanceId}`, values)
+    if (data.success) {
+      setInstance(data?.data?.instance?.instance)
+      toggleInstanceEdit(false)
+      toast.update(toastId, { isLoading: false, type: 'success', render: 'Instance updated successfully' })
+    }
+    setSaving(false)
+  }
+
+  const onVersionUpdate = async (data: any) => {
+    setSaving(true)
+
+    const toastId = toast('Updating version...', { isLoading: true })
+
+    const payload = {
+      configModule: ConfigModules.INSTANCE_VERSION,
+      version_id: data.version_id,
+      updateService: false,
+    }
+    const { data: responseData } = await apiAxiosToast(toastId).put(
+      `/applications/${id}/instances/${instanceId}/config`,
+      payload,
+    )
+
+    if (responseData.success) {
+      setInstance(responseData?.data?.instance?.instance)
+      toggleVersionSelectionModal(false)
+      toast.update(toastId, { isLoading: false, type: 'success', render: 'Version updated successfully' })
+    }
+
+    setSaving(false)
+  }
+
   return (
     <>
       <ViewInstance
@@ -207,6 +283,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
         instance={instance}
         instanceTabs={instanceTabs}
         instanceMenuItems={instanceMenuItems}
+        instanceMenuContainer={instanceMenuContainer}
       />
       <SideFullMenu
         onClose={() => {
@@ -216,12 +293,25 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
         visible={showEditInstance}
       >
         <EditInstanceMenu
+          saving={saving}
           instance={instance}
           onClose={() => {
             toggleInstanceEdit(false)
           }}
+          onSave={onInstanceSave}
         />
       </SideFullMenu>
+
+      <VersionSelectionModal
+        selectedApplication={selectedApplication}
+        instance={instance}
+        open={showVersionSelectionModal}
+        onCancel={() => {
+          toggleVersionSelectionModal(false)
+        }}
+        onVersionUpdate={onVersionUpdate}
+        saving={saving}
+      />
     </>
   )
 }
@@ -244,6 +334,7 @@ export const InstanceMenu = (props: IInstanceMenuProps) => {
                   onClick={(e) => {
                     if (item?.onClick) {
                       e.preventDefault()
+                      e.stopPropagation()
                       item?.onClick()
                     }
                   }}

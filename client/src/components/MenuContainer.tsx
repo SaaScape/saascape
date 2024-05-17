@@ -1,7 +1,11 @@
-import React, { useEffect, useRef, useState } from "react"
-import { CSSTransition } from "react-transition-group"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
 
-interface IMenuContainerRef {
+import React, { useEffect, useRef, useState } from 'react'
+import { CSSTransition } from 'react-transition-group'
+
+export interface IMenuContainerRef {
   closeMenu?: () => void
 }
 interface IProps {
@@ -49,10 +53,10 @@ const MenuContainer = (props: IProps) => {
       if (menuRef.current?.contains(e.target as Node)) return
       closeMenu()
     }
-    document.body.addEventListener("click", event)
+    document.body.addEventListener('click', event)
 
     return () => {
-      document.body.removeEventListener("click", event)
+      document.body.removeEventListener('click', event)
     }
   }, [showMenu])
 
@@ -61,20 +65,10 @@ const MenuContainer = (props: IProps) => {
   }, [showMenu])
 
   return (
-    <div
-      ref={containerRef}
-      className='component-menu-container'
-      onClick={toggleMenu}
-    >
+    <div ref={containerRef} className="component-menu-container" onClick={toggleMenu}>
       {props.children}
-      <CSSTransition
-        in={showMenu}
-        timeout={300}
-        classNames='menu-animate'
-        unmountOnExit={true}
-        nodeRef={menuRef}
-      >
-        <div ref={menuRef} className='component-menu' style={style}>
+      <CSSTransition in={showMenu} timeout={300} classNames="menu-animate" unmountOnExit={true} nodeRef={menuRef}>
+        <div ref={menuRef} className="component-menu" style={style}>
           {MenuComponent}
         </div>
       </CSSTransition>

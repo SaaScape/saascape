@@ -1,3 +1,7 @@
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
 import { Avatar, Card, Tabs } from 'antd'
 import { IViewProps, InstanceMenu } from './ViewInstanceContainer'
 import Icon from '../../../components/Icon'
@@ -5,19 +9,9 @@ import moment from 'moment'
 import MenuContainer from '../../../components/MenuContainer'
 import MenuIcon from '../../../components/MenuIcon'
 
-const ViewInstance = ({ instance, instanceTabs, instanceMenuItems }: IViewProps) => {
+const ViewInstance = ({ instance, instanceTabs, instanceMenuItems, instanceMenuContainer }: IViewProps) => {
   return (
     <section className="view-instance p-relative">
-      {/* <div className='top-bar-container'>
-        <div className='top-bar d-flex justify-between align-center'>
-          <div>
-            <h1>{instance?.name}</h1>
-            <p>Instance configuration</p>
-          </div>
-          <div className='right'></div>
-        </div>
-      </div> */}
-
       <Card className="m-b-20">
         <div className="instance-details d-flex justify-between align-center">
           <div className="left d-flex justify-start align-start">
@@ -30,7 +24,10 @@ const ViewInstance = ({ instance, instanceTabs, instanceMenuItems }: IViewProps)
             </div>
           </div>
           <div className="right">
-            <MenuContainer MenuComponent={<InstanceMenu instanceMenuItems={instanceMenuItems} />}>
+            <MenuContainer
+              menuContainer={instanceMenuContainer}
+              MenuComponent={<InstanceMenu instanceMenuItems={instanceMenuItems} />}
+            >
               <MenuIcon />
             </MenuContainer>
           </div>

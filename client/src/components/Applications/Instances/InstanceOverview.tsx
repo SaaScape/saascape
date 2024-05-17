@@ -1,3 +1,7 @@
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
 import IInstance from 'types/schemas/Instances'
 import { IApplication } from '../../../store/slices/applicationSlice'
 import { Button, Card, Tag } from 'antd'
@@ -26,6 +30,7 @@ const InstanceOverview = ({ instance, application, setInstance, toggleInstanceEd
   console.log(menuContainer)
 
   const swarm = swarms.find((swarm) => swarm?._id === instance?.swarm_id)
+  const { domain } = instance || {}
 
   const handleTagSave = async (tags: string[], updateType: UpdateType) => {
     const payload: {
@@ -91,6 +96,12 @@ const InstanceOverview = ({ instance, application, setInstance, toggleInstanceEd
                 </Button>
               </div>
             </div>
+            <div>
+              <div className="title">Domain</div>
+              <div className="d-flex align-center justify-between">
+                <span>{domain?.domain_name || 'None'}</span>
+              </div>
+            </div>
           </div>
           <div className="grid-child">
             <div>
@@ -118,31 +129,6 @@ const InstanceOverview = ({ instance, application, setInstance, toggleInstanceEd
           </div>
         </div>
       </Card>
-
-      {/* <StatisticBanner loading={false}>
-        <div>
-          <div className='title'>Replicas</div>
-          <div className='value'>{1}</div>
-        </div>
-        <div>
-          <div>
-            <div className='title'>CPU Usage</div>
-            <div className='value'>{`22%`}</div>
-          </div>
-        </div>
-        <div>
-          <div>
-            <div className='title'>Memory</div>
-            <div className='value'>{"424 Mb"}</div>
-          </div>
-        </div>
-        <div>
-          <div>
-            <div className='title'>Version</div>
-            <div className='value'>{instance?.version?.tag}</div>
-          </div>
-        </div>
-      </StatisticBanner> */}
     </section>
   )
 }
