@@ -15,6 +15,8 @@ import queues from '../helpers/queues'
 import SSL from '../modules/ssl'
 import dns from 'node:dns'
 import IInstance from 'types/schemas/Instances'
+import { IApplication } from '../schemas/Applications'
+import { has } from 'lodash'
 
 export default class DomainService {
   async findMany(query: any) {
@@ -138,6 +140,14 @@ export default class DomainService {
 
     const newLinkedServers: IDomain['linked_servers'] = []
 
+    // Check if domain is mapped to an instance
+    const instance = await db.managementDb?.collection<IInstance>('instances').findOne({ domain_id: domain?._id })
+    const application =
+      instance?.application_id &&
+      (await db.managementDb?.collection<IApplication>('applications').findOne({ _id: instance?.application_id }))
+
+    const hasApplicationDirectives = application?.config?.nginx?.directives
+
     for (const server of servers || []) {
       try {
         if (!server?._id || server?.availability === constants.AVAILABILITY.OFFLINE) {
@@ -156,10 +166,15 @@ export default class DomainService {
         }
 
         isSSLDomain = isSSLDomain && certFileExistence.cert && certFileExistence.key
+        const applicationDirectivesExist =
+          hasApplicationDirectives &&
+          (await ssh
+            .checkIfFileExists(`/etc/nginx/saascape/${domain?.domain_name}/application.conf`)
+            .catch(() => false))
 
         const configFiles = {
-          secure: await getDomainConfigFile(domain, true),
-          insecure: await getDomainConfigFile(domain, false),
+          secure: await getDomainConfigFile(domain, true, !!applicationDirectivesExist),
+          insecure: await getDomainConfigFile(domain, false, !!applicationDirectivesExist),
         }
 
         await serverService

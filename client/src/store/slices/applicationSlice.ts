@@ -1,8 +1,9 @@
-import { createSlice } from "@reduxjs/toolkit"
-import {
-  IEncryptedData,
-  ILinkedIdEnabledDocument,
-} from "../../interfaces/interfaces"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+import { createSlice } from '@reduxjs/toolkit'
+import { IEncryptedData, ILinkedIdEnabledDocument } from '../../interfaces/interfaces'
 
 export interface ICustomField {
   _id: string
@@ -12,7 +13,7 @@ export interface ICustomField {
   options?: string[]
 }
 
-export type ContactType = "tenant" | "lead"
+export type ContactType = 'tenant' | 'lead'
 
 export interface ICustomField {
   _id: string
@@ -49,6 +50,9 @@ export interface IApplicationConfig {
   secrets_config: ISecretsConfig
 
   environment_config: IEnvironmentVariablesConfig
+  nginx: {
+    directives?: string
+  }
 }
 
 export interface IApplication extends ILinkedIdEnabledDocument {
@@ -71,7 +75,7 @@ const initialState: {
 }
 
 const applicationsSlice = createSlice({
-  name: "applications",
+  name: 'applications',
   initialState,
   reducers: {
     setApplications: (state, action) => {
@@ -80,9 +84,7 @@ const applicationsSlice = createSlice({
     },
     updateApplication: (state, action) => {
       const application = action.payload
-      const index = state.applications.findIndex(
-        (app) => app._id === application._id
-      )
+      const index = state.applications.findIndex((app) => app._id === application._id)
       state.applications[index] = application
       if (state?.selectedApplication?._id === application._id) {
         state.selectedApplication = application
@@ -98,5 +100,4 @@ const applicationsSlice = createSlice({
 })
 
 export default applicationsSlice.reducer
-export const { setApplications, setSelectedApplication, updateApplication } =
-  applicationsSlice.actions
+export const { setApplications, setSelectedApplication, updateApplication } = applicationsSlice.actions

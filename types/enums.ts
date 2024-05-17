@@ -7,7 +7,9 @@ export enum ConfigModules {
   SECRETS_CONFIG = 'secrets_config',
   ENVIRONMENT_CONFIG = 'environment_config',
   TAGS = 'tags',
+  VERSION_CONFIG = 'version_config',
   INSTANCE_VERSION = 'instance_version',
+  NGINX_DIRECTIVE = 'nginx_directive',
 }
 
 export enum UpdateType {

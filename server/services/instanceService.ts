@@ -70,12 +70,23 @@ export default class InstanceService {
           },
         },
         {
+          $lookup: {
+            from: 'domains',
+            localField: 'domain_id',
+            foreignField: '_id',
+            as: 'domain',
+          },
+        },
+        {
           $set: {
             version: { $first: '$version' },
+            domain: { $first: '$domain' },
           },
         },
       ])
       .toArray()
+
+    // TODO: Apply instance secrets config transport encryption here
 
     return {
       instances,
@@ -299,8 +310,6 @@ export default class InstanceService {
           break
       }
     }
-
-    console.log(JSON.stringify(bulkWrites))
 
     await db.managementDb?.collection<IInstance>('instances')?.bulkWrite(bulkWrites)
 

@@ -1,46 +1,50 @@
-import { CronJob } from "cron"
-import ServerService from "../../services/serverService"
-import { db } from "../../db"
-import { IServer } from "../../schemas/Servers"
-import constants from "../../helpers/constants"
-import { logError } from "../../helpers/error"
-import { IDomain } from "../../schemas/Domains"
-import { ObjectId } from "mongodb"
-import SSL from "../../modules/ssl"
-import moment from "moment"
-import DomainService from "../../services/domainsService"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+import { CronJob } from 'cron'
+import ServerService from '../../services/serverService'
+import { db } from '../../db'
+import { IServer } from '../../schemas/Servers'
+import constants from '../../helpers/constants'
+import { logError } from '../../helpers/error'
+import { IDomain } from '../../schemas/Domains'
+import { ObjectId } from 'mongodb'
+import SSL from '../../modules/ssl'
+import moment from 'moment'
+import DomainService from '../../services/domainsService'
+import ApplicationService from '../../services/applicationService'
 
 const crons: { [key: string]: CronJob } = {}
 
 const initializeDomainCrons = (use: Function) => {
-  const renewDomainsCron = new CronJob("0 2 * * *", use(renewDomains))
-  const bulkApplySSLCron = new CronJob("0 */1 * * *", use(bulkApplySSLCer))
-  const getDNSDataCron = new CronJob("*/30 * * * * *", use(getDNSData))
+  const renewDomainsCron = new CronJob('0 2 * * *', use(renewDomains))
+  const bulkApplySSLCron = new CronJob('0 */1 * * *', use(bulkApplySSLCer))
+  const getDNSDataCron = new CronJob('*/30 * * * * *', use(getDNSData))
+  const syncApplicationDirectivesCron = new CronJob('*/10 * * * * *', use(syncApplicationDirectives))
 
   //  Start crons
   bulkApplySSLCron.start()
   renewDomainsCron.start()
   getDNSDataCron.start()
+  syncApplicationDirectivesCron.start()
 
   //  Store crons
-  crons["bulkApplySSLCron"] = bulkApplySSLCron
-  crons["renewDomainsCron"] = renewDomainsCron
-  crons["getDNSDataCron"] = getDNSDataCron
+  crons['bulkApplySSLCron'] = bulkApplySSLCron
+  crons['renewDomainsCron'] = renewDomainsCron
+  crons['getDNSDataCron'] = getDNSDataCron
+  crons['syncApplicationDirectives'] = syncApplicationDirectivesCron
 }
 
 const renewDomains = async () => {
-  console.log("renewing domains")
-  crons?.["renewDomainsCron"]?.stop()
+  console.log('renewing domains')
+  crons?.['renewDomainsCron']?.stop()
   const domains = await db.managementDb
-    ?.collection<IDomain>("domains")
+    ?.collection<IDomain>('domains')
     .find({
-      "SSL.end_date": { $lte: moment().add(30, "days").toDate() },
-      "SSL.status": {
-        $in: [
-          constants.SSL_STATUSES.EXPIRED,
-          constants.SSL_STATUSES.EXPIRING,
-          constants.SSL_STATUSES.ACTIVE,
-        ],
+      'SSL.end_date': { $lte: moment().add(30, 'days').toDate() },
+      'SSL.status': {
+        $in: [constants.SSL_STATUSES.EXPIRED, constants.SSL_STATUSES.EXPIRING, constants.SSL_STATUSES.ACTIVE],
       },
     })
     .toArray()
@@ -48,8 +52,8 @@ const renewDomains = async () => {
   if (domains?.length) {
     console.log(`${domains.length} domains will be expiring soon`)
   } else {
-    console.log("No domains will be expiring soon")
-    crons?.["renewDomainsCron"]?.start()
+    console.log('No domains will be expiring soon')
+    crons?.['renewDomainsCron']?.start()
     return
   }
 
@@ -57,13 +61,11 @@ const renewDomains = async () => {
 
   for (const domain of domains) {
     const thisMoment = moment()
-    const latestMoment = moment(thisMoment).add(30, "days")
+    const latestMoment = moment(thisMoment).add(30, 'days')
 
     const sslStatus =
-      (moment(domain?.SSL?.end_date).isSameOrBefore(thisMoment) &&
-        constants.SSL_STATUSES.EXPIRED) ||
-      (moment(domain?.SSL?.end_date).isSameOrBefore(latestMoment) &&
-        constants.SSL_STATUSES.EXPIRING)
+      (moment(domain?.SSL?.end_date).isSameOrBefore(thisMoment) && constants.SSL_STATUSES.EXPIRED) ||
+      (moment(domain?.SSL?.end_date).isSameOrBefore(latestMoment) && constants.SSL_STATUSES.EXPIRING)
 
     bulkUpdates.push({
       updateOne: {
@@ -72,7 +74,7 @@ const renewDomains = async () => {
         },
         update: {
           $set: {
-            "SSL.status": sslStatus,
+            'SSL.status': sslStatus,
           },
         },
       },
@@ -80,7 +82,7 @@ const renewDomains = async () => {
   }
 
   if (bulkUpdates.length) {
-    await db.managementDb?.collection<IDomain>("domains").bulkWrite(bulkUpdates)
+    await db.managementDb?.collection<IDomain>('domains').bulkWrite(bulkUpdates)
   }
 
   for (const domain of domains || []) {
@@ -98,24 +100,23 @@ const renewDomains = async () => {
       })
     }
   }
-  crons?.["renewDomainsCron"]?.start()
+  crons?.['renewDomainsCron']?.start()
 }
-
 const bulkApplySSLCer = async () => {
-  console.log("bulk applying ssl cer")
-  crons?.["bulkApplySSLCron"]?.stop()
+  console.log('bulk applying ssl cer')
+  crons?.['bulkApplySSLCron']?.stop()
 
   const domains = await db.managementDb
-    ?.collection<IDomain>("domains")
+    ?.collection<IDomain>('domains')
     .find({
-      "SSL.status": {
+      'SSL.status': {
         $in: [constants.SSL_STATUSES.EXPIRING, constants.SSL_STATUSES.ACTIVE],
       },
     })
     .toArray()
 
   if (!domains?.length) {
-    crons?.["bulkApplySSLCron"]?.start()
+    crons?.['bulkApplySSLCron']?.start()
     return
   }
 
@@ -128,14 +129,19 @@ const bulkApplySSLCer = async () => {
     }
   }
 
-  crons?.["bulkApplySSLCron"]?.start()
+  crons?.['bulkApplySSLCron']?.start()
 }
-
 const getDNSData = async () => {
   const domainService = new DomainService()
-  crons?.["getDNSDataCron"]?.stop()
+  crons?.['getDNSDataCron']?.stop()
   await domainService.cronCheckDnsData().catch((err) => console.log(err))
-  crons?.["getDNSDataCron"]?.start()
+  crons?.['getDNSDataCron']?.start()
+}
+const syncApplicationDirectives = async () => {
+  const applicationService = new ApplicationService()
+  crons?.['syncApplicationDirectives']?.stop()
+  await applicationService.syncApplicationDirectivesCron()
+  crons?.['syncApplicationDirectives']?.start()
 }
 
 export default initializeDomainCrons

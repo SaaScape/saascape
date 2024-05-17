@@ -108,7 +108,7 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
             />
           </Form.Item>
           <Form.Item tooltip={toolTips?.port} label={'Port'} name={'port'} rules={requiredFormItemRules}>
-            <InputNumber min={0} max={65535} readOnly={instance?.port_assignment === 'auto'} />
+            <InputNumber min={0} max={65535} />
           </Form.Item>
           <Form.Item label={'Replicas'} name={'replicas'} rules={requiredFormItemRules}>
             <InputNumber min={0} />

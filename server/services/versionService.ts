@@ -1,12 +1,16 @@
-import Dockerode from "dockerode"
-import { getClient } from "../clients/clients"
-import IVersion from "../schemas/Versions"
-import { ObjectId } from "mongodb"
-import { db } from "../db"
-import { IApplication } from "../schemas/Applications"
-import { decipherData } from "../helpers/utils"
-import Pagination from "../helpers/pagination"
-import constants from "../helpers/constants"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+import Dockerode from 'dockerode'
+import { getClient } from '../clients/clients'
+import IVersion from '../schemas/Versions'
+import { ObjectId } from 'mongodb'
+import { db } from '../db'
+import { IApplication } from '../schemas/Applications'
+import { decipherData } from '../helpers/utils'
+import Pagination from '../helpers/pagination'
+import constants from '../helpers/constants'
 
 interface IClientData {
   namespace: string
@@ -27,15 +31,15 @@ export default class VersionService {
     }
 
     if (query?.searchValue) {
-      findObj["$or"] = [
-        { namespace: { $regex: query.searchValue, $options: "i" } },
-        { tag: { $regex: query.searchValue, $options: "i" } },
-        { repository: { $regex: query.searchValue, $options: "i" } },
+      findObj['$or'] = [
+        { namespace: { $regex: query.searchValue, $options: 'i' } },
+        { tag: { $regex: query.searchValue, $options: 'i' } },
+        { repository: { $regex: query.searchValue, $options: 'i' } },
       ]
     }
 
     const versions = await pagination.runPaginatedQuery({
-      collection: db.managementDb?.collection("versions"),
+      collection: db.managementDb?.collection('versions'),
       findObj,
     })
 
@@ -44,86 +48,68 @@ export default class VersionService {
     }
   }
 
-  pullImage(
-    application: IApplication,
-    dockerClient: Dockerode,
-    namespace: string,
-    repository: string,
-    tag: string
-  ) {
-    return new Promise<{ tag: string; image: string }>(
-      async (resolve, reject) => {
-        let repo = `${repository}`
-        if (namespace) {
-          repo = `${namespace}/${repository}`
-        }
-        const dockerImage = `${repo}:${tag}`
-        const newImageTag = `${tag}-${Date.now()}`
-
-        const encryptedData = {
-          username: application.config?.version_config?.docker_hub_username,
-          password: application.config?.version_config?.docker_hub_password,
-        }
-
-        const authconfig = {
-          username:
-            encryptedData.username &&
-            decipherData(
-              encryptedData.username?.encryptedData,
-              encryptedData.username?.iv
-            ),
-          password:
-            encryptedData.password &&
-            decipherData(
-              encryptedData.password?.encryptedData,
-              encryptedData.password?.iv
-            ),
-        }
-
-        dockerClient.pull(dockerImage, { authconfig }, (err, stream) => {
-          if (err) {
-            reject(err)
-          }
-          const onFinished = async (err: any, output: any) => {
-            if (err) reject(err)
-
-            await dockerClient
-              ?.getImage(dockerImage)
-              .tag({ repo, tag: newImageTag })
-
-            console.log("output", output)
-            resolve({ tag: newImageTag, image: `${repo}:${newImageTag}` })
-          }
-          const onProgress = (event: any) => {}
-
-          try {
-            dockerClient?.modem?.followProgress(stream, onFinished, onProgress)
-          } catch (err) {
-            console.log(err)
-            reject(err)
-          }
-        })
+  pullImage(application: IApplication, dockerClient: Dockerode, namespace: string, repository: string, tag: string) {
+    return new Promise<{ tag: string; image: string }>(async (resolve, reject) => {
+      let repo = `${repository}`
+      if (namespace) {
+        repo = `${namespace}/${repository}`
       }
-    )
+      const dockerImage = `${repo}:${tag}`
+      const newImageTag = `${tag}-${Date.now()}`
+
+      const encryptedData = {
+        username: application.config?.version_config?.docker_hub_username,
+        password: application.config?.version_config?.docker_hub_password,
+      }
+
+      const authconfig = {
+        username:
+          encryptedData.username && decipherData(encryptedData.username?.encryptedData, encryptedData.username?.iv),
+        password:
+          encryptedData.password && decipherData(encryptedData.password?.encryptedData, encryptedData.password?.iv),
+      }
+
+      dockerClient.pull(dockerImage, { authconfig }, (err, stream) => {
+        if (err) {
+          reject(err)
+        }
+        const onFinished = async (err: any, output: any) => {
+          if (err) reject(err)
+
+          await dockerClient?.getImage(dockerImage).tag({ repo, tag: newImageTag })
+
+          console.log('output', output)
+          resolve({ tag: newImageTag, image: `${repo}:${newImageTag}` })
+        }
+        const onProgress = (event: any) => {}
+
+        try {
+          dockerClient?.modem?.followProgress(stream, onFinished, onProgress)
+        } catch (err) {
+          console.log(err)
+          reject(err)
+        }
+      })
+    })
   }
   async createVersion(data: IClientData, isWebhook?: boolean) {
     const application = await db.managementDb
-      ?.collection<IApplication>("applications")
+      ?.collection<IApplication>('applications')
       .findOne({ _id: new ObjectId(this.applicationId) })
-    if (!application) throw { showError: "Application not found" }
+    if (!application) throw { showError: 'Application not found' }
 
     if (!isWebhook) {
       // Right now we are retrieving the docker client but without the ability to specify from which swarm. This will be vital when we have more than one swarm
-      const dockerClient = (await getClient("docker", "manager")) as Dockerode
-      if (!dockerClient) throw { showError: "Docker client not found" }
+      const dockerClient = (await getClient('docker', 'manager')) as Dockerode
+      if (!dockerClient) throw { showError: 'Docker client not found' }
       const imagePullResult = await this.pullImage(
         application,
         dockerClient,
         data.namespace,
         data.repository,
-        data.tag
+        data.tag,
       ).catch((err) => {
-        throw { showError: "Unable to pull image" }
+        throw { showError: 'Unable to pull image' }
       })
     }
 
@@ -138,23 +124,19 @@ export default class VersionService {
       updated_at: new Date(),
     }
 
-    const version = await db.managementDb
-      ?.collection<IVersion>("versions")
-      .insertOne(versionPayload)
+    const version = await db.managementDb?.collection<IVersion>('versions').insertOne(versionPayload)
 
-    if (!version?.insertedId) throw { showError: "Unable to create version" }
+    if (!version?.insertedId) throw { showError: 'Unable to create version' }
     return { version: versionPayload }
   }
 
   async getVersionById(versionId: string) {
-    const version = await db.managementDb
-      ?.collection<IVersion>("versions")
-      .findOne({
-        application_id: new ObjectId(this.applicationId),
-        _id: new ObjectId(versionId),
-      })
+    const version = await db.managementDb?.collection<IVersion>('versions').findOne({
+      application_id: new ObjectId(this.applicationId),
+      _id: new ObjectId(versionId),
+    })
 
-    if (!version) throw { showError: "Version not found" }
+    if (!version) throw { showError: 'Version not found' }
     return { version }
   }
 }

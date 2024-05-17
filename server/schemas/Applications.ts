@@ -1,10 +1,11 @@
-import { Document, ObjectId } from "mongodb"
-import {
-  IEncryptedData,
-  ILinkedIdEnabledDocument,
-} from "../interfaces/interfaces"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
 
-export type ContactType = "tenant" | "lead"
+import { Document, ObjectId } from 'mongodb'
+import { IEncryptedData, ILinkedIdEnabledDocument } from '../interfaces/interfaces'
+
+export type ContactType = 'tenant' | 'lead'
 
 export interface ICustomField {
   _id: ObjectId
@@ -44,6 +45,9 @@ export interface IApplicationConfig {
   }
   secrets_config: ISecretsConfig
   environment_config: IEnvironmentVariablesConfig
+  nginx: {
+    directives?: string
+  }
 }
 
 export interface IApplication extends Document, ILinkedIdEnabledDocument {
