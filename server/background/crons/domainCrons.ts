@@ -21,7 +21,7 @@ const initializeDomainCrons = (use: Function) => {
   const renewDomainsCron = new CronJob('0 2 * * *', use(renewDomains))
   const bulkApplySSLCron = new CronJob('0 */1 * * *', use(bulkApplySSLCer))
   const getDNSDataCron = new CronJob('*/30 * * * * *', use(getDNSData))
-  const syncApplicationDirectivesCron = new CronJob('*/10 * * * * *', use(syncApplicationDirectives))
+  const syncApplicationDirectivesCron = new CronJob('0 */1 * * *', use(syncApplicationDirectives))
 
   //  Start crons
   bulkApplySSLCron.start()
