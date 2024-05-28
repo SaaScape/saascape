@@ -1,11 +1,16 @@
-import { Socket, io } from "socket.io-client"
-import constants from "../../helpers/constants"
-import ServerSocket from "../socketServices/serverSocket"
-import DomainSocket from "../socketServices/domainSocket"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+import { Socket, io } from 'socket.io-client'
+import constants from '../../helpers/constants'
+import ServerSocket from '../socketServices/serverSocket'
+import DomainSocket from '../socketServices/domainSocket'
+import InstanceSocket from '../socketServices/instanceSocket'
 export let socket: Socket | undefined
 
 const generateSocketEventMap = () => {
-  const socketServices = [ServerSocket, DomainSocket]
+  const socketServices = [ServerSocket, DomainSocket, InstanceSocket]
   const obj: { [key: string]: string } = {}
   for (const Service of socketServices) {
     const service = new Service()
@@ -28,11 +33,7 @@ class SocketEvent {
   }
 
   handleEventError(err: any) {
-    console.error(
-      `An error occurred when executing, ${this?.event} : ${JSON.stringify(
-        err
-      )}`
-    )
+    console.error(`An error occurred when executing, ${this?.event} : ${JSON.stringify(err)}`)
   }
 
   async handleEvent() {
@@ -40,9 +41,7 @@ class SocketEvent {
       const Service = this.routeMap?.[socketEventMap?.[this.event]]
       if (!Service) return
       const service = new Service(this.data, this.event)
-      await Promise.resolve(service.events?.[this.event]?.()).catch(
-        this.handleEventError
-      )
+      await Promise.resolve(service.events?.[this.event]?.()).catch(this.handleEventError)
     } catch (err) {
       console.warn(err)
     }
@@ -52,6 +51,7 @@ class SocketEvent {
     // MAP ROUTES TO SERVICE
     [constants.SOCKET_ROUTES.SERVER]: ServerSocket,
     [constants.SOCKET_ROUTES.DOMAIN]: DomainSocket,
+    [constants.SOCKET_ROUTES.INSTANCE]: InstanceSocket,
   }
 }
 
@@ -65,14 +65,14 @@ const socketRoutes = (socket: Socket) => {
 
 export const initSocketClient = async () => {
   return new Promise((resolve, reject) => {
-    const socketIo = io(process?.env?.BACKEND_URL || "", {
+    const socketIo = io(process?.env?.BACKEND_URL || '', {
       auth: {
-        type: "background_server",
+        type: 'background_server',
         token: process.env?.BACKGROUND_SOCKET_TOKEN,
       },
     })
-    socketIo.on("connect", () => {
-      console.log("Background server connected to main server on", socketIo?.id)
+    socketIo.on('connect', () => {
+      console.log('Background server connected to main server on', socketIo?.id)
       socket = socketIo
       socketRoutes(socket)
       resolve(socket)

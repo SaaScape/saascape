@@ -19,6 +19,7 @@ export interface ISecret {
   _id: ObjectId
   name: string
   value: IEncryptedData
+  docker_secret_id?: string
 }
 
 export interface IEnvironmentVariable {

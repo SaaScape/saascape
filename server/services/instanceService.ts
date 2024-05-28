@@ -4,11 +4,13 @@
 
 import { ObjectId } from 'mongodb'
 import { db } from '../db'
-import IInstance, { instanceServiceStatus } from 'types/schemas/Instances'
-import { ConfigModules, UpdateType } from 'types/enums'
+import IInstance, { instanceDbStatus, InstanceServiceStatus } from 'types/schemas/Instances'
+import { ConfigModules, instanceHealth, updateStatus, UpdateType } from 'types/enums'
 import constants from '../helpers/constants'
 import { IApplication } from '../schemas/Applications'
 import { decryptClientTransport, encryptData, prepareApplicationPayloadForTransport } from '../helpers/utils'
+import Instance from '../modules/instance'
+import { clients } from '../clients/clients'
 
 interface IUpdateConfigData {
   configModule: ConfigModules
@@ -31,7 +33,7 @@ export default class InstanceService {
         {
           $match: {
             application_id: this.applicationId,
-            status: constants.STATUSES.ACTIVE_STATUS,
+            status: instanceDbStatus.ACTIVE,
           },
         },
         { $group: { _id: '$service_status', count: { $count: {} } } },
@@ -58,7 +60,7 @@ export default class InstanceService {
         {
           $match: {
             application_id: this.applicationId,
-            status: constants.STATUSES.ACTIVE_STATUS,
+            status: { $nin: [instanceDbStatus.DELETED] },
           },
         },
         {
@@ -102,7 +104,7 @@ export default class InstanceService {
             $match: {
               _id: instanceId,
               application_id: this.applicationId,
-              status: constants.STATUSES.ACTIVE_STATUS,
+              status: { $nin: [instanceDbStatus.DELETED] },
             },
           },
           { $limit: 1 },
@@ -150,7 +152,7 @@ export default class InstanceService {
     // Check if instance already exists with the same name
     const foundInstance = await db.managementDb
       ?.collection<IInstance>('instances')
-      .countDocuments({ name, status: constants.STATUSES.ACTIVE_STATUS })
+      .countDocuments({ name, status: { $nin: [instanceDbStatus.DELETED] } })
 
     if (!!foundInstance) {
       throw { showError: 'Instance already exists' }
@@ -167,7 +169,10 @@ export default class InstanceService {
     const payload: IInstance = {
       _id: new ObjectId(),
       name,
-      service_status: instanceServiceStatus.PRE_CONFIGURED,
+      service_status: InstanceServiceStatus.PRE_CONFIGURED,
+      service_health: instanceHealth.UNKNOWN,
+      service_health_updated_at: new Date(),
+      update_status: updateStatus.READY,
       config: {
         environment_config: application?.config?.environment_config,
         secrets_config: application?.config?.secrets_config,
@@ -177,7 +182,7 @@ export default class InstanceService {
       database: is_custom_database ? database : new ObjectId(database),
       version_id: new ObjectId(version_id),
       application_id: this.applicationId,
-      status: constants.STATUSES.ACTIVE_STATUS,
+      status: instanceDbStatus.ACTIVE,
       swarm_id: new ObjectId(swarm_id),
       port: 0,
       replicas: 0,
@@ -193,7 +198,7 @@ export default class InstanceService {
       {
         _id: payload._id,
         application_id: this.applicationId,
-        status: constants.STATUSES.ACTIVE_STATUS,
+        status: instanceDbStatus.ACTIVE,
       },
       payload,
       {
@@ -202,6 +207,8 @@ export default class InstanceService {
       },
     )
 
+    if (!instance) throw { showError: 'Instance not created' }
+
     return {
       instance,
     }
@@ -209,9 +216,12 @@ export default class InstanceService {
 
   async deleteOne(instanceId: ObjectId) {
     // Do some logic here with regards to deleting the instance, such as removing service etc
-    await db.managementDb?.collection<IInstance>('instances').deleteOne({
-      _id: instanceId,
-    })
+    await db.managementDb?.collection<IInstance>('instances').updateOne(
+      {
+        _id: instanceId,
+      },
+      { $set: { status: instanceDbStatus.PENDING_REMOVAL } },
+    )
   }
 
   private async updateVariables(id: string, data: IUpdateConfigData, type: string) {
@@ -409,7 +419,10 @@ export default class InstanceService {
   async checkDomainInUse(domainId: ObjectId, instanceId?: ObjectId) {
     return db.managementDb
       ?.collection<IInstance>('instances')
-      .findOne({ domain_id: domainId, _id: { $ne: instanceId } }, { projection: { name: 1 } })
+      .findOne(
+        { status: { $nin: [instanceDbStatus.DELETED] }, domain_id: domainId, _id: { $ne: instanceId } },
+        { projection: { name: 1 } },
+      )
   }
 
   async updateOne(id: string, data: any) {
@@ -439,8 +452,29 @@ export default class InstanceService {
 
     await db.managementDb?.collection<IInstance>('instances').updateOne({ _id: new ObjectId(id) }, { $set: payload })
 
-    const updatedInstance = await this.findOne(new ObjectId(id))
+    return await this.findOne(new ObjectId(id))
+  }
 
-    return updatedInstance
+  async requestDeployment(id: string) {
+    const instance = await db.managementDb
+      ?.collection<IInstance>('instances')
+      ?.findOne({ _id: new ObjectId(id), application_id: this.applicationId })
+    if (!instance) throw { showError: 'Instance not found' }
+
+    // Check instance has all required fields to deploy
+    const { name, database, port, replicas, swarm_id, domain_id, version_id, update_status } = instance
+
+    // Check update status
+    if (update_status !== updateStatus.READY) throw { showError: 'Instance is not ready to be updated' }
+
+    if (!name || !database || !port || !(replicas > 0) || !swarm_id || !domain_id || !version_id)
+      throw { showError: 'Missing required fields' }
+
+    await db.managementDb
+      ?.collection<IInstance>('instances')
+      .updateOne({ _id: new ObjectId(id) }, { $set: { status: instanceDbStatus.PENDING_DEPLOYMENT } })
+    // TODO: When pending deployment, do not allow any updates to the instance or additional deployments
+
+    return await this.findOne(new ObjectId(id))
   }
 }

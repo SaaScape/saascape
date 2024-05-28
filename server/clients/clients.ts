@@ -1,23 +1,30 @@
-import { db } from "../db"
-import { IServer } from "../schemas/Servers"
-import constants from "../helpers/constants"
-import DockerService from "../services/dockerService"
-import { IDockerClients, ISSHClients } from "../interfaces/clients"
-import SSHService from "../services/sshService"
-import { decipherData } from "../helpers/utils"
-import Dockerode from "dockerode"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
 
-const clients: { docker: IDockerClients; ssh: ISSHClients } = {
+import { db } from '../db'
+import { IServer } from '../schemas/Servers'
+import constants from '../helpers/constants'
+import DockerService from '../services/dockerService'
+import { IDockerClients, IInstanceClients, ISSHClients } from '../interfaces/clients'
+import SSHService from '../services/sshService'
+import { decipherData } from '../helpers/utils'
+import Dockerode from 'dockerode'
+import IInstance, { instanceDbStatus } from 'types/schemas/Instances'
+import Instance from '../modules/instance'
+
+const clients: { docker: IDockerClients; ssh: ISSHClients; instance: IInstanceClients } = {
   docker: {},
   ssh: {},
+  instance: {},
 }
 export const initializeDockerClients = async () => {
-  console.log("Initializing docker clients")
+  console.log('Initializing docker clients')
   const servers = await db.managementDb
-    ?.collection<IServer>("servers")
+    ?.collection<IServer>('servers')
     .find({
       status: constants.STATUSES.ACTIVE_STATUS,
-      "linked_ids.name": constants.INTEGRATIONS.DOCKER,
+      'linked_ids.name': constants.INTEGRATIONS.DOCKER,
     })
     .toArray()
 
@@ -33,9 +40,9 @@ export const initializeDockerClients = async () => {
 }
 
 export const initializeSSHClients = async () => {
-  console.log("Initializing ssh clients")
+  console.log('Initializing ssh clients')
   const servers = await db.managementDb
-    ?.collection<IServer>("servers")
+    ?.collection<IServer>('servers')
     .find({
       status: constants.STATUSES.ACTIVE_STATUS,
     })
@@ -43,14 +50,8 @@ export const initializeSSHClients = async () => {
 
   for (const server of servers || []) {
     try {
-      const adminUsername = decipherData(
-        server?.admin_username?.encryptedData,
-        server?.admin_username?.iv
-      )
-      const privateKey = decipherData(
-        server?.private_key?.encryptedData,
-        server?.private_key?.iv
-      )
+      const adminUsername = decipherData(server?.admin_username?.encryptedData, server?.admin_username?.iv)
+      const privateKey = decipherData(server?.private_key?.encryptedData, server?.private_key?.iv)
 
       const ssh = new SSHService({
         host: server?.server_ip_address,
@@ -62,8 +63,8 @@ export const initializeSSHClients = async () => {
       clients.ssh[server?._id?.toString()] = ssh
 
       // Connection even listeners here
-      ssh.client.connection?.on("close", async () => {
-        console.log("connection to ssh client, closed. Attempting to reconnect")
+      ssh.client.connection?.on('close', async () => {
+        console.log('connection to ssh client, closed. Attempting to reconnect')
         await ssh.connect()
       })
       await ssh.connect()
@@ -73,35 +74,67 @@ export const initializeSSHClients = async () => {
   }
 }
 
-const initializeClients = async () => {
-  await Promise.allSettled([initializeDockerClients(), initializeSSHClients()])
-  console.log("Clients have been initialized")
+export const initializeInstanceClients = async () => {
+  console.log('Initializing instance clients')
+  const instances = await db.managementDb
+    ?.collection<IInstance>('instances')
+    .find({ status: instanceDbStatus.ACTIVE })
+    .toArray()
+
+  for (const instance of instances || []) {
+    try {
+      if (clients.instance[instance?._id?.toString()]) {
+        clients.instance[instance?._id?.toString()].instance = instance
+        continue
+      }
+      const instanceClient = new Instance(instance)
+      clients.instance[instance?._id?.toString()] = instanceClient
+      await instanceClient.getServiceData()
+    } catch (err) {
+      console.warn('Error initialising instance clients', err)
+    }
+  }
+
+  console.log('Instance clients have been initialized')
+}
+
+const initializeClients = async (type: 'background' | 'primary') => {
+  if (type === 'background') {
+    await Promise.allSettled([initializeDockerClients(), initializeSSHClients(), initializeInstanceClients()])
+  } else {
+    await Promise.allSettled([initializeDockerClients(), initializeSSHClients()])
+  }
+  console.log('Clients have been initialized')
 }
 
 const getClient = async (
-  type: "docker" | "ssh",
-  swarmRole?: "manager" | "worker"
+  type: 'docker' | 'ssh',
+  swarmRole?: 'manager' | 'worker',
+  options?: { swarmId?: string },
 ): Promise<Dockerode | SSHService | undefined> => {
   for (const client of Object.values(clients[type])) {
     try {
       switch (type) {
-        case "docker":
+        case 'docker':
           const dockerClient = client as Dockerode
 
           await dockerClient.ping()
           if (swarmRole) {
             const dockerInfo = await dockerClient.info()
-            const { NodeID, RemoteManagers } = dockerInfo?.Swarm
-            const isManager = RemoteManagers?.some(
-              (manager: any) => manager?.NodeID === NodeID
-            )
+            const {
+              NodeID,
+              RemoteManagers,
+              Cluster: { ID },
+            } = dockerInfo?.Swarm
+            const isManager = RemoteManagers?.some((manager: any) => manager?.NodeID === NodeID)
 
-            if (swarmRole === "manager" && !isManager) continue
-            if (swarmRole === "worker" && isManager) continue
+            if (options?.swarmId && options?.swarmId !== ID) continue
+            if (swarmRole === 'manager' && !isManager) continue
+            if (swarmRole === 'worker' && isManager) continue
           }
 
           return client
-        case "ssh":
+        case 'ssh':
           return client
       }
     } catch (err) {

@@ -6,12 +6,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { IApplicationProps } from '../ApplicationRouteHandler'
 import ViewInstance from './ViewInstance'
 import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs'
 import { useSelector } from 'react-redux'
 import { IStore } from '../../../store/store'
-import IInstance, { instanceServiceStatus } from 'types/schemas/Instances'
-import { apiAxios, apiAxiosToast } from '../../../helpers/axios'
+import IInstance, { InstanceServiceStatus } from 'types/schemas/Instances'
+import { apiAxios, apiAxiosClean, apiAxiosToast } from '../../../helpers/axios'
 import { Popconfirm, TabsProps } from 'antd'
 import Icon from '../../../components/Icon'
 import EnvironmentConfig from '../../../components/Applications/configuration/EnvironmentConfig'
@@ -23,6 +23,7 @@ import { IMenuContainerRef, useMenuContainer } from '../../../components/MenuCon
 import VersionSelectionModal from '../../../components/Applications/Instances/VersionSelectionModal.tsx'
 import { ConfigModules } from 'types/enums.ts'
 import { toast } from 'react-toastify'
+import { deploymentActions, DeploymentStages, InstancesWrapperContext } from '../../../components/InstancesWrapper.tsx'
 
 export interface IViewProps {
   instance?: IInstance
@@ -39,15 +40,15 @@ type instanceMenuItem = {
 }[][]
 
 const instanceStatusMap: {
-  running: instanceServiceStatus[]
-  failed: instanceServiceStatus[]
-  stopped: instanceServiceStatus[]
-  preConfig: instanceServiceStatus[]
+  running: InstanceServiceStatus[]
+  failed: InstanceServiceStatus[]
+  stopped: InstanceServiceStatus[]
+  preConfig: InstanceServiceStatus[]
 } = {
-  running: [instanceServiceStatus.RUNNING],
-  failed: [instanceServiceStatus.CREATION_FAILED, instanceServiceStatus.FAILED],
-  stopped: [instanceServiceStatus.STOPPED],
-  preConfig: [instanceServiceStatus.PRE_CONFIGURED],
+  running: [InstanceServiceStatus.RUNNING],
+  failed: [InstanceServiceStatus.CREATION_FAILED, InstanceServiceStatus.FAILED],
+  stopped: [InstanceServiceStatus.STOPPED],
+  preConfig: [InstanceServiceStatus.PRE_CONFIGURED],
 }
 
 const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
@@ -63,6 +64,8 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   const setBreadcrumbs = useSetBreadcrumbs()
   const navigate = useNavigate()
   const instanceMenuContainer = useMenuContainer()
+
+  const { startDeployment, progressDeployment, failDeployment } = useContext(InstancesWrapperContext)
 
   useEffect(() => {
     setId(id)
@@ -153,7 +156,9 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
         [
           {
             text: 'Deploy Instance',
-            onClick: () => {},
+            onClick: async () => {
+              await deployInstance()
+            },
           },
           {
             text: 'Select Version',
@@ -167,6 +172,13 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
     }
     setInstanceMenuItems(instanceMenuItems)
   }, [instance])
+
+  const deployInstance = async () => {
+    if (!id || !instanceId || !instance) return
+    // Instead of calling dispatch deployments here, we should be using methods provided by the context to do so instead
+    const result = await startDeployment(instance)
+    result?.instance && setInstance(result?.instance)
+  }
 
   const getInstance = async () => {
     if (!id || !instanceId) return

@@ -1,0 +1,169 @@
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+import IInstance, { instanceDbStatus, InstanceServiceStatus } from 'types/schemas/Instances'
+import { instanceHealth } from 'types/enums'
+import constants from '../helpers/constants'
+import { clients, getClient } from '../clients/clients'
+import { db } from '../db'
+import Service, { IHealthObj } from './service'
+import moment from 'moment'
+
+export default class Instance {
+  instance: IInstance
+  health: instanceHealth
+  instanceServiceStatus: InstanceServiceStatus
+  serviceActive: boolean
+  serviceId?: string
+  service?: Service
+
+  constructor(instance: IInstance) {
+    this.instance = instance
+    this.health = instanceHealth.UNKNOWN
+    this.instanceServiceStatus = this.instance.service_status || InstanceServiceStatus.UNKNOWN
+    this.serviceActive = false
+  }
+
+  getServiceData = async () => {
+    // This method controls the service data inside the instance and should be called after all changes to the instance to get latest data from the service
+    // This method will also be called periodically to keep the data updated
+    console.log('Getting service data for', this.instance?._id?.toString(), this.instance?.name)
+    this.serviceId = this.instance?.linked_ids?.find((id) => id.name === constants.SERVICE)?.id
+    this.serviceActive = !!this.serviceId
+    this.service ??= new Service(this)
+
+    if (this.serviceActive) {
+      //  Get service data
+      //   Run service getData commands, to update the instance health etc.
+      const serviceData = await this.service.getServiceData()
+      const health = await this.service.checkServiceHealth()
+      await this.updateInstanceHealth(health)
+    }
+  }
+
+  addToClients() {
+    console.log('Adding instance to client')
+    clients.instance[this.instance?._id?.toString()] = this
+  }
+
+  removeFromClients() {
+    console.log('Removing instance from client')
+    delete clients.instance[this.instance?._id?.toString()]
+  }
+
+  async updateInstanceDetails() {
+    // This method will be called to get latest service data from the db and service this is called when the instance is updated or every 1 hour by cron
+    const instance = await db.managementDb?.collection<IInstance>('instances').findOne({ _id: this.instance?._id })
+    if (!instance) {
+      this.removeFromClients()
+      return
+    }
+    this.instance = instance
+    await this.getServiceData()
+  }
+
+  async create() {
+    console.log('Creating instance service on swarm')
+    //   Check if service is already active
+    await this.getServiceData()
+    if (this.serviceActive) {
+      console.log('Service is already active skipping creation')
+      return
+    }
+  }
+
+  async updateInstanceHealth(healthObj: IHealthObj) {
+    this.health = healthObj.instanceHealthStatus
+    this.instanceServiceStatus = healthObj.instanceStatus
+    this.instance.replica_health = healthObj.replicaStates
+
+    const payload: any = {
+      service_status: healthObj.instanceStatus,
+      replica_health: healthObj.replicaStates,
+      service_health: healthObj.instanceHealthStatus,
+    }
+
+    if (this.instance.service_health !== healthObj.instanceHealthStatus) {
+      payload.service_health_updated_at = new Date()
+    }
+
+    await db.managementDb?.collection<IInstance>('instances').updateOne(
+      { _id: this.instance._id },
+      {
+        $set: payload,
+      },
+    )
+    //   Send socket to server to let know of update in instance health which will then be sent to client
+  }
+
+  async sendInstanceHealthNotifications() {
+    const { service_health_notified_at, service_health_updated_at, service_health } = this.instance
+
+    if (service_health === instanceHealth.HEALTHY || !this.serviceActive) return
+
+    const notifIntervals: {
+      other: { sendEveryXMinutes: number }
+      [lastXMinutes: number]: { sendEveryXMinutes: number }
+    } = {
+      10: {
+        sendEveryXMinutes: 5,
+      },
+      20: {
+        sendEveryXMinutes: 10,
+      },
+      30: {
+        sendEveryXMinutes: 15,
+      },
+      60: {
+        sendEveryXMinutes: 20,
+      },
+      other: {
+        sendEveryXMinutes: 30,
+      },
+    }
+
+    const lastNotified = service_health_notified_at && moment(service_health_notified_at)
+    const lastUpdated = moment(service_health_updated_at)
+    const minutesSinceLastUpdate = moment().diff(lastUpdated, 'minutes')
+    const minutesSinceLastNotified = lastNotified ? moment().diff(lastNotified, 'minutes') : 0
+
+    let shouldSendNotification = !lastNotified
+
+    if (!shouldSendNotification) {
+      for (const [lastXMinutes, obj] of Object.entries(notifIntervals)) {
+        if (lastXMinutes !== 'other' && minutesSinceLastUpdate > +lastXMinutes) continue
+
+        console.log(shouldSendNotification, lastXMinutes, obj.sendEveryXMinutes)
+        if (!(+minutesSinceLastNotified >= obj.sendEveryXMinutes)) break
+        shouldSendNotification = true
+        break
+      }
+    }
+
+    if (!shouldSendNotification) return
+
+    // Send notification
+    console.log('Sending notification')
+
+    // TODO: Implement email and socket notifications here
+
+    await db.managementDb?.collection<IInstance>('instances').updateOne(
+      { _id: this.instance._id },
+      {
+        $set: {
+          service_health_notified_at: new Date(),
+        },
+      },
+    )
+  }
+
+  async deleteInstance() {
+    console.log('Deleting instance')
+    await this.service?.deleteService()
+    await db.managementDb
+      ?.collection<IInstance>('instances')
+      .updateOne({ _id: this.instance._id }, { $set: { status: instanceDbStatus.DELETED } })
+    this.removeFromClients()
+  }
+}

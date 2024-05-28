@@ -9,6 +9,9 @@ import { ObjectId } from 'mongodb'
 import InstanceService from '../../services/instanceService'
 import withPerms from '../../middleware/withPerms'
 import permissions from '../../helpers/permissions'
+import { io } from '../../init/sockets'
+import constants from '../../helpers/constants'
+import Instance from '../../modules/instance'
 
 export default (app: Router, use: any) => {
   const router = Router({ mergeParams: true })
@@ -21,6 +24,7 @@ export default (app: Router, use: any) => {
   router.put('/:id', use(updateOne))
   router.delete('/:id', use(deleteOne))
   router.put('/:id/config', use(withPerms([permissions.APPLICATIONS.UPDATE_APPLICATIONS])), use(updateConfig))
+  router.put('/:id/deploy', use(withPerms([permissions.APPLICATIONS.UPDATE_APPLICATIONS])), use(deployInstance))
 }
 
 const findMany: API = async (req, res) => {
@@ -48,6 +52,9 @@ const insertOne: API = async (req, res) => {
   const { application_id } = req.params
   const instanceService = new InstanceService(new ObjectId(application_id))
   const { instance } = await instanceService.create(req.body)
+  io?.io
+    ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+    .emit(constants.SOCKET_EVENTS.CREATE_INSTANCE_CLIENT, { instance_id: instance?._id })
   sendSuccessResponse({ instance }, req, res)
 }
 
@@ -55,17 +62,37 @@ const deleteOne: API = async (req, res) => {
   const { application_id, id } = req.params
   const instanceService = new InstanceService(new ObjectId(application_id))
   await instanceService.deleteOne(new ObjectId(id))
+
+  io?.io
+    ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+    .emit(constants.SOCKET_EVENTS.INSTANCE_DELETE, { instance_id: id })
   sendSuccessResponse({}, req, res)
 }
 const updateConfig: API = async (req, res) => {
   const { application_id, id } = req.params
   const instanceService = new InstanceService(new ObjectId(application_id))
   const instance = (await instanceService.updateConfig(id, req.body)) || {}
+  io?.io
+    ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+    .emit(constants.SOCKET_EVENTS.UPDATE_INSTANCE_CLIENT_DATA, { instance_id: id })
   sendSuccessResponse({ instance }, req, res)
 }
 const updateOne: API = async (req, res) => {
   const { application_id, id } = req.params
   const instanceService = new InstanceService(new ObjectId(application_id))
   const instance = (await instanceService.updateOne(id, req.body)) || {}
+  io?.io
+    ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+    .emit(constants.SOCKET_EVENTS.UPDATE_INSTANCE_CLIENT_DATA, { instance_id: id })
+  sendSuccessResponse({ instance }, req, res)
+}
+
+const deployInstance: API = async (req, res) => {
+  const { application_id, id } = req.params
+  const instanceService = new InstanceService(new ObjectId(application_id))
+  const instance = (await instanceService.requestDeployment(id)) || {}
+  io?.io
+    ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+    .emit(constants.SOCKET_EVENTS.DEPLOY_INSTANCE, { instance_id: id })
   sendSuccessResponse({ instance }, req, res)
 }

@@ -10,7 +10,6 @@ import { initSockets } from './init/sockets'
 import { initExpressRoutes } from './init/expressRoutes'
 import { db } from './db'
 import initializeClients from './clients/clients'
-
 ;(async () => {
   const { SSL_KEY, SSL_CERT, HOST_PORT } = process.env
   const isSSL = SSL_KEY && SSL_CERT
@@ -26,7 +25,7 @@ import initializeClients from './clients/clients'
   await db.init().then(async () => await db.connect())
   initSockets(webServer)
   initExpressRoutes(app)
-  initializeClients()
+  initializeClients('primary')
 
   webServer.listen(HOST_PORT, () => {
     console.log(`Listening on port ${HOST_PORT}`)

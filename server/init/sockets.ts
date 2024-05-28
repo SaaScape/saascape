@@ -1,8 +1,13 @@
-import http from "http"
-import https from "https"
-import { Server } from "socket.io"
-import jwtHelper from "../modules/jwt"
-import constants from "../helpers/constants"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+import http from 'http'
+import https from 'https'
+import { Server } from 'socket.io'
+import jwtHelper from '../modules/jwt'
+import constants from '../helpers/constants'
+import initializeSocketEvents from './socketListeners'
 
 interface ISocketConnection {
   userId?: string
@@ -20,9 +25,10 @@ class SocketServer {
 
   startServer(webServer: http.Server | https.Server) {
     this.webServer = webServer
-    const io = new Server(webServer)
+    const io: Server = new Server(webServer)
+
     this.io = io
-    console.log("Socket server started")
+    console.log('Socket server started')
     this.initRoutes()
   }
 
@@ -32,21 +38,22 @@ class SocketServer {
     io.use(async (socket, next) => {
       try {
         const { auth } = socket?.handshake
-        if (auth?.type === "background_server") {
+        if (auth?.type === 'background_server') {
           if (auth?.token !== process?.env?.BACKGROUND_SOCKET_TOKEN) {
-            const err = new Error("Invalid background server token")
+            const err = new Error('Invalid background server token')
             return next(err)
           }
           socket.join(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+          socket.data.isBackground = true
           return next()
         } else {
           const cookies = Object.fromEntries(
-            (socket.handshake.headers.cookie || "").split("; ").map((str) => {
-              const i = str.indexOf("=")
+            (socket.handshake.headers.cookie || '').split('; ').map((str) => {
+              const i = str.indexOf('=')
               const key = str.slice(0, i)
               const value = str.slice(i + 1)
               return [key, value]
-            }) || []
+            }) || [],
           )
 
           if (!cookies?.accessToken) {
@@ -60,17 +67,19 @@ class SocketServer {
           return next()
         }
       } catch (error: any) {
-        console.log("Socket error", error)
+        console.log('Socket error', error)
         return next(error)
       }
     })
 
-    io.on("connection", (socket) => {
-      socket.on("disconnect", () => {
+    io.on('connection', (socket) => {
+      socket.on('disconnect', () => {
         delete this.connections[socket.id]
       })
+      initializeSocketEvents(socket)
     })
-    console.log("Socket routes initialized")
+
+    console.log('Socket routes initialized')
   }
 }
 

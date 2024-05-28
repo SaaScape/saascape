@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb'
 import { db } from '../db'
 import constants from '../helpers/constants'
 import Pagination from '../helpers/pagination'
-import { DomainSSLStatus, IDomain } from '../schemas/Domains'
+import { IDomain } from '../schemas/Domains'
 import ServerService from './serverService'
 import { IServer } from '../schemas/Servers'
 import { getDomainConfigFile } from '../modules/nginx'
@@ -14,9 +14,10 @@ import { logError } from '../helpers/error'
 import queues from '../helpers/queues'
 import SSL from '../modules/ssl'
 import dns from 'node:dns'
-import IInstance from 'types/schemas/Instances'
+import IInstance, { instanceDbStatus } from 'types/schemas/Instances'
 import { IApplication } from '../schemas/Applications'
-import { has } from 'lodash'
+import { SSLStatus } from 'types/enums'
+import { decipherData } from '../helpers/utils'
 
 export default class DomainService {
   async findMany(query: any) {
@@ -31,7 +32,7 @@ export default class DomainService {
       const domainsToIgnore = new Set()
       const instances = await db?.managementDb
         ?.collection<IInstance>('instances')
-        .find({ status: constants.STATUSES.ACTIVE_STATUS })
+        .find({ status: instanceDbStatus.ACTIVE })
         .project({ domain_id: 1 })
         .toArray()
       for (const instance of instances || []) {
@@ -58,6 +59,7 @@ export default class DomainService {
 
   async findOne(id: string) {
     const domain = await db.managementDb?.collection('domains').findOne({ _id: new ObjectId(id) })
+    // TODO: Remove ssl key before sending to client
     if (!domain) throw { showError: 'Domain not found' }
     return { domain }
   }
@@ -84,7 +86,7 @@ export default class DomainService {
       description: data.description,
       enable_ssl: data?.enable_ssl,
       SSL: {
-        status: constants.SSL_STATUSES.PENDING_INITIALIZATION as DomainSSLStatus,
+        status: SSLStatus.PENDING_INITIALIZATION,
       },
       DNS: {
         a_record: '',
@@ -337,4 +339,27 @@ export default class DomainService {
 
     await db?.managementDb?.collection<IDomain>('domains').bulkWrite(bulkUpdates)
   }
+
+  // TODO: Do not allow deletion of domain, if linked to an instance
+
+  async getSSLCerts(domainId: ObjectId): Promise<false | DecipheredCertificates> {
+    // Do not expose to front end
+    const domain = await db.managementDb?.collection<IDomain>('domains').findOne({ _id: domainId })
+    if (!domain) throw new Error('Domain not found')
+    if (!domain.enable_ssl) return false
+
+    const { certificates, status } = domain?.SSL || {}
+
+    if (!status || !constants.ACTIVE_SSL_STATUSES.includes(status))
+      throw new Error('Domain SSL is not ready to be applied')
+    if (!certificates) throw new Error('No SSL certificates found')
+
+    return {
+      cert: certificates.cert && decipherData(certificates.cert.encryptedData, certificates.cert.iv),
+      key: certificates.key && decipherData(certificates.key.encryptedData, certificates.key.iv),
+      csr: certificates.csr && decipherData(certificates.csr.encryptedData, certificates.csr.iv),
+    }
+  }
 }
+
+export type DecipheredCertificates = { cert: string; key: string; csr: string }

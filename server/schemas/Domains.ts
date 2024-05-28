@@ -1,12 +1,12 @@
-import { Document, ObjectId } from "mongodb"
-import { IEncryptedData } from "../interfaces/interfaces"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
 
-export type DomainSSLStatus =
-  | "active"
-  | "pending_initialization"
-  | "initializing"
-  | "expiring"
-  | "expired"
+import { Document, ObjectId } from 'mongodb'
+import { IEncryptedData } from '../interfaces/interfaces'
+import { SSLStatus } from 'types/enums'
+
+export type DomainSSLStatus = 'active' | 'pending_initialization' | 'initializing' | 'expiring' | 'expired'
 export interface IDomain extends Document {
   domain_name: string
   status: string
@@ -18,7 +18,7 @@ export interface IDomain extends Document {
     last_updated: Date
   }
   SSL?: {
-    status: DomainSSLStatus
+    status: SSLStatus
     challenge_token?: string
     challenge_auth_key?: string
     certificates?: {
