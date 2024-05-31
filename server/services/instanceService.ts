@@ -312,6 +312,7 @@ export default class InstanceService {
 
           for (const fieldKey in fields[_id]) {
             const updatePath = `config.${type}.${_id.toString()}.${fieldKey}`
+            const dockerSecretPath = `config.${type}.${_id.toString()}.docker_secret_id`
 
             const value = fields?.[_id]?.[fieldKey]
 
@@ -320,6 +321,7 @@ export default class InstanceService {
                 if (isSecret) {
                   // const decipheredValue = await decryptClientTransport(value || '')
                   updateObj.updateOne.update.$set[updatePath] = encryptData(value)
+                  updateObj.updateOne.update.$set[dockerSecretPath] = null
                   break
                 }
 

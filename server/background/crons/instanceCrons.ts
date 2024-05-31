@@ -8,7 +8,7 @@ import { clients, initializeInstanceClients } from '../../clients/clients'
 const crons: { [key: string]: CronJob } = {}
 
 const initializeInstanceCrons = (use: Function) => {
-  const updateInstanceDetailsCron = new CronJob('*/30 * * * * *', use(updateInstanceDetails))
+  const updateInstanceDetailsCron = new CronJob('*/10 * * * * *', use(updateInstanceDetails))
   const fetchNewClientsCron = new CronJob('*/30 * * * * *', use(fetchNewClients))
   const sendInstanceHealthNotificationsCron = new CronJob('*/30 * * * * *', use(sendInstanceHealthNotifications))
 
@@ -22,12 +22,14 @@ const initializeInstanceCrons = (use: Function) => {
 }
 
 const updateInstanceDetails = async () => {
+  crons['updateInstanceDetailsCron'].stop()
   console.log('Updating instance data')
   for (const instanceClient of Object.values(clients.instance)) {
     try {
       await instanceClient.updateInstanceDetails()
     } catch (err) {}
   }
+  crons['updateInstanceDetailsCron'].start()
 }
 
 const fetchNewClients = async () => {

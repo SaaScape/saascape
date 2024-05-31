@@ -68,7 +68,17 @@ export default class Instance {
 
   async updateInstanceDetails() {
     // This method will be called to get latest service data from the db and service this is called when the instance is updated or every 1 hour by cron
-    const instance = await db.managementDb?.collection<IInstance>('instances').findOne({ _id: this.instance?._id })
+    const instance = (
+      await db.managementDb
+        ?.collection<IInstance>('instances')
+        .aggregate([
+          { $match: { _id: this.instance?._id } },
+          { $lookup: { from: 'domains', localField: 'domain_id', foreignField: '_id', as: 'domain' } },
+          { $set: { domain: { $first: '$domain' } } },
+        ])
+        .toArray()
+    )?.[0] as IInstance
+
     if (!instance) {
       this.removeFromClients()
       return

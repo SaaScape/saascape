@@ -68,8 +68,6 @@ export default class Service {
   }
 
   async createCustomSecret(secretName: string, secretValue: string) {
-    console.log('creating custom secret')
-
     const dockerClient = await this.getDockerClient()
 
     const secret = await dockerClient.createSecret({
@@ -85,50 +83,18 @@ export default class Service {
     return (await this.getSecretById(secret.id)) as Dockerode.Secret
   }
 
-  async updateSecret(secretId: string, name: string, value: string) {
-    const secret = await this.getSecretById(secretId)
-
-    if (!secret || !(secret instanceof Dockerode.Secret)) {
-      throw new Error('Docker secret not found')
-    }
-
-    const updateResult = await secret
-      .update({
-        Name: name,
-        Labels: { instanceId: this.instanceClient.instance?._id?.toString(), secretId },
-        Data: Buffer.from(value).toString('base64'),
-      })
-      .catch((err) => {
-        console.warn('Error updating secret', err)
-        return false
-      })
-
-    if (!updateResult) {
-      throw new Error('Docker secret not updated')
-    }
-
-    return updateResult.id
-  }
-
   async createSecret(
     id: string,
     secret: IInstance['config']['secrets_config'][string],
     dockerClient: Dockerode,
-    forceUpdate: boolean = false,
     bulkUpdates?: any[],
   ) {
     const decodedValue = decipherData(secret.value.encryptedData, secret.value.iv)
-    const secretName = `${this.instanceClient.instance?._id?.toString()}-${lodash.snakeCase(secret.name)}`
+    const secretName = `${new ObjectId().toString()}-${lodash.snakeCase(secret.name)}`
 
     if (secret.docker_secret_id) {
-      if (!forceUpdate) {
-        const dockerSecret = await this.getSecretById(secret.docker_secret_id)
-        if (dockerSecret) return secret.docker_secret_id
-      }
-      return await this.updateSecret(secret.docker_secret_id, secretName, decodedValue).catch((err) => {
-        console.warn('unable to update secret', err)
-        return
-      })
+      const dockerSecret = await this.getSecretById(secret.docker_secret_id)
+      if (dockerSecret) return secret.docker_secret_id
     }
 
     const dockerSecret = await dockerClient.createSecret({
@@ -166,47 +132,36 @@ export default class Service {
       .getSSLCerts(this.instanceClient.instance?.domain_id)
       .catch((err) => false)
     if (!certificates) return
-    // Find secret ids for certificates or create new ones
-    const dockerClient = await this.getDockerClient()
+
     const secretNameMap = {
-      cert: `${this.instanceClient.instance._id.toString()}-SAASCAPE_SSL_CERT`,
-      key: `${this.instanceClient.instance._id.toString()}-SAASCAPE_SSL_KEY`,
-      csr: `${this.instanceClient.instance._id.toString()}-SAASCAPE_SSL_CSR`,
+      cert: `${new ObjectId().toString()}-SAASCAPE_SSL_CERT`,
+      key: `${new ObjectId().toString()}-SAASCAPE_SSL_KEY`,
+      csr: `${new ObjectId().toString()}-SAASCAPE_SSL_CSR`,
     }
-    const foundSecrets = await dockerClient.listSecrets({
-      filters: {
-        names: [secretNameMap.cert, secretNameMap.csr, secretNameMap.key],
-      },
-    })
+
     const secrets = {
-      cert:
-        foundSecrets.find((secret) => secret.Spec?.Name === secretNameMap.cert) ||
-        (await this.createCustomSecret(secretNameMap.cert, certificates?.cert).catch((err) => console.warn(err))),
-      key:
-        foundSecrets.find((secret) => secret.Spec?.Name === secretNameMap.key) ||
-        (await this.createCustomSecret(secretNameMap.key, certificates?.key).catch((err) => console.warn(err))),
-      csr:
-        foundSecrets.find((secret) => secret.Spec?.Name === secretNameMap.csr) ||
-        (await this.createCustomSecret(secretNameMap.csr, certificates?.csr).catch((err) => console.warn(err))),
+      cert: await this.createCustomSecret(secretNameMap.cert, certificates?.cert).catch((err) => console.warn(err)),
+      key: await this.createCustomSecret(secretNameMap.key, certificates?.key).catch((err) => console.warn(err)),
+      csr: await this.createCustomSecret(secretNameMap.csr, certificates?.csr).catch((err) => console.warn(err)),
     }
 
     return secrets
   }
 
-  async createSecrets() {
-    await this.instanceClient.updateInstanceDetails()
-    const bulkUpdates: any[] = []
-
-    const dockerClient = await this.getDockerClient()
-    for (const [id, secret] of Object.entries(this.instanceClient.instance?.config?.secrets_config) || []) {
-      try {
-        await this.createSecret(id, secret, dockerClient, false, bulkUpdates)
-      } catch (err) {
-        console.warn('Error creating secret', err)
-      }
-    }
-    bulkUpdates.length && (await db.managementDb?.collection<IInstance>('instances').bulkWrite(bulkUpdates))
-  }
+  // async createSecrets() {
+  //   await this.instanceClient.updateInstanceDetails()
+  //   const bulkUpdates: any[] = []
+  //
+  //   const dockerClient = await this.getDockerClient()
+  //   for (const [id, secret] of Object.entries(this.instanceClient.instance?.config?.secrets_config) || []) {
+  //     try {
+  //       await this.createSecret(id, secret, dockerClient, bulkUpdates)
+  //     } catch (err) {
+  //       console.warn('Error creating secret', err)
+  //     }
+  //   }
+  //   bulkUpdates.length && (await db.managementDb?.collection<IInstance>('instances').bulkWrite(bulkUpdates))
+  // }
 
   private async getSecretNames() {
     const secretNames = []
@@ -227,6 +182,8 @@ export default class Service {
     for (const value of Object.values(environment_config)) {
       environmentVariables.push(`${value.name}=${value.value}`)
     }
+
+    // const domainName = this.instanceClient.instance.domain?.domain_name || ''
     // TODO: Get database name from database collection here
     const dbName = this.instanceClient.instance.is_custom_database ? this.instanceClient.instance.database : ''
     environmentVariables.push(
@@ -234,19 +191,40 @@ export default class Service {
         `${InstanceVariables.SAASCAPE_PORT}=${this.instanceClient.instance.port}`,
         `${InstanceVariables.SAASCAPE_DATABASE_NAME}=${dbName}`,
         `${InstanceVariables.SAASCAPE_SECRET_NAMES}=${(await this.getSecretNames()).join(',')}`,
+        `${InstanceVariables.SAASCAPE_DOMAIN_NAME}=${this.instanceClient.instance.domain?.domain_name}`,
       ],
     )
+
     return environmentVariables
+  }
+
+  async removeSecrets() {
+    const dockerClient = await this.getDockerClient()
+
+    const existingSecrets = await dockerClient.listSecrets({
+      filters: {
+        label: [`instanceId=${this.instanceClient.instance._id.toString()}`],
+      },
+    })
+
+    for (const secret of existingSecrets) {
+      try {
+        await dockerClient.getSecret(secret.ID).remove()
+      } catch (err) {
+        console.log('error removing secret', err)
+      }
+    }
   }
 
   async getSecrets() {
     const secrets = []
     const dockerClient = await this.getDockerClient()
+
     for (const [key, value] of Object.entries(this.instanceClient.instance.config.secrets_config)) {
       const { docker_secret_id } = value
       try {
         if (!docker_secret_id) {
-          const secret = await this.createSecret(key, value, dockerClient, true)
+          const secret = await this.createSecret(key, value, dockerClient)
           value.docker_secret_id = secret
         }
         let dockerSecret = await dockerClient
@@ -255,10 +233,11 @@ export default class Service {
           .catch((err) => {})
         if (!dockerSecret) {
           // Create secret
-          const secret = await this.createSecret(key, value, dockerClient, true)
+          const secret = await this.createSecret(key, value, dockerClient)
           value.docker_secret_id = secret
           dockerSecret = await dockerClient.getSecret(secret).inspect()
         }
+        if (!dockerSecret) throw new Error('Error creating secret')
 
         const secret = {
           File: {
@@ -272,6 +251,7 @@ export default class Service {
         }
         secrets.push(secret)
       } catch (err) {
+        // TODO : IF any secret errors then we should notifiy the user
         console.log('error getting secret', err)
       }
     }
@@ -462,6 +442,7 @@ export default class Service {
       console.warn('Service does not exist')
       return
     }
+
     console.log('updating instance :)')
     if (!this.instanceClient.serviceId) return
     const dockerClient = await this.getDockerClient()
@@ -480,13 +461,14 @@ export default class Service {
       },
     }
     // Endpoint spec
-    serviceObj.Spec.TaskTemplate.EndpointSpec = {
-      ...serviceObj.Spec.TaskTemplate.EndpointSpec,
+    serviceObj.Spec.EndpointSpec = {
+      ...serviceObj.Spec.EndpointSpec,
       Ports: [
         {
           Protocol: 'tcp',
           TargetPort: this.instanceClient.instance.port,
           PublishedPort: this.instanceClient.instance.port,
+          PublishMode: 'ingress',
         },
       ],
     }
@@ -499,6 +481,7 @@ export default class Service {
     }
     serviceObj.Spec.TaskTemplate = {
       ...serviceObj.Spec.TaskTemplate,
+      ForceUpdate: 1,
     }
 
     const r = await service.update({
@@ -513,6 +496,7 @@ export default class Service {
         Order: 'stop-first',
       },
     })
+
     console.log(
       JSON.stringify({
         ...serviceObj.Spec,
@@ -527,7 +511,8 @@ export default class Service {
         },
       }),
     )
-    console.log(r)
+
+    await this.removeSecrets()
   }
 
   async deployVersion(versionId: ObjectId) {

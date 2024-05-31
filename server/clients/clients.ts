@@ -76,12 +76,21 @@ export const initializeSSHClients = async () => {
 
 export const initializeInstanceClients = async () => {
   console.log('Initializing instance clients')
-  const instances = await db.managementDb
+
+  const instances = (await db.managementDb
     ?.collection<IInstance>('instances')
-    .find({
-      status: { $in: [instanceDbStatus.ACTIVE, instanceDbStatus.PENDING_DEPLOYMENT, instanceDbStatus.PENDING_REMOVAL] },
-    })
-    .toArray()
+    .aggregate([
+      {
+        $match: {
+          status: {
+            $in: [instanceDbStatus.ACTIVE, instanceDbStatus.PENDING_DEPLOYMENT, instanceDbStatus.PENDING_REMOVAL],
+          },
+        },
+      },
+      { $lookup: { from: 'domains', localField: 'domain_id', foreignField: '_id', as: 'domain' } },
+      { $set: { domain: { $first: '$domain' } } },
+    ])
+    .toArray()) as IInstance[]
 
   for (const instance of instances || []) {
     try {

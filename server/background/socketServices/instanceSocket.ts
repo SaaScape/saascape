@@ -38,7 +38,16 @@ export default class InstanceSocket {
       }
     }
 
-    const instance = await db.managementDb?.collection<IInstance>('instances').findOne(payload)
+    const instance = (
+      await db.managementDb
+        ?.collection<IInstance>('instances')
+        .aggregate([
+          { $match: payload },
+          { $lookup: { from: 'domains', localField: 'domain_id', foreignField: '_id', as: 'domain' } },
+          { $set: { domain: { $first: '$domain' } } },
+        ])
+        .toArray()
+    )?.[0] as IInstance
 
     if (!instance) throw new Error('Instance not found')
 
