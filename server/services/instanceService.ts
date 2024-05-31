@@ -8,9 +8,7 @@ import IInstance, { instanceDbStatus, InstanceServiceStatus } from 'types/schema
 import { ConfigModules, instanceHealth, updateStatus, UpdateType } from 'types/enums'
 import constants from '../helpers/constants'
 import { IApplication } from '../schemas/Applications'
-import { decryptClientTransport, encryptData, prepareApplicationPayloadForTransport } from '../helpers/utils'
-import Instance from '../modules/instance'
-import { clients } from '../clients/clients'
+import { encryptData, prepareApplicationPayloadForTransport } from '../helpers/utils'
 
 interface IUpdateConfigData {
   configModule: ConfigModules
@@ -20,10 +18,23 @@ interface IUpdateConfigData {
   [key: string]: any
 }
 
+interface IScaleInstanceData {
+  replicas: number
+}
+
 export default class InstanceService {
   applicationId: ObjectId
   constructor(applicationId: ObjectId) {
     this.applicationId = applicationId
+  }
+
+  async setInstanceUpdateStatus(instanceId: string, status: updateStatus, additionalData?: { [key: string]: any }) {
+    await db.managementDb
+      ?.collection<IInstance>('instances')
+      .updateOne(
+        { _id: new ObjectId(instanceId) },
+        { $set: { ...(additionalData || {}), update_status: status, update_status_updated_at: new Date() } },
+      )
   }
 
   async getInstancesStats() {
@@ -260,11 +271,11 @@ export default class InstanceService {
             const value = fields?.[_id]?.[newField]?.value
             if (!value) continue
 
-            const decipheredValue = isSecret && (await decryptClientTransport(value))
+            // const decipheredValue = isSecret && (await decryptClientTransport(value))
             const payload = {
               _id: newId,
               name: newFieldData?.name,
-              value: isSecret ? encryptData(decipheredValue || '') : newFieldData?.value,
+              value: isSecret ? encryptData(newFieldData.value || '') : newFieldData?.value,
             }
             insertObj.updateOne.update.$set[`config.${type}.${newId.toString()}`] = payload
             bulkWrites.push(insertObj)
@@ -307,8 +318,8 @@ export default class InstanceService {
             switch (fieldKey) {
               case 'value':
                 if (isSecret) {
-                  const decipheredValue = await decryptClientTransport(value || '')
-                  updateObj.updateOne.update.$set[updatePath] = encryptData(decipheredValue)
+                  // const decipheredValue = await decryptClientTransport(value || '')
+                  updateObj.updateOne.update.$set[updatePath] = encryptData(value)
                   break
                 }
 
@@ -470,10 +481,37 @@ export default class InstanceService {
     if (!name || !database || !port || !(replicas > 0) || !swarm_id || !domain_id || !version_id)
       throw { showError: 'Missing required fields' }
 
-    await db.managementDb
-      ?.collection<IInstance>('instances')
-      .updateOne({ _id: new ObjectId(id) }, { $set: { status: instanceDbStatus.PENDING_DEPLOYMENT } })
+    const payload: { status: instanceDbStatus; service_status?: InstanceServiceStatus } = {
+      status: instanceDbStatus.PENDING_DEPLOYMENT,
+    }
+
+    if (instance.service_status === InstanceServiceStatus.PRE_CONFIGURED) {
+      payload.service_status = InstanceServiceStatus.PENDING
+    }
+
+    await db.managementDb?.collection<IInstance>('instances').updateOne({ _id: new ObjectId(id) }, { $set: payload })
     // TODO: When pending deployment, do not allow any updates to the instance or additional deployments
+
+    return await this.findOne(new ObjectId(id))
+  }
+
+  async scaleInstance(id: string, data: IScaleInstanceData) {
+    const { replicas } = data
+
+    const instance = await db.managementDb?.collection<IInstance>('instances')?.findOne({
+      _id: new ObjectId(id),
+      application_id: this.applicationId,
+      status: { $in: [instanceDbStatus.ACTIVE] },
+    })
+
+    if (!instance) throw { showError: 'Instance not found' }
+
+    const { update_status } = instance
+
+    // Check update status
+    if (update_status !== updateStatus.READY) throw { showError: 'Instance is not ready to be updated' }
+
+    await this.setInstanceUpdateStatus(id, updateStatus.UPDATING, { replicas })
 
     return await this.findOne(new ObjectId(id))
   }

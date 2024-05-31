@@ -14,7 +14,6 @@ export const sendErrorResponse = async (err: IError, req: Request, res: Response
     const statusType = err?.message || err?.showError ? 'error' : 'warning'
 
     console.log(`API ${statusType} occurred - ${formattedDate} - ${errorMessage}`)
-    console.log(err)
 
     const responseObj: { error?: string; warning?: string; success: boolean } = { success: false }
 

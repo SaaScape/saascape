@@ -1,7 +1,7 @@
-import { Button, Table } from "antd"
-import { IProps } from "./InstancesContainer"
-import StatisticBanner from "../../../components/StatisticBanner"
-import CreateInstanceModal from "../../../components/Applications/CreateInstanceModal"
+import { Button, Table } from 'antd'
+import { IProps } from './InstancesContainer'
+import StatisticBanner from '../../../components/StatisticBanner'
+import CreateInstanceModal from '../../../components/Applications/CreateInstanceModal'
 
 const Instances = ({
   loading,
@@ -17,18 +17,15 @@ const Instances = ({
 }: IProps) => {
   return (
     <>
-      <section className='sub-section instances'>
-        <div className='top-bar-container'>
-          <div className='top-bar d-flex justify-between align-center'>
+      <section className="sub-section instances">
+        <div className="top-bar-container">
+          <div className="top-bar d-flex justify-between align-center">
             <div>
               <h1>Instances</h1>
-              <p>
-                View and manage all instances of{" "}
-                {selectedApplication?.application_name}
-              </p>
+              <p>View and manage all instances of {selectedApplication?.application_name}</p>
             </div>
-            <div className='right'>
-              <Button onClick={openCreateInstanceModal} type='primary'>
+            <div className="right">
+              <Button onClick={openCreateInstanceModal} type="primary">
                 Create Instance
               </Button>
             </div>
@@ -37,25 +34,25 @@ const Instances = ({
 
         <StatisticBanner loading={loading}>
           <div>
-            <div className='title'>Total Instances</div>
-            <div className='value'>{instancesInfo?.totalInstances || 0}</div>
+            <div className="title">Total Instances</div>
+            <div className="value">{instancesInfo?.totalInstances || 0}</div>
           </div>
           <div>
             <div>
-              <div className='title'>Running</div>
-              <div className='value'>{instancesInfo?.running || 0}</div>
+              <div className="title">Running</div>
+              <div className="value">{instancesInfo?.running || 0}</div>
             </div>
           </div>
           <div>
             <div>
-              <div className='title'>Stopped</div>
-              <div className='value'>{instancesInfo?.stopped || 0}</div>
+              <div className="title">Stopped</div>
+              <div className="value">{instancesInfo?.stopped || 0}</div>
             </div>
           </div>
           <div>
             <div>
-              <div className='title'>Failed</div>
-              <div className='value'>{instancesInfo?.failed || 0}</div>
+              <div className="title">Failed</div>
+              <div className="value">{instancesInfo?.failed || 0}</div>
             </div>
           </div>
         </StatisticBanner>
@@ -65,7 +62,7 @@ const Instances = ({
             dataSource={instances}
             loading={loading}
             columns={columns}
-            rowKey={(record) => record._id}
+            rowKey={(record) => record._id?.toString()}
             onRow={onRow}
           />
         </div>

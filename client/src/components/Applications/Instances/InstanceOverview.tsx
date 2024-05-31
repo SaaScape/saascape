@@ -27,7 +27,6 @@ const InstanceOverview = ({ instance, application, setInstance, toggleInstanceEd
   const swarms = useSelector((state: IStore) => state.swarms)
 
   const menuContainer = useMenuContainer()
-  console.log(menuContainer)
 
   const swarm = swarms.find((swarm) => swarm?._id === instance?.swarm_id)
   const { domain } = instance || {}

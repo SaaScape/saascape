@@ -6,14 +6,9 @@ import { ObjectId } from 'mongodb'
 import { db } from '../db'
 import constants from '../helpers/constants'
 import { IApplication, ICustomField } from '../schemas/Applications'
-import {
-  cleanVersionConfig,
-  decryptClientTransport,
-  encryptData,
-  prepareApplicationPayloadForTransport,
-} from '../helpers/utils'
+import { cleanVersionConfig, encryptData, prepareApplicationPayloadForTransport } from '../helpers/utils'
 import ServerService from './serverService'
-import IInstance from 'types/schemas/Instances'
+import IInstance, { IInstanceHealths, instanceDbStatus } from 'types/schemas/Instances'
 import InstanceService from './instanceService'
 import { getDomainApplicationDirectives, updateNginxConfigFile } from '../modules/nginx'
 import { ConfigModules } from 'types/enums'
@@ -237,11 +232,12 @@ export default class ApplicationService {
             const value = fields?.[_id]?.[newField]?.value
             if (!value) continue
 
-            const decipheredValue = isSecret && (await decryptClientTransport(value))
+            // Temporarily disabled encryption during transport
+            // const decipheredValue = isSecret && (await decryptClientTransport(value))
             const payload = {
               _id: newId,
               name: newFieldData?.name,
-              value: isSecret ? encryptData(decipheredValue || '') : newFieldData?.value,
+              value: isSecret ? encryptData(newFieldData?.value || '') : newFieldData?.value,
             }
             insertObj.updateOne.update.$set[`config.${type}.${newId.toString()}`] = payload
             bulkWrites.push(insertObj)
@@ -284,8 +280,8 @@ export default class ApplicationService {
             switch (fieldKey) {
               case 'value':
                 if (isSecret) {
-                  const decipheredValue = await decryptClientTransport(value || '')
-                  updateObj.updateOne.update.$set[updatePath] = encryptData(decipheredValue)
+                  // const decipheredValue = await decryptClientTransport(value || '')
+                  updateObj.updateOne.update.$set[updatePath] = encryptData(value)
                   break
                 }
 
@@ -395,6 +391,7 @@ export default class ApplicationService {
   }
 
   async syncApplicationDirectivesCron() {
+    console.log('syncing application directives')
     const applications = await db.managementDb
       ?.collection<IApplication>('applications')
       .find({
@@ -458,5 +455,30 @@ export default class ApplicationService {
     }
 
     return { wasSuccessful }
+  }
+
+  async getInstancesHealth() {
+    const instances = await db.managementDb
+      ?.collection<IInstance>('instances')
+      .find({ status: { $nin: [instanceDbStatus.DELETED] } })
+      .project({ _id: 1, service_status: 1, service_health_updated_at: 1, service_health: 1, replica_health: 1 })
+      .toArray()
+
+    if (!instances) throw { showError: 'Instances not found' }
+
+    const instanceHealths: IInstanceHealths = Object.fromEntries(
+      instances?.map((instance) => [
+        instance._id.toString(),
+        {
+          instance_id: instance._id.toString(),
+          health: instance.service_health,
+          healthLastUpdated: instance.service_health_updated_at,
+          instanceServiceStatus: instance.service_status,
+          replica_health: instance.replica_health,
+        },
+      ]),
+    )
+
+    return { instanceHealths }
   }
 }

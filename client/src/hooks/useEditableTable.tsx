@@ -1,9 +1,10 @@
-import { ReactNode, useEffect, useState } from "react"
-import { ColumnProps } from "antd/es/table"
-import { FormInstance } from "antd/es/form/Form"
-import { Button } from "antd"
-import Icon from "../components/Icon"
-import { cloneDeep } from "lodash"
+import { ReactNode, useEffect, useState } from 'react'
+import { ColumnProps } from 'antd/es/table'
+import { FormInstance } from 'antd/es/form/Form'
+import { Button } from 'antd'
+import Icon from '../components/Icon'
+import { cloneDeep } from 'lodash'
+import { CSVData } from '../helpers/utils.ts'
 
 export interface IColumnProps extends ColumnProps<any> {
   editableRender?: (value: string, record: any, index: number) => ReactNode
@@ -30,19 +31,10 @@ interface IUpdatedFields {
   deletedFields?: {
     [key: string]: boolean
   }
-  [key: string]:
-    | IUpdatedField
-    | { [key: string]: boolean }
-    | { [key: string]: IUpdatedField }
-    | undefined
+  [key: string]: IUpdatedField | { [key: string]: boolean } | { [key: string]: IUpdatedField } | undefined
 }
 
-const useEditableTable = ({
-  form,
-  columns = [],
-  setDataSource,
-  templateObj,
-}: IProps) => {
+const useEditableTable = ({ form, columns = [], setDataSource, templateObj }: IProps) => {
   const [editable, setEditable] = useState<{
     _id: string
     key: string
@@ -70,19 +62,15 @@ const useEditableTable = ({
     }
 
     modifiedColumns.push({
-      key: "actions",
-      width: "125px",
-      className: "actions-column",
-      align: "right",
+      key: 'actions',
+      width: '125px',
+      className: 'actions-column',
+      align: 'right',
       render: (_, record) => {
         return (
-          <div className='d-flex justify-end'>
-            <Button
-              className='delete-record'
-              type='text'
-              onClick={() => deleteRecord(record)}
-            >
-              <Icon icon='TRASH' />
+          <div className="d-flex justify-end">
+            <Button className="delete-record" type="text" onClick={() => deleteRecord(record)}>
+              <Icon icon="TRASH" />
             </Button>
           </div>
         )
@@ -105,8 +93,37 @@ const useEditableTable = ({
     obj._id = recordNumber.toString()
     obj.isNew = true
 
-    console.log(obj, recordNumber)
     return obj
+  }
+
+  const addCSVRecord = (data: CSVData) => {
+    const newRecords: { _id: string; name: string; value: string; isNew: boolean }[] = []
+    let currValue = 0
+    setDataSource((curr: any) => {
+      currValue = curr.length + 1
+      for (const row of data) {
+        if (curr.some((env: any) => env.name === row.name)) continue
+        const recordObj = {
+          _id: currValue.toString(),
+          name: row.name,
+          value: row.value,
+          isNew: true,
+        }
+        newRecords.push(recordObj)
+        currValue += 1
+      }
+      return [...curr, ...newRecords]
+    })
+    setUpdatedFields((curr: any) => {
+      const obj = { ...curr }
+      obj.newFields ??= {}
+
+      for (const record of newRecords) {
+        obj.newFields[record._id] = record
+      }
+
+      return obj
+    })
   }
 
   const addNewRecord = () => {
@@ -179,8 +196,7 @@ const useEditableTable = ({
     })
   }
 
-  const checkIfEditable = (_id: string, key: string) =>
-    _id === editable?._id && key === editable?.key
+  const checkIfEditable = (_id: string, key: string) => _id === editable?._id && key === editable?.key
 
   const EditableColumn = (column: IColumnProps) => {
     const { render, editableRender, key, secureField } = column
@@ -191,8 +207,8 @@ const useEditableTable = ({
       return isEditable
         ? editableRender?.(text, record, index) || render?.(text, record, index)
         : !showSecrets && secureField
-        ? "********"
-        : render?.(text, record, index)
+          ? '********'
+          : render?.(text, record, index)
     }
   }
 
@@ -204,6 +220,7 @@ const useEditableTable = ({
     addNewRecord,
     displaySecrets,
     resetUpdatedFields,
+    addCSVRecord,
   }
 }
 

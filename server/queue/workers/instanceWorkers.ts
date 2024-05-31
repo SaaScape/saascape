@@ -5,12 +5,8 @@
 import Bull from 'bull'
 import queues from '../../helpers/queues'
 import { getQueue } from '../queue'
-
-import ServerService from '../../services/serverService'
 import constants from '../../helpers/constants'
 import { logError } from '../../helpers/error'
-import DomainService from '../../services/domainsService'
-import { initializeSSLOnDomainQueueProducer } from '../producers/domainProducers'
 import { updateStatus } from 'types/enums'
 import { db } from '../../db'
 import IInstance, { instanceDbStatus } from 'types/schemas/Instances'
@@ -35,10 +31,11 @@ const deployInstanceQueue = async () => {
   queue.process(1, async (job: Bull.Job) => {
     console.log(`Deploying instance ${job.data?.instance_id} from Job ${job.id}`)
     const { instance_id } = job.data
-    const instance = await db.managementDb
-      ?.collection<IInstance>('instances')
-      .findOne({ _id: new ObjectId(instance_id), status: instanceDbStatus.ACTIVE })
-    if (!instance) return
+    const instance = await db.managementDb?.collection<IInstance>('instances').findOne({
+      _id: new ObjectId(instance_id),
+      status: { $in: [instanceDbStatus.ACTIVE, instanceDbStatus.PENDING_DEPLOYMENT] },
+    })
+    if (!instance) throw new Error('Instance not found for deployment')
     const client =
       clients.instance?.[instance_id] ||
       (() => {
@@ -48,14 +45,16 @@ const deployInstanceQueue = async () => {
       })()
     await setInstanceUpdateStatus(job.data?.instance_id, updateStatus.UPDATING)
     await client.updateInstanceDetails()
-    await client.service?.createService()
-    // TODO: FIX BUG : This completed even though the service is not created as the server is offline...
-
-    //   TODO: CRON for update timeout and set status to failed
+    if (!client.service) throw new Error('Service not found for deployment')
+    if (client.serviceId) {
+      await client.service?.updateService()
+    } else {
+      await client.service?.createService()
+    }
   })
 
   queue.on('failed', async (job) => {
-    console.log('failed to deploy instance', job.data?._id)
+    console.warn('failed to deploy instance', job.data?.instance_id)
     await logError({
       error: { message: job.failedReason },
       entityId: job.data?._id,

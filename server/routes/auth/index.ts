@@ -1,9 +1,9 @@
-import express, { NextFunction, Request, Response } from "express"
-import { sendErrorResponse, sendSuccessResponse } from "../../helpers/responses"
-import cookieParser from "cookie-parser"
-import IError from "../../interfaces/error"
-import { AuthService } from "../../services/authService"
-import withAuth from "../../middleware/withAuth"
+import express, { NextFunction, Request, Response } from 'express'
+import { sendErrorResponse, sendSuccessResponse } from '../../helpers/responses'
+import cookieParser from 'cookie-parser'
+import IError from '../../interfaces/error'
+import { AuthService } from '../../services/authService'
+import withAuth from '../../middleware/withAuth'
 
 export default (app: express.Application) => {
   const use =
@@ -15,49 +15,37 @@ export default (app: express.Application) => {
   router.use(express.json())
   router.use(cookieParser())
 
-  app.use("/auth", router)
+  app.use('/auth', router)
 
-  router.get("/", use(getIndex))
-  router.post("/login", use(login))
-  router.post("/token-login", use(tokenLogin))
-  router.get("/check-auth", use(withAuth), use(checkAuth))
-  router.put("/renew-token", use(renewAccessToken))
+  router.get('/', use(getIndex))
+  router.post('/login', use(login))
+  router.post('/token-login', use(tokenLogin))
+  router.get('/check-auth', use(withAuth), use(checkAuth))
+  router.put('/renew-token', use(renewAccessToken))
 
   router.use(catchError)
 }
 
-const catchError = async (
-  err: IError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const catchError = async (err: IError, req: Request, res: Response, next: NextFunction) => {
   sendErrorResponse(err, req, res)
 }
 
 const getIndex = async (req: Request, res: Response) => {
-  sendSuccessResponse({ message: "hello auth" }, req, res)
+  sendSuccessResponse({ message: 'hello auth' }, req, res)
 }
 
 const login = async (req: Request, res: Response) => {
   const authService = new AuthService()
-  const { userAccount, accessToken, refreshToken } = await authService.login(
-    req.body,
-    req
-  )
+  const { userAccount, accessToken, refreshToken } = await authService.login(req.body, req)
   const { permissions } = req
-  res.cookie("accessToken", accessToken, { httpOnly: true })
-  console.log(permissions)
+  res.cookie('accessToken', accessToken, { httpOnly: true })
   sendSuccessResponse({ userAccount, permissions, refreshToken }, req, res)
 }
 const tokenLogin = async (req: Request, res: Response) => {
   const authService = new AuthService()
-  const { userAccount, accessToken } = await authService.refreshLogin(
-    req.body,
-    req
-  )
+  const { userAccount, accessToken } = await authService.refreshLogin(req.body, req)
   const { permissions } = req
-  res.cookie("accessToken", accessToken, { httpOnly: true })
+  res.cookie('accessToken', accessToken, { httpOnly: true })
   sendSuccessResponse({ userAccount, permissions }, req, res)
 }
 const checkAuth = async (req: Request, res: Response) => {
@@ -69,6 +57,6 @@ const checkAuth = async (req: Request, res: Response) => {
 const renewAccessToken = async (req: Request, res: Response) => {
   const authService = new AuthService()
   const { accessToken } = await authService.renewAccessToken(req)
-  res.cookie("accessToken", accessToken, { httpOnly: true })
+  res.cookie('accessToken', accessToken, { httpOnly: true })
   sendSuccessResponse({ authenticated: true }, req, res)
 }

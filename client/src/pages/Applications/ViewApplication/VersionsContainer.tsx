@@ -1,18 +1,18 @@
-import { useEffect, useState } from "react"
-import Versions from "./Versions"
-import { IApplication } from "../../../store/slices/applicationSlice"
-import { useSelector } from "react-redux"
-import { IStore } from "../../../store/store"
-import { useParams } from "react-router-dom"
-import breadcrumbs from "../../../helpers/constants/breadcrumbs"
-import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
-import { IApplicationProps } from "../ApplicationRouteHandler"
-import ManageVersionModal from "../../../components/Applications/ManageVersionModal"
-import { apiAxios, apiAxiosToast } from "../../../helpers/axios"
-import { toast } from "react-toastify"
-import usePaginatedTable from "../../../hooks/usePaginatedTable"
-import { Popover, TableColumnProps } from "antd"
-import moment from "moment"
+import { useEffect, useState } from 'react'
+import Versions from './Versions'
+import { IApplication } from '../../../store/slices/applicationSlice'
+import { useSelector } from 'react-redux'
+import { IStore } from '../../../store/store'
+import { useParams } from 'react-router-dom'
+import breadcrumbs from '../../../helpers/constants/breadcrumbs'
+import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
+import { IApplicationProps } from '../ApplicationRouteHandler'
+import ManageVersionModal from '../../../components/Applications/ManageVersionModal'
+import { apiAxiosToast } from '../../../helpers/axios'
+import { toast } from 'react-toastify'
+import usePaginatedTable from '../../../hooks/usePaginatedTable'
+import { Popover, TableColumnProps } from 'antd'
+import moment from 'moment'
 
 export interface IVersion {
   _id: string
@@ -37,11 +37,11 @@ export interface IVersionProps {
 
 const versionColumns: TableColumnProps<IVersion>[] = [
   {
-    title: "Version",
-    key: "version",
+    title: 'Version',
+    key: 'version',
     render: (_, record) => {
       const { namespace, repository, tag } = record
-      let text = ""
+      let text = ''
       namespace && (text += `${namespace}/`)
       repository && (text += `${repository}:`)
       tag && (text += tag)
@@ -49,57 +49,51 @@ const versionColumns: TableColumnProps<IVersion>[] = [
     },
   },
   {
-    title: "Namespace",
-    dataIndex: "namespace",
-    key: "namespace",
+    title: 'Namespace',
+    dataIndex: 'namespace',
+    key: 'namespace',
   },
   {
-    title: "Repository",
-    dataIndex: "repository",
-    key: "repository",
+    title: 'Repository',
+    dataIndex: 'repository',
+    key: 'repository',
   },
   {
-    title: "Tag",
-    dataIndex: "tag",
-    key: "tag",
+    title: 'Tag',
+    dataIndex: 'tag',
+    key: 'tag',
   },
   {
-    title: "Created",
-    dataIndex: "created_at",
-    key: "created_at",
+    title: 'Created',
+    dataIndex: 'created_at',
+    key: 'created_at',
     render: (_, record) => (
-      <Popover
-        content={<span>{moment(record?.created_at).format("LLL")}</span>}
-      >
+      <Popover content={<span>{moment(record?.created_at).format('LLL')}</span>}>
         {moment(record.created_at).fromNow()}
       </Popover>
     ),
   },
   {
-    title: "Updated",
-    dataIndex: "updated_at",
-    key: "updated_at",
+    title: 'Updated',
+    dataIndex: 'updated_at',
+    key: 'updated_at',
     render: (_, record) => (
-      <Popover
-        content={<span>{moment(record?.updated_at).format("LLL")}</span>}
-      >
+      <Popover content={<span>{moment(record?.updated_at).format('LLL')}</span>}>
         {moment(record.updated_at).fromNow()}
       </Popover>
     ),
   },
   {
-    title: "Actions",
-    dataIndex: "actions",
-    key: "actions",
-    align: "right",
+    title: 'Actions',
+    dataIndex: 'actions',
+    key: 'actions',
+    align: 'right',
   },
 ]
 
 const VersionsContainer = (props: IApplicationProps) => {
   const [loading, setLoading] = useState(false)
-  const { selectedApplication } = useSelector(
-    (state: IStore) => state.applications
-  )
+  const { selectedApplication } = useSelector((state: IStore) => state.applications)
   const [showManageVersionModal, setShowManageVersionModal] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -108,14 +102,10 @@ const VersionsContainer = (props: IApplicationProps) => {
 
   const apiUrl = `/applications/${id}/versions`
 
-  const {
-    tableConfig,
-    paginatedData,
-    onSearch,
-    dataFetching,
-    reload,
-    onTableChange,
-  } = usePaginatedTable({ apiUrl, sortField: "updated_at" })
+  const { tableConfig, paginatedData, onSearch, dataFetching, reload, onTableChange } = usePaginatedTable({
+    apiUrl,
+    sortField: 'updated_at',
+  })
 
   useEffect(() => {
     props.setId(id)
@@ -124,12 +114,7 @@ const VersionsContainer = (props: IApplicationProps) => {
 
   useEffect(() => {
     if (!id) return
-    setBreadcrumbs(
-      breadcrumbs.VIEW_APPLICATION_VERSIONS(
-        selectedApplication?.application_name || id,
-        id
-      )
-    )
+    setBreadcrumbs(breadcrumbs.VIEW_APPLICATION_VERSIONS(selectedApplication?.application_name || id, id))
   }, [selectedApplication])
 
   const openManageVersionModal = () => {
@@ -140,28 +125,22 @@ const VersionsContainer = (props: IApplicationProps) => {
   }
 
   const onCreateVersion = async (values: any) => {
-    console.log(values)
-
     setSaving(true)
-    const toastSaving = toast.info("Creating version...", {
+    const toastSaving = toast.info('Creating version...', {
       isLoading: true,
     })
-    const { data } = await apiAxiosToast(toastSaving)?.post(
-      `/applications/${id}/versions`,
-      values
-    )
+    const { data } = await apiAxiosToast(toastSaving)?.post(`/applications/${id}/versions`, values)
     if (data?.success) {
       toast.update(toastSaving, {
         isLoading: false,
-        type: "success",
-        render: "Version created successfully",
+        type: 'success',
+        render: 'Version created successfully',
         autoClose: 2000,
       })
       onManageVersionClose()
       reload()
     }
     setSaving(false)
-    console.log(data)
   }
 
   const versionProps: IVersionProps = {

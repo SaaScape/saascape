@@ -1,27 +1,20 @@
-import { useEffect, useState } from "react"
-import useSetBreadcrumbs from "../../middleware/useSetBreadcrumbs"
-import breadcrumbs from "../../helpers/constants/breadcrumbs"
-import Domains from "./Domains"
-import usePaginatedTable, {
-  IPaginatedViewProps,
-} from "../../hooks/usePaginatedTable"
-import ManageDomainModal from "../../components/Domains/ManageDomainModal"
-import { apiAxios } from "../../helpers/axios"
-import { toast } from "react-toastify"
-import { Popover, TableColumnProps } from "antd"
-import { IEncryptedData } from "../../interfaces/interfaces"
-import { serverLookupByIp } from "../../helpers/utils"
-import RecordLink from "../../components/RecordLink"
-import constants from "../../helpers/constants/constants"
-import Icon from "../../components/Icon"
-import moment from "moment"
+import { useEffect, useState } from 'react'
+import useSetBreadcrumbs from '../../middleware/useSetBreadcrumbs'
+import breadcrumbs from '../../helpers/constants/breadcrumbs'
+import Domains from './Domains'
+import usePaginatedTable, { IPaginatedViewProps } from '../../hooks/usePaginatedTable'
+import ManageDomainModal from '../../components/Domains/ManageDomainModal'
+import { apiAxios } from '../../helpers/axios'
+import { toast } from 'react-toastify'
+import { Popover, TableColumnProps } from 'antd'
+import { IEncryptedData } from '../../interfaces/interfaces'
+import { serverLookupByIp } from '../../helpers/utils'
+import RecordLink from '../../components/RecordLink'
+import constants from '../../helpers/constants/constants'
+import Icon from '../../components/Icon'
+import moment from 'moment'
 
-export type DomainSSLStatus =
-  | "active"
-  | "pending_initialization"
-  | "initializing"
-  | "expiring"
-  | "expired"
+export type DomainSSLStatus = 'active' | 'pending_initialization' | 'initializing' | 'expiring' | 'expired'
 export interface IDomain {
   _id: string
   domain_name: string
@@ -60,14 +53,7 @@ export interface IViewProps extends IPaginatedViewProps {
 const apiUrl = `/domains`
 
 export const DomainsContainer = () => {
-  const {
-    tableConfig,
-    paginatedData,
-    onSearch,
-    dataFetching,
-    reload,
-    onTableChange,
-  } = usePaginatedTable({ apiUrl })
+  const { tableConfig, paginatedData, onSearch, dataFetching, reload, onTableChange } = usePaginatedTable({ apiUrl })
 
   const setBreadcrumbs = useSetBreadcrumbs()
   useEffect(() => {
@@ -79,7 +65,6 @@ export const DomainsContainer = () => {
   const [loading, setLoading] = useState(false)
 
   const onDomainSave = async (values: any) => {
-    console.log(values)
     setLoading(true)
     if (domain?._id) {
       const response = await apiAxios.put(`/domains/${domain?._id}`, values)
@@ -89,11 +74,10 @@ export const DomainsContainer = () => {
       } = await apiAxios.post(`/domains`, values)
       if (success) {
         setShowManageDomainModal(false)
-        toast.success("Domain created successfully")
+        toast.success('Domain created successfully')
         reload()
       }
       setLoading(false)
-      console.log(data)
     }
   }
 
@@ -113,10 +97,10 @@ export const DomainsContainer = () => {
   }
 
   const columns: TableColumnProps<IDomain>[] = [
-    { title: "Domain Name", dataIndex: "domain_name", key: "domain_name" },
+    { title: 'Domain Name', dataIndex: 'domain_name', key: 'domain_name' },
     {
-      title: "DNS Host",
-      key: "dns_host",
+      title: 'DNS Host',
+      key: 'dns_host',
       render: (_, record) => {
         // DNS Host will either be a server, load balancer or and ip
 
@@ -125,57 +109,40 @@ export const DomainsContainer = () => {
 
         if (server?.server_name) {
           return (
-            <RecordLink
-              entity='server'
-              label={server?.server_name}
-              link={`/servers/${server?._id}`}
-            >
+            <RecordLink entity="server" label={server?.server_name} link={`/servers/${server?._id}`}>
               {server?.server_name}
             </RecordLink>
           )
         }
 
-        return serverIp || "N/A"
+        return serverIp || 'N/A'
       },
     },
     {
-      title: "SSL",
-      key: "ssl_status",
+      title: 'SSL',
+      key: 'ssl_status',
       render: (_, record) => {
         const sslEnabled = record?.enable_ssl
 
         const status = record?.SSL?.status
 
         const colorMap = {
-          [constants.SSL_STATUSES.ACTIVE]: "green",
-          [constants.SSL_STATUSES.PENDING_INITIALIZATION]: "orange",
-          [constants.SSL_STATUSES.INITIALIZING]: "blue",
-          [constants.SSL_STATUSES.EXPIRING]: "orange",
-          [constants.SSL_STATUSES.EXPIRED]: "red",
-          [constants.SSL_STATUSES.FAILED]: "red",
+          [constants.SSL_STATUSES.ACTIVE]: 'green',
+          [constants.SSL_STATUSES.PENDING_INITIALIZATION]: 'orange',
+          [constants.SSL_STATUSES.INITIALIZING]: 'blue',
+          [constants.SSL_STATUSES.EXPIRING]: 'orange',
+          [constants.SSL_STATUSES.EXPIRED]: 'red',
+          [constants.SSL_STATUSES.FAILED]: 'red',
         }
 
-        const secure = [
-          constants.SSL_STATUSES.ACTIVE,
-          constants.SSL_STATUSES.EXPIRING,
-        ].includes(status || "")
+        const secure = [constants.SSL_STATUSES.ACTIVE, constants.SSL_STATUSES.EXPIRING].includes(status || '')
 
         const popoverMessage = {
-          [constants.SSL_STATUSES.ACTIVE]: (
-            <div>
-              Expires On: {moment(record?.SSL?.end_date).format("DD-MM-YYYY")}
-            </div>
-          ),
+          [constants.SSL_STATUSES.ACTIVE]: <div>Expires On: {moment(record?.SSL?.end_date).format('DD-MM-YYYY')}</div>,
           [constants.SSL_STATUSES.EXPIRING]: (
-            <div>
-              Expires On: {moment(record?.SSL?.end_date).format("DD-MM-YYYY")}
-            </div>
+            <div>Expires On: {moment(record?.SSL?.end_date).format('DD-MM-YYYY')}</div>
           ),
-          [constants.SSL_STATUSES.EXPIRED]: (
-            <div>
-              Expired On: {moment(record?.SSL?.end_date).format("DD-MM-YYYY")}
-            </div>
-          ),
+          [constants.SSL_STATUSES.EXPIRED]: <div>Expired On: {moment(record?.SSL?.end_date).format('DD-MM-YYYY')}</div>,
           [constants.SSL_STATUSES.FAILED]: (
             <div>
               <div>Failed to initialize SSL</div>
@@ -185,16 +152,13 @@ export const DomainsContainer = () => {
         }
 
         return sslEnabled ? (
-          <Popover
-            title={`SSL Status: ${status}`}
-            content={popoverMessage?.[status || ""]}
-          >
-            <span style={{ color: colorMap?.[status || ""] }}>
-              <Icon icon={secure ? "SECURE" : "INSECURE"} />
+          <Popover title={`SSL Status: ${status}`} content={popoverMessage?.[status || '']}>
+            <span style={{ color: colorMap?.[status || ''] }}>
+              <Icon icon={secure ? 'SECURE' : 'INSECURE'} />
             </span>
           </Popover>
         ) : (
-          "Not Enabled"
+          'Not Enabled'
         )
       },
     },

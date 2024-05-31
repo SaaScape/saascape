@@ -11,11 +11,16 @@ import withPerms from '../../middleware/withPerms'
 import permissions from '../../helpers/permissions'
 import { io } from '../../init/sockets'
 import constants from '../../helpers/constants'
-import Instance from '../../modules/instance'
+import { InstanceSocketEvents } from 'types/sockets'
+import ApplicationService from '../../services/applicationService'
 
 export default (app: Router, use: any) => {
   const router = Router({ mergeParams: true })
+  const instanceRouter = Router({ mergeParams: true })
+  app.use('/instances', instanceRouter)
   app.use('/:application_id/instances', router)
+
+  instanceRouter.get('/instancesHealth', use(getInstancesHealth))
 
   router.get('/', use(findMany))
   router.get('/instancesInfo', use(getInstancesStats))
@@ -25,6 +30,7 @@ export default (app: Router, use: any) => {
   router.delete('/:id', use(deleteOne))
   router.put('/:id/config', use(withPerms([permissions.APPLICATIONS.UPDATE_APPLICATIONS])), use(updateConfig))
   router.put('/:id/deploy', use(withPerms([permissions.APPLICATIONS.UPDATE_APPLICATIONS])), use(deployInstance))
+  router.put('/:id/scale', use(withPerms([permissions.APPLICATIONS.UPDATE_APPLICATIONS])), use(scaleInstance))
 }
 
 const findMany: API = async (req, res) => {
@@ -95,4 +101,18 @@ const deployInstance: API = async (req, res) => {
     ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
     .emit(constants.SOCKET_EVENTS.DEPLOY_INSTANCE, { instance_id: id })
   sendSuccessResponse({ instance }, req, res)
+}
+
+const scaleInstance: API = async (req, res) => {
+  const { application_id, id } = req.params
+  const instanceService = new InstanceService(new ObjectId(application_id))
+  const instance = (await instanceService.scaleInstance(id, req.body)) || {}
+  io?.io?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS).emit(InstanceSocketEvents.DEPLOY_INSTANCE, { instance_id: id })
+  sendSuccessResponse({ instance }, req, res)
+}
+
+const getInstancesHealth: API = async (req, res) => {
+  const applicationService = new ApplicationService()
+  const { instanceHealths } = await applicationService.getInstancesHealth()
+  sendSuccessResponse({ instanceHealths }, req, res)
 }

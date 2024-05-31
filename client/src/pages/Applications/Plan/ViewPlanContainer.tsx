@@ -16,22 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { useNavigate, useParams } from "react-router-dom"
-import { IApplicationProps } from "../ApplicationRouteHandler"
-import ViewPlan from "./ViewPlan"
-import { useSelector } from "react-redux"
-import { IStore } from "../../../store/store"
-import { useEffect, useState } from "react"
-import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
-import breadcrumbs from "../../../helpers/constants/breadcrumbs"
-import { IPlan } from "../ViewApplication/PlansContainer"
-import { apiAxios } from "../../../helpers/axios"
-import { ICurrency } from "../../../store/slices/configData"
-import { getCurrency } from "../../../helpers/utils"
-import ManagePlanModal, {
-  IManagePlanModalProps,
-} from "../../../components/Applications/ManagePlanModal"
-import { toast } from "react-toastify"
+import { useNavigate, useParams } from 'react-router-dom'
+import { IApplicationProps } from '../ApplicationRouteHandler'
+import ViewPlan from './ViewPlan'
+import { useSelector } from 'react-redux'
+import { IStore } from '../../../store/store'
+import { useEffect, useState } from 'react'
+import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
+import breadcrumbs from '../../../helpers/constants/breadcrumbs'
+import { IPlan } from '../ViewApplication/PlansContainer'
+import { apiAxios } from '../../../helpers/axios'
+import { ICurrency } from '../../../store/slices/configData'
+import { getCurrency } from '../../../helpers/utils'
+import ManagePlanModal, { IManagePlanModalProps } from '../../../components/Applications/ManagePlanModal'
+import { toast } from 'react-toastify'
 
 export interface IViewProps {
   planId: string
@@ -39,11 +37,7 @@ export interface IViewProps {
   currency: ICurrency | null
   loading: boolean
   onAddonDelete: () => void
-  onManagePlanClick: (
-    state: boolean,
-    isAddon: boolean,
-    addonId?: string
-  ) => void
+  onManagePlanClick: (state: boolean, isAddon: boolean, addonId?: string) => void
   functions?: {
     [functionName: string]: (...args: any[]) => any
   }
@@ -51,9 +45,7 @@ export interface IViewProps {
 
 const ViewPlanContainer = (props: IApplicationProps) => {
   const { id, planId } = useParams()
-  const { selectedApplication } = useSelector(
-    (state: IStore) => state.applications
-  )
+  const { selectedApplication } = useSelector((state: IStore) => state.applications)
   const [plan, setPlan] = useState<IPlan | null>(null)
   const [loading, setLoading] = useState(false)
   const [currency, setCurrency] = useState<ICurrency | null>(null)
@@ -78,8 +70,8 @@ const ViewPlanContainer = (props: IApplicationProps) => {
         selectedApplication?.application_name || id,
         id,
         planId,
-        plan?.plan_name || planId
-      )
+        plan?.plan_name || planId,
+      ),
     )
   }, [selectedApplication, plan])
 
@@ -101,25 +93,18 @@ const ViewPlanContainer = (props: IApplicationProps) => {
   // }, [showManagePlanModal])
 
   const getPlan = async () => {
-    console.log("gett")
     setLoading(true)
     if (!selectedApplication?._id || !planId) return
     const {
       data: { data, success },
-    } = await apiAxios.get(
-      `/plans/${planId}?applicationId=${selectedApplication?._id}`
-    )
+    } = await apiAxios.get(`/plans/${planId}?applicationId=${selectedApplication?._id}`)
     if (success) {
       setPlan(data?.plan)
     }
     setLoading(false)
   }
 
-  const onManagePlanClick = (
-    state: boolean,
-    isAddon: boolean,
-    addonId?: string
-  ) => {
+  const onManagePlanClick = (state: boolean, isAddon: boolean, addonId?: string) => {
     setIsAddon(isAddon)
     setSelectedAddon(addonId || null)
     setShowManagePlanModal(state)
@@ -127,15 +112,11 @@ const ViewPlanContainer = (props: IApplicationProps) => {
 
   const onPlanSave = async (values: any) => {
     setLoading(true)
-    console.log("updating plan", values)
     const {
       data: { success },
-    } = await apiAxios.put(
-      `/plans/${planId}?applicationId=${selectedApplication?._id}`,
-      values
-    )
+    } = await apiAxios.put(`/plans/${planId}?applicationId=${selectedApplication?._id}`, values)
     if (success) {
-      toast.success("Plan updated successfully")
+      toast.success('Plan updated successfully')
       await getPlan()
       setShowManagePlanModal(false)
     }
@@ -146,11 +127,9 @@ const ViewPlanContainer = (props: IApplicationProps) => {
     setLoading(true)
     const {
       data: { success },
-    } = await apiAxios.delete(
-      `/plans/${planId}?applicationId=${selectedApplication?._id}`
-    )
+    } = await apiAxios.delete(`/plans/${planId}?applicationId=${selectedApplication?._id}`)
     if (success) {
-      toast.success("Plan deleted successfully")
+      toast.success('Plan deleted successfully')
       navigate(`/applications/${id}/plans`)
     }
     setLoading(false)
@@ -160,12 +139,11 @@ const ViewPlanContainer = (props: IApplicationProps) => {
     setLoading(true)
     const {
       data: { success },
-    } = await apiAxios.delete(
-      `/plans/addon-plan/${planId}?applicationId=${selectedApplication?._id}`,
-      { data: { addonPlanId: selectedAddon } }
-    )
+    } = await apiAxios.delete(`/plans/addon-plan/${planId}?applicationId=${selectedApplication?._id}`, {
+      data: { addonPlanId: selectedAddon },
+    })
     if (success) {
-      toast.success("Plan deleted successfully")
+      toast.success('Plan deleted successfully')
       await getPlan()
       setShowManagePlanModal(false)
     }
@@ -173,7 +151,7 @@ const ViewPlanContainer = (props: IApplicationProps) => {
   }
 
   const viewProps: IViewProps = {
-    planId: planId || "",
+    planId: planId || '',
     plan,
     currency,
     loading,

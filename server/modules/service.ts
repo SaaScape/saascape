@@ -294,7 +294,6 @@ export default class Service {
       console.log('error getting secret', err)
     }
 
-    console.log(secrets)
     return secrets
   }
 
@@ -355,8 +354,7 @@ export default class Service {
   async createService() {
     // Check if service exists
     if (await this.checkServiceExists()) {
-      console.log('Service already exists')
-      return
+      throw new Error('Service already exists')
     }
 
     // Ensure that instance is in a state where it can be created
@@ -368,8 +366,7 @@ export default class Service {
     ]
 
     if (!allowedCreationStates.includes(this.instanceClient.instance.service_status)) {
-      console.warn('Instance is not in a state where it can be created')
-      return
+      throw new Error('Instance is not in a state where it can be created')
     }
 
     // Create service
@@ -447,53 +444,90 @@ export default class Service {
     await service.update({ force: true })
   }
 
-  async scale(replicas: number) {
-    if (!(await this.checkServiceExists())) {
-      console.warn('Service does not exist')
-      return
-    }
-    if (!this.instanceClient.serviceId) return
-    const dockerClient = await this.getDockerClient()
-    const service = dockerClient.getService(this.instanceClient.serviceId)
-    await service.update({ Mode: { Replicated: { Replicas: replicas } } })
-  }
+  // async scale(replicas: number) {
+  //   if (!(await this.checkServiceExists())) {
+  //     console.warn('Service does not exist')
+  //     return
+  //   }
+  //   if (!this.instanceClient.serviceId) return
+  //   if (this.instanceClient.instance.update_status !== updateStatus.UPDATING)
+  //     throw new Error('Instance is not in a state where it can be scaled')
+  //   const dockerClient = await this.getDockerClient()
+  //   const service = dockerClient.getService(this.instanceClient.serviceId)
+  //   await service.update({ Mode: { Replicated: { Replicas: replicas } } })
+  // }
 
   async updateService() {
     if (!(await this.checkServiceExists())) {
       console.warn('Service does not exist')
       return
     }
+    console.log('updating instance :)')
     if (!this.instanceClient.serviceId) return
     const dockerClient = await this.getDockerClient()
     const service = dockerClient.getService(this.instanceClient.serviceId)
+    const serviceObj = await service.inspect()
     const environmentVariables = [...((await this.getEnvironmentVariables()) || []), ...[`MANAGEMENT_ENGINE=SAASCAPE`]]
     const secrets = await this.getSecrets()
 
-    await service.update({
-      TaskTemplate: {
-        ContainerSpec: {
-          Env: environmentVariables,
-          Secrets: secrets,
-          Labels: {
-            versionId: this.instanceClient.instance.version_id.toString(),
-          },
+    // Container spec
+    serviceObj.Spec.TaskTemplate.ContainerSpec = {
+      ...serviceObj.Spec.TaskTemplate.ContainerSpec,
+      Env: environmentVariables,
+      Secrets: secrets,
+      Labels: {
+        versionId: this.instanceClient.instance.version_id.toString(),
+      },
+    }
+    // Endpoint spec
+    serviceObj.Spec.TaskTemplate.EndpointSpec = {
+      ...serviceObj.Spec.TaskTemplate.EndpointSpec,
+      Ports: [
+        {
+          Protocol: 'tcp',
+          TargetPort: this.instanceClient.instance.port,
+          PublishedPort: this.instanceClient.instance.port,
         },
-        EndpointSpec: {
-          Ports: [
-            {
-              Protocol: 'tcp',
-              TargetPort: this.instanceClient.instance.port,
-              PublishedPort: this.instanceClient.instance.port,
-            },
-          ],
-        },
-        Mode: {
-          Replicated: {
-            Replicas: this.instanceClient.instance.replicas,
-          },
-        },
+      ],
+    }
+    // Mode
+    serviceObj.Spec.Mode = {
+      ...serviceObj.Spec.Mode,
+      Replicated: {
+        Replicas: this.instanceClient.instance.replicas,
+      },
+    }
+    serviceObj.Spec.TaskTemplate = {
+      ...serviceObj.Spec.TaskTemplate,
+    }
+
+    const r = await service.update({
+      ...serviceObj.Spec,
+      version: +serviceObj.Version.Index,
+      UpdateConfig: {
+        Parallelism: 1,
+        Delay: 1000000000,
+        FailureAction: 'pause',
+        Monitor: 15000000000,
+        MaxFailureRatio: 0,
+        Order: 'stop-first',
       },
     })
+    console.log(
+      JSON.stringify({
+        ...serviceObj.Spec,
+        version: +serviceObj.Version.Index,
+        UpdateConfig: {
+          Parallelism: 1,
+          Delay: 1000000000,
+          FailureAction: 'pause',
+          Monitor: 15000000000,
+          MaxFailureRatio: 0,
+          Order: 'stop-first',
+        },
+      }),
+    )
+    console.log(r)
   }
 
   async deployVersion(versionId: ObjectId) {
@@ -619,6 +653,7 @@ export default class Service {
     }
 
     // Set Status
+    console.log('statuses', instanceStatuses)
     if (Object.keys(instanceStatuses).length === 1) {
       instanceStatus = this.instanceStatusMap?.[Object.keys(instanceStatuses)[0]] || InstanceServiceStatus.UNKNOWN
     } else if (Object.keys(instanceStatuses).length > 1) {

@@ -9,10 +9,13 @@ import { clients, getClient } from '../clients/clients'
 import { db } from '../db'
 import Service, { IHealthObj } from './service'
 import moment from 'moment'
+import { socket } from '../background/init/sockets'
+import { InstanceSocketEvents } from 'types/sockets'
 
 export default class Instance {
   instance: IInstance
   health: instanceHealth
+  healthLastUpdated: Date
   instanceServiceStatus: InstanceServiceStatus
   serviceActive: boolean
   serviceId?: string
@@ -23,6 +26,7 @@ export default class Instance {
     this.health = instanceHealth.UNKNOWN
     this.instanceServiceStatus = this.instance.service_status || InstanceServiceStatus.UNKNOWN
     this.serviceActive = false
+    this.healthLastUpdated = this.instance.service_health_updated_at
   }
 
   getServiceData = async () => {
@@ -36,9 +40,19 @@ export default class Instance {
     if (this.serviceActive) {
       //  Get service data
       //   Run service getData commands, to update the instance health etc.
-      const serviceData = await this.service.getServiceData()
-      const health = await this.service.checkServiceHealth()
-      await this.updateInstanceHealth(health)
+      try {
+        const serviceData = await this.service.getServiceData()
+        const health = await this.service.checkServiceHealth()
+        await this.updateInstanceHealth(health)
+      } catch (error) {
+        console.error('Error getting service data', error)
+        const health = {
+          instanceHealthStatus: instanceHealth.UNKNOWN,
+          instanceStatus: InstanceServiceStatus.UNKNOWN,
+          replicaStates: {},
+        }
+        await this.updateInstanceHealth(health)
+      }
     }
   }
 
@@ -85,7 +99,9 @@ export default class Instance {
     }
 
     if (this.instance.service_health !== healthObj.instanceHealthStatus) {
-      payload.service_health_updated_at = new Date()
+      const date = new Date()
+      payload.service_health_updated_at = date
+      this.healthLastUpdated = date
     }
 
     await db.managementDb?.collection<IInstance>('instances').updateOne(
@@ -95,6 +111,13 @@ export default class Instance {
       },
     )
     //   Send socket to server to let know of update in instance health which will then be sent to client
+    socket?.emit(InstanceSocketEvents.UPDATE_HEALTH, {
+      instance_id: this.instance._id,
+      health: this.health,
+      replica_health: this.instance.replica_health,
+      instanceServiceStatus: this.instanceServiceStatus,
+      healthLastUpdated: this.healthLastUpdated,
+    })
   }
 
   async sendInstanceHealthNotifications() {

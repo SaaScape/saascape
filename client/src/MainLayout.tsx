@@ -7,15 +7,13 @@ import Aside from './components/Aside'
 import Header from './components/Header'
 import { apiAxios } from './helpers/axios'
 import Main from './pages/Main'
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { setConfigData } from './store/slices/configData'
 import axios from 'axios'
 import { setApplications } from './store/slices/applicationSlice'
 import { setServers } from './store/slices/serverSlice'
 import { setSwarms } from './store/slices/swarmSlice'
-import InstancesWrapper from './components/InstancesWrapper.tsx'
-// import socket from "./sockets/sockets"
-// import { IStore } from "./store/store"
+import ManageInstances from './components/InstanceManager.tsx'
 
 const MainLayout = () => {
   const dispatch = useDispatch()
@@ -70,13 +68,13 @@ const MainLayout = () => {
   }
 
   return (
-    <InstancesWrapper>
+    <ManageInstances>
       <div className="main-layout">
         <Header />
         <Aside />
         <Main />
       </div>
-    </InstancesWrapper>
+    </ManageInstances>
   )
 }
 

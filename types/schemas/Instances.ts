@@ -39,6 +39,17 @@ export enum instanceDbStatus {
   PENDING_DEPLOYMENT = 'pending_deployment',
 }
 
+export interface IInstanceHealth {
+  instance_id: string
+  health: instanceHealth
+  healthLastUpdated: Date
+  instanceServiceStatus: InstanceServiceStatus
+  replica_health: IReplicaStates
+}
+export interface IInstanceHealths {
+  [instanceId: string]: IInstanceHealth
+}
+
 export default interface IInstance extends ILinkedIdEnabledDocument {
   _id: ObjectId
   service_status: InstanceServiceStatus

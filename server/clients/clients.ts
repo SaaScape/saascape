@@ -78,7 +78,9 @@ export const initializeInstanceClients = async () => {
   console.log('Initializing instance clients')
   const instances = await db.managementDb
     ?.collection<IInstance>('instances')
-    .find({ status: instanceDbStatus.ACTIVE })
+    .find({
+      status: { $in: [instanceDbStatus.ACTIVE, instanceDbStatus.PENDING_DEPLOYMENT, instanceDbStatus.PENDING_REMOVAL] },
+    })
     .toArray()
 
   for (const instance of instances || []) {

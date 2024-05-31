@@ -32,6 +32,12 @@ const onInstanceDeploymentFailed: SocketListener = () => ({
   },
   [misc.CLIENT]: (data: any) => {},
 })
+const onInstanceHealthUpdate: SocketListener = () => ({
+  [misc.BACKGROUND]: (data: any) => {
+    socketServer?.emit(InstanceSocketEvents.UPDATE_HEALTH, data)
+  },
+  [misc.CLIENT]: (data: any) => {},
+})
 
 const getSocketEvent: (socket: Socket, listener: SocketListener) => SocketEvent = (socket, listener) => {
   const isBackground = socket.data.isBackground
@@ -43,6 +49,7 @@ const initializeSocketEvents = (socket: Socket) => {
   //   Instance
   socket.on(InstanceSocketEvents.INSTANCE_DEPLOYED, getSocketEvent(socket, onInstanceDeployed))
   socket.on(InstanceSocketEvents.INSTANCE_DEPLOYMENT_FAILED, getSocketEvent(socket, onInstanceDeploymentFailed))
+  socket.on(InstanceSocketEvents.UPDATE_HEALTH, getSocketEvent(socket, onInstanceHealthUpdate))
 }
 
 export default initializeSocketEvents

@@ -1,18 +1,17 @@
-import { Button, Card, Form, Input, Popconfirm, Table } from "antd"
-import IInstance from "types/schemas/Instances"
-import {
-  IApplication,
-  updateApplication,
-} from "../../../store/slices/applicationSlice"
-import { useEffect, useState } from "react"
-import useEditableTable, { IColumnProps } from "../../../hooks/useEditableTable"
-import { useForm } from "antd/es/form/Form"
-import { toast } from "react-toastify"
-import { apiAxiosToast } from "../../../helpers/axios"
-import constants from "../../../helpers/constants/constants"
-import { useDispatch } from "react-redux"
-import { ILinkedIdEnabledDocument } from "../../../interfaces/interfaces"
-import ImportAppVariables from "./ImportAppVariables"
+import { Button, Card, Form, Input, Popconfirm, Table } from 'antd'
+import IInstance from 'types/schemas/Instances'
+import { IApplication, updateApplication } from '../../../store/slices/applicationSlice'
+import { useEffect, useState } from 'react'
+import useEditableTable, { IColumnProps } from '../../../hooks/useEditableTable'
+import { useForm } from 'antd/es/form/Form'
+import { toast } from 'react-toastify'
+import { apiAxiosToast } from '../../../helpers/axios'
+import constants from '../../../helpers/constants/constants'
+import { useDispatch } from 'react-redux'
+import { ILinkedIdEnabledDocument } from '../../../interfaces/interfaces'
+import ImportAppVariables from './ImportAppVariables'
+import CSVImportVariables from './CSVImportVariables.tsx'
+import { CSVData } from '../../../helpers/utils.ts'
 
 interface IProps {
   application?: IApplication
@@ -25,54 +24,49 @@ export interface IEnvironmentVariable extends ILinkedIdEnabledDocument {
   value: string
 }
 
-// Todo, for new instances we will add all the secrets from the application config. and all environment variables. We will also add one new subcomponent which will allow users to select and import a secret from app config and then they can edit it. Or they can add a custom secret.
-// Any imported ids will have same _id as the application config.
-// So when name is changed in app config then we will update it for all instances showing warning and ask user to confirm.
-
 const EnvironmentConfig = ({ application, instance }: IProps) => {
   const [loading, setLoading] = useState(false)
   //   Secrets below will either be the application config secrets or the instance secrets. If instance is defined then we will use instance secrets
   const [environmentVariables, setEnvironmentVariables] = useState<any>([])
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showCSVImportModal, setShowCSVImportModal] = useState(false)
 
   const dispatch = useDispatch()
 
   useEffect(() => {
     setEnvironmentVariables(
       Object.values(
-        instance?._id
-          ? instance?.config?.environment_config
-          : application?.config?.environment_config || {}
-      )
+        instance?._id ? instance?.config?.environment_config : application?.config?.environment_config || {},
+      ),
     )
   }, [application?.config?.environment_config])
 
   const [columns, setColumns] = useState<IColumnProps[]>([
     {
-      title: "Name",
-      key: "name",
-      dataIndex: "name",
+      title: 'Name',
+      key: 'name',
+      dataIndex: 'name',
       render(value, record) {
         return value
       },
       editableRender(value, record) {
         return (
-          <Form.Item name='name'>
+          <Form.Item name="name">
             <Input onChange={() => form.submit()} />
           </Form.Item>
         )
       },
     },
     {
-      title: "Value",
-      key: "value",
-      dataIndex: "value",
+      title: 'Value',
+      key: 'value',
+      dataIndex: 'value',
       render(value, record) {
         return value
       },
       editableRender(value) {
         return (
-          <Form.Item name='value'>
+          <Form.Item name="value">
             <Input onChange={() => form.submit()} />
           </Form.Item>
         )
@@ -86,15 +80,9 @@ const EnvironmentConfig = ({ application, instance }: IProps) => {
     form,
     columns,
     setDataSource: setEnvironmentVariables,
-    templateObj: { _id: "", name: "Environment name", value: "Env value" },
+    templateObj: { _id: '', name: 'Environment name', value: 'Env value' },
   })
-  const {
-    editableColumns,
-    onFinish,
-    updatedFields,
-    addNewRecord,
-    resetUpdatedFields,
-  } = editableTable
+  const { editableColumns, onFinish, updatedFields, addNewRecord, resetUpdatedFields, addCSVRecord } = editableTable
   const onSave = async () => {
     // If instance then we will update instance keys, otherwise we will update application config secrets
 
@@ -113,7 +101,7 @@ const EnvironmentConfig = ({ application, instance }: IProps) => {
 
     if (data?.success) {
       toast.update(toastId, {
-        type: "success",
+        type: 'success',
         render: <div>Saving environment variables... Done!</div>,
         isLoading: false,
         autoClose: 1000,
@@ -150,41 +138,48 @@ const EnvironmentConfig = ({ application, instance }: IProps) => {
     closeImportEnvironmentModal()
   }
 
+  const toggleCSVImportModal = (open: boolean) => {
+    setShowCSVImportModal(open)
+  }
+
+  const openCSVImportModal = () => {
+    toggleCSVImportModal(true)
+  }
+
+  const onCSVImportCancel = () => {
+    toggleCSVImportModal(false)
+  }
+
+  const onCSVImport = (data: CSVData) => {
+    addCSVRecord(data)
+  }
+
   return (
     <>
-      <section className='application-secrets-config'>
+      <section className="application-secrets-config">
         <Card>
-          <div className='top-bar d-flex justify-between align-center'>
-            <div className='left'>
-              <span className='title'>Environment Variables</span>
+          <div className="top-bar d-flex justify-between align-center">
+            <div className="left">
+              <span className="title">Environment Variables</span>
             </div>
-            <div className='right'>
-              <div className='right d-flex'>
+            <div className="right">
+              <div className="right d-flex">
                 {instance?._id && (
-                  <Button
-                    className='m-r-10'
-                    onClick={openImportEnvironmentModal}
-                  >
+                  <Button className="m-r-10" onClick={openImportEnvironmentModal}>
                     Import Variables
                   </Button>
                 )}
-                <Button className='m-r-10'>Upload Variables</Button>
+                <Button className="m-r-10" onClick={openCSVImportModal}>
+                  Upload Variables
+                </Button>
                 <Button onClick={addNewRecord}>New Variable</Button>
               </div>
             </div>
           </div>
           <Form form={form} onFinish={onFinish}>
-            <Table
-              loading={loading}
-              dataSource={environmentVariables}
-              columns={editableColumns}
-              rowKey={"_id"}
-            />
-            <Popconfirm
-              title='Are you sure you want to save?'
-              onConfirm={onSave}
-            >
-              <Button type='primary'>Save</Button>
+            <Table loading={loading} dataSource={environmentVariables} columns={editableColumns} rowKey={'_id'} />
+            <Popconfirm title="Are you sure you want to save?" onConfirm={onSave}>
+              <Button type="primary">Save</Button>
             </Popconfirm>
           </Form>
         </Card>
@@ -193,11 +188,13 @@ const EnvironmentConfig = ({ application, instance }: IProps) => {
       <ImportAppVariables
         visible={showImportModal}
         onCancel={closeImportEnvironmentModal}
-        type='environment_variables'
+        type="environment_variables"
         variables={environmentVariables}
         application={application}
         onImport={onImport}
       />
+
+      <CSVImportVariables open={showCSVImportModal} onCancel={onCSVImportCancel} onImport={onCSVImport} />
     </>
   )
 }

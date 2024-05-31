@@ -1,20 +1,17 @@
-import Servers from "./Servers"
-import useSetBreadcrumbs from "../../middleware/useSetBreadcrumbs"
-import { useEffect, useState } from "react"
-import breadcrumbs from "../../helpers/constants/breadcrumbs"
-import ManageServerModal from "../../components/Servers/ManageServerModal"
-import { apiAxios } from "../../helpers/axios"
-import { FormInstance, Tag } from "antd"
-import { toast } from "react-toastify"
-import {
-  IEncryptedData,
-  ILinkedIdEnabledDocument,
-} from "../../interfaces/interfaces"
-import constants from "../../helpers/constants/constants"
-import { useNavigate } from "react-router-dom"
-import { useDispatch, useSelector } from "react-redux"
-import { IStore } from "../../store/store"
-import { setServers } from "../../store/slices/serverSlice"
+import Servers from './Servers'
+import useSetBreadcrumbs from '../../middleware/useSetBreadcrumbs'
+import { useEffect, useState } from 'react'
+import breadcrumbs from '../../helpers/constants/breadcrumbs'
+import ManageServerModal from '../../components/Servers/ManageServerModal'
+import { apiAxios } from '../../helpers/axios'
+import { FormInstance, Tag } from 'antd'
+import { toast } from 'react-toastify'
+import { IEncryptedData, ILinkedIdEnabledDocument } from '../../interfaces/interfaces'
+import constants from '../../helpers/constants/constants'
+import { useNavigate } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+import { IStore } from '../../store/store'
+import { setServers } from '../../store/slices/serverSlice'
 
 export interface IServer extends ILinkedIdEnabledDocument {
   _id: string
@@ -53,63 +50,56 @@ const ServersContainer = () => {
   }, [])
 
   const getSwarm = (record: IServer) => {
-    const dockerLinkedId = record?.linked_ids?.find(
-      (linkedIdObj) => linkedIdObj.name === constants.INTEGRATIONS.DOCKER
-    )
+    const dockerLinkedId = record?.linked_ids?.find((linkedIdObj) => linkedIdObj.name === constants.INTEGRATIONS.DOCKER)
 
     const { integration_id } = dockerLinkedId || {}
 
-    const dockerIntegration = integrations?.docker?.find(
-      (integration) => integration._id === integration_id
-    )
+    const dockerIntegration = integrations?.docker?.find((integration) => integration._id === integration_id)
 
     if (!dockerIntegration) return
 
-    const swarm = swarms?.find(
-      (swarm) => swarm._id === dockerIntegration?.config?.swarm?.swarm_id
-    )
+    const swarm = swarms?.find((swarm) => swarm._id === dockerIntegration?.config?.swarm?.swarm_id)
     const nodeType = dockerIntegration?.config?.swarm?.node_type
-    console.log(swarm)
     return { swarm, nodeType }
   }
   const columns = [
     {
-      title: "Server Name",
-      dataIndex: "server_name",
-      key: "server_name",
+      title: 'Server Name',
+      dataIndex: 'server_name',
+      key: 'server_name',
     },
     {
-      title: "Server IP Address",
-      dataIndex: "server_ip_address",
-      key: "server_ip_address",
+      title: 'Server IP Address',
+      dataIndex: 'server_ip_address',
+      key: 'server_ip_address',
     },
     {
-      title: "Status",
-      dataIndex: "server_status",
-      key: "server_status",
+      title: 'Status',
+      dataIndex: 'server_status',
+      key: 'server_status',
       render: (text: string) => {
         switch (text) {
           case constants.SERVER_STATUSES.PENDING_INITIALIZATION:
-            return <Tag color='orange'>Pending Initialization</Tag>
+            return <Tag color="orange">Pending Initialization</Tag>
           case constants.SERVER_STATUSES.FAILED_INITIALIZATION:
-            return <Tag color='red'>Failed Initialization</Tag>
+            return <Tag color="red">Failed Initialization</Tag>
           case constants.SERVER_STATUSES.SUCCESSFUL_INITIALIZATION:
-            return <Tag color='green'>Ready</Tag>
+            return <Tag color="green">Ready</Tag>
           default:
             return text
         }
       },
     },
     {
-      title: "Availability",
-      dataIndex: "availability",
-      key: "availability",
+      title: 'Availability',
+      dataIndex: 'availability',
+      key: 'availability',
       render: (text: string) => {
         switch (text) {
           case constants.AVAILABILITY.ONLINE:
-            return <Tag color='green'>{constants.AVAILABILITY.ONLINE}</Tag>
+            return <Tag color="green">{constants.AVAILABILITY.ONLINE}</Tag>
           case constants.AVAILABILITY.OFFLINE:
-            return <Tag color='red'>{constants.AVAILABILITY.OFFLINE}</Tag>
+            return <Tag color="red">{constants.AVAILABILITY.OFFLINE}</Tag>
 
           default:
             return text
@@ -117,11 +107,11 @@ const ServersContainer = () => {
       },
     },
     {
-      title: "Swarm",
+      title: 'Swarm',
       render: (_: any, record: IServer) => {
         const { swarm, nodeType } = getSwarm(record) || {}
 
-        const tagColor = nodeType === "manager" ? "blue" : "green"
+        const tagColor = nodeType === 'manager' ? 'blue' : 'green'
 
         return (
           <span>
@@ -130,7 +120,7 @@ const ServersContainer = () => {
                 {swarm?.name} <Tag color={tagColor}>{nodeType}</Tag>
               </span>
             ) : (
-              "-"
+              '-'
             )}
           </span>
         )
@@ -146,7 +136,7 @@ const ServersContainer = () => {
     setLoading(true)
     const {
       data: { data, success },
-    } = await apiAxios.get("/servers")
+    } = await apiAxios.get('/servers')
     if (success) {
       dispatch(setServers(data?.servers))
     }
@@ -154,22 +144,22 @@ const ServersContainer = () => {
   }
   const testConnection = async (values: any, form: FormInstance) => {
     setTestingConnection(true)
-    const { data } = await apiAxios.post("/servers/test-connection", values)
+    const { data } = await apiAxios.post('/servers/test-connection', values)
     if (data?.success && data?.data?.success) {
-      toast.success("Connection successful")
+      toast.success('Connection successful')
       setTestingConnection(false)
       return true
     }
     const { error } = data?.data?.data || {}
     switch (error) {
-      case "Missing required params":
+      case 'Missing required params':
         const missingParams = data?.data?.data?.missingParams
         const errorFieldObj = (missingParams || []).map((param: string) => ({
           name: [param],
-          errors: ["Required"],
+          errors: ['Required'],
         }))
         form.setFields(errorFieldObj)
-        toast.error("Connection test failed: " + missingParams.join(", "))
+        toast.error('Connection test failed: ' + missingParams.join(', '))
         break
     }
 
@@ -181,9 +171,9 @@ const ServersContainer = () => {
     if (!connectionTestResult) return // Do somethign here re error
     const {
       data: { success },
-    } = await apiAxios.post("/servers", values)
+    } = await apiAxios.post('/servers', values)
     if (success) {
-      toast.success("Server created successfully")
+      toast.success('Server created successfully')
       await getServers()
       setShowServerModal(false)
     }

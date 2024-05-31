@@ -1,14 +1,13 @@
-import { configureStore } from "@reduxjs/toolkit"
-import usersReducer, { IUserState } from "./slices/userSlice"
-import notificationsReducer, {
-  INotificationState,
-} from "./slices/notificationsSlice"
-import configDataReducer, { IConfigData } from "./slices/configData"
-import breadcrumbsReducer, { IBreadcrumbs } from "./slices/breadcrumbs"
-import layoutConfigReducer, { ILayoutConfig } from "./slices/layoutConfig"
-import applicationsReducer, { IApplication } from "./slices/applicationSlice"
-import serverReducer, { IServerState } from "./slices/serverSlice"
-import swarmReducer, { ISwarm } from "./slices/swarmSlice"
+import { configureStore } from '@reduxjs/toolkit'
+import usersReducer, { IUserState } from './slices/userSlice'
+import notificationsReducer, { INotificationState } from './slices/notificationsSlice'
+import configDataReducer, { IConfigData } from './slices/configData'
+import breadcrumbsReducer, { IBreadcrumbs } from './slices/breadcrumbs'
+import layoutConfigReducer, { ILayoutConfig } from './slices/layoutConfig'
+import applicationsReducer, { IApplication } from './slices/applicationSlice'
+import serverReducer, { IServerState } from './slices/serverSlice'
+import swarmReducer, { ISwarm } from './slices/swarmSlice'
+import instanceReducer, { IInstancesState } from './slices/instancesSlice'
 
 export interface IStore {
   user: IUserState
@@ -22,6 +21,7 @@ export interface IStore {
   }
   servers: IServerState[]
   swarms: ISwarm[]
+  instances: IInstancesState
 }
 
 export const store = configureStore({
@@ -34,6 +34,7 @@ export const store = configureStore({
     applications: applicationsReducer,
     servers: serverReducer,
     swarms: swarmReducer,
+    instances: instanceReducer,
   },
 })
 

@@ -67,6 +67,7 @@ const iconsObj: IIconsObj = {
     PLUG: solid.faPlug,
     TAG: solid.faTag,
     CLOSE: solid.faClose,
+    UPLOAD: solid.faUpload,
   },
   regular: {
     BELL: regular.faBell,

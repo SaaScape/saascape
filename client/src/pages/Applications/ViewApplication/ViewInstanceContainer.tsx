@@ -6,9 +6,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { IApplicationProps } from '../ApplicationRouteHandler'
 import ViewInstance from './ViewInstance'
 import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
-import { useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { IStore } from '../../../store/store'
 import IInstance, { InstanceServiceStatus } from 'types/schemas/Instances'
 import { apiAxios, apiAxiosClean, apiAxiosToast } from '../../../helpers/axios'
@@ -23,7 +23,9 @@ import { IMenuContainerRef, useMenuContainer } from '../../../components/MenuCon
 import VersionSelectionModal from '../../../components/Applications/Instances/VersionSelectionModal.tsx'
 import { ConfigModules } from 'types/enums.ts'
 import { toast } from 'react-toastify'
-import { deploymentActions, DeploymentStages, InstancesWrapperContext } from '../../../components/InstancesWrapper.tsx'
+
+import { useManageInstances } from '../../../components/InstanceManager.tsx'
+import { IInstanceHealth, updateInstanceHealth } from '../../../store/slices/instancesSlice.ts'
 
 export interface IViewProps {
   instance?: IInstance
@@ -59,13 +61,16 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   const [saving, setSaving] = useState(false)
 
   const { selectedApplication } = useSelector((state: IStore) => state.applications)
+  const instanceHealths = useSelector((state: IStore) => state.instances?.instanceHealths)
+  const instanceHealth = instanceHealths[instance?._id?.toString() || '']
 
   const { id, instanceId } = useParams()
   const setBreadcrumbs = useSetBreadcrumbs()
   const navigate = useNavigate()
   const instanceMenuContainer = useMenuContainer()
+  const dispatch = useDispatch()
 
-  const { startDeployment, progressDeployment, failDeployment } = useContext(InstancesWrapperContext)
+  const { addDeployment } = useManageInstances()
 
   useEffect(() => {
     setId(id)
@@ -125,8 +130,8 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
             onClick: () => {},
           },
           {
-            text: 'Restart',
-            onClick: () => {},
+            text: 'Redeploy Instance',
+            onClick: deployInstance,
           },
         ],
       ]
@@ -156,9 +161,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
         [
           {
             text: 'Deploy Instance',
-            onClick: async () => {
-              await deployInstance()
-            },
+            onClick: deployInstance,
           },
           {
             text: 'Select Version',
@@ -175,8 +178,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
 
   const deployInstance = async () => {
     if (!id || !instanceId || !instance) return
-    // Instead of calling dispatch deployments here, we should be using methods provided by the context to do so instead
-    const result = await startDeployment(instance)
+    const result = (await addDeployment(instance)) as { instance: IInstance } | undefined
     result?.instance && setInstance(result?.instance)
   }
 
@@ -187,6 +189,14 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
     } = await apiAxios.get(`/applications/${id}/instances/${instanceId}`)
     if (success) {
       setInstance(data?.instance)
+      const instanceHealthPayload: IInstanceHealth = {
+        instance_id: instanceId,
+        health: data?.instance?.service_health,
+        healthLastUpdated: data?.instance?.service_health_updated_at,
+        instanceServiceStatus: data?.instance?.service_status,
+        replica_health: data?.instance?.replica_health,
+      }
+      dispatch(updateInstanceHealth(instanceHealthPayload))
     }
   }
 
