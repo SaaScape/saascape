@@ -2,7 +2,7 @@
  * Copyright SaaScape (c) 2024.
  */
 
-import IInstance, { instanceDbStatus, InstanceServiceStatus } from 'types/schemas/Instances'
+import IInstance, { instanceDbStatus, InstanceServiceStatus, IReplicaStates } from 'types/schemas/Instances'
 import { instanceHealth } from 'types/enums'
 import constants from '../helpers/constants'
 import { clients, getClient } from '../clients/clients'
@@ -46,10 +46,17 @@ export default class Instance {
         await this.updateInstanceHealth(health)
       } catch (error) {
         console.error('Error getting service data', error)
+        const replicas: IReplicaStates = Object.fromEntries(
+          Array.from({ length: this.instance.replicas }, (_, i) => [
+            i + 1,
+            { health: instanceHealth.UNKNOWN, state: 'unknown', since: new Date() },
+          ]),
+        )
+
         const health = {
           instanceHealthStatus: instanceHealth.UNKNOWN,
           instanceStatus: InstanceServiceStatus.UNKNOWN,
-          replicaStates: {},
+          replicaStates: replicas,
         }
         await this.updateInstanceHealth(health)
       }

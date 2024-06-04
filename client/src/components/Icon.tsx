@@ -68,6 +68,9 @@ const iconsObj: IIconsObj = {
     TAG: solid.faTag,
     CLOSE: solid.faClose,
     UPLOAD: solid.faUpload,
+    CIRCLE_CHECK: solid.faCircleCheck,
+    CIRCLE_EXCLAMATION: solid.faCircleExclamation,
+    CIRCLE_INFO: solid.faCircleInfo,
   },
   regular: {
     BELL: regular.faBell,

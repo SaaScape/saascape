@@ -1,0 +1,38 @@
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+.instance-health-container {
+  padding: 2px 5px;
+  border-radius: 5px;
+  .instance-health {
+    svg {
+      margin-right: 5px;
+      font-size: 1.2rem;
+    }
+    text-transform: capitalize;
+    font-weight: bold;
+    color: @text-color;
+    cursor:help;
+    &.healthy {
+      svg {
+        color: @primary-blue;
+      }
+    }
+    &.partially-healthy {
+      svg {
+        color: @primary-blue;
+      }
+    }
+    &.unhealthy {
+      svg {
+        color: @error-red;
+      }
+    }
+    &.unknown {
+      svg {
+        color: @error-red;
+      }
+    }
+  }
+}

@@ -3,13 +3,20 @@
  */
 
 import { Avatar, Card, Tabs } from 'antd'
-import { IViewProps, InstanceMenu } from './ViewInstanceContainer'
+import { InstanceMenu, IViewProps } from './ViewInstanceContainer'
 import Icon from '../../../components/Icon'
 import moment from 'moment'
 import MenuContainer from '../../../components/MenuContainer'
 import MenuIcon from '../../../components/MenuIcon'
+import InstanceHealth from '../../../components/Applications/Instances/InstanceHealth.tsx'
 
-const ViewInstance = ({ instance, instanceTabs, instanceMenuItems, instanceMenuContainer }: IViewProps) => {
+const ViewInstance = ({
+  instance,
+  instanceTabs,
+  instanceMenuItems,
+  instanceMenuContainer,
+  instanceHealthObj,
+}: IViewProps) => {
   return (
     <section className="view-instance p-relative">
       <Card className="m-b-20">
@@ -17,9 +24,12 @@ const ViewInstance = ({ instance, instanceTabs, instanceMenuItems, instanceMenuC
           <div className="left d-flex justify-start align-start">
             <Avatar size={40} icon={<Icon icon="INSTANCE" />} />
             <div>
-              <h3>
-                <strong>{instance?.name}</strong> | {instance?.version?.tag}
-              </h3>
+              <div className={'d-flex align-center'}>
+                <h3 className={'m-r-8'}>
+                  <strong>{instance?.name}</strong> | {instance?.version?.tag}
+                </h3>
+                <InstanceHealth instanceHealthObj={instanceHealthObj} />
+              </div>
               <span className="weak">Last modified {moment(instance?.updated_at).fromNow()}</span>
             </div>
           </div>

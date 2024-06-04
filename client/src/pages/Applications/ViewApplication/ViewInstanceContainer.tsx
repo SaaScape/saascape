@@ -6,12 +6,12 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { IApplicationProps } from '../ApplicationRouteHandler'
 import ViewInstance from './ViewInstance'
 import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
-import { useCallback, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs'
 import { useDispatch, useSelector } from 'react-redux'
 import { IStore } from '../../../store/store'
 import IInstance, { InstanceServiceStatus } from 'types/schemas/Instances'
-import { apiAxios, apiAxiosClean, apiAxiosToast } from '../../../helpers/axios'
+import { apiAxios, apiAxiosToast } from '../../../helpers/axios'
 import { Popconfirm, TabsProps } from 'antd'
 import Icon from '../../../components/Icon'
 import EnvironmentConfig from '../../../components/Applications/configuration/EnvironmentConfig'
@@ -25,7 +25,8 @@ import { ConfigModules } from 'types/enums.ts'
 import { toast } from 'react-toastify'
 
 import { useManageInstances } from '../../../components/InstanceManager.tsx'
-import { IInstanceHealth, updateInstanceHealth } from '../../../store/slices/instancesSlice.ts'
+import { updateInstanceHealth } from '../../../store/slices/instancesSlice.ts'
+import { IInstanceHealth } from 'types/schemas/Instances.ts'
 
 export interface IViewProps {
   instance?: IInstance
@@ -33,6 +34,7 @@ export interface IViewProps {
   instanceMenuItems: instanceMenuItem
   toggleInstanceEdit: (open: boolean) => void
   instanceMenuContainer: IMenuContainerRef
+  instanceHealthObj: IInstanceHealth
 }
 
 type instanceMenuItem = {
@@ -62,7 +64,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
 
   const { selectedApplication } = useSelector((state: IStore) => state.applications)
   const instanceHealths = useSelector((state: IStore) => state.instances?.instanceHealths)
-  const instanceHealth = instanceHealths[instance?._id?.toString() || '']
+  const instanceHealthObj = instanceHealths[instance?._id?.toString() || '']
 
   const { id, instanceId } = useParams()
   const setBreadcrumbs = useSetBreadcrumbs()
@@ -93,6 +95,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   }, [instanceId])
 
   useEffect(() => {
+    // TODO: Ensure that the instance can be updated in most cases
     if (!instance) return
     const instanceMenuItems: instanceMenuItem = [
       [
@@ -257,11 +260,6 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
     },
   ]
 
-  /**
-   * TODO: When editing an instance changes will be submitted to the database but the docker service will
-   * not be updated with the new configuration until the instance is redeployed
-   */
-
   const onInstanceSave = async (values: any) => {
     setSaving(true)
     const toastId = toast('Updating instance...', { isLoading: true })
@@ -306,6 +304,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
         instanceTabs={instanceTabs}
         instanceMenuItems={instanceMenuItems}
         instanceMenuContainer={instanceMenuContainer}
+        instanceHealthObj={instanceHealthObj}
       />
       <SideFullMenu
         onClose={() => {

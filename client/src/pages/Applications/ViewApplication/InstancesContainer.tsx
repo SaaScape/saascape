@@ -12,6 +12,7 @@ import { apiAxios, apiAxiosToast } from '../../../helpers/axios'
 import { toast } from 'react-toastify'
 import IInstance from 'types/schemas/Instances'
 import { bulkUpdateInstanceHealth } from '../../../store/slices/instancesSlice.ts'
+import InstanceHealth from '../../../components/Applications/Instances/InstanceHealth.tsx'
 
 export interface IProps {
   selectedApplication: IApplication | null
@@ -67,7 +68,7 @@ const InstancesContainer = (props: IApplicationProps) => {
       render: (_, record) => {
         if (healthLoading) return <Spin />
         const instanceHealth = instanceHealths?.[record?._id?.toString()]
-        return instanceHealth?.health
+        return <InstanceHealth instanceHealthObj={instanceHealth} />
       },
     },
     {
