@@ -8,3 +8,7 @@ export enum InstanceSocketEvents {
   DEPLOY_INSTANCE = 'deploy_instance',
   UPDATE_HEALTH = 'update_health',
 }
+
+export enum DomainSocketEvents {
+  SYNC_APPLICATION_DIRECTIVES = 'sync_application_directives',
+}

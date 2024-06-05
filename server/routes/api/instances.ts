@@ -11,7 +11,7 @@ import withPerms from '../../middleware/withPerms'
 import permissions from '../../helpers/permissions'
 import { io } from '../../init/sockets'
 import constants from '../../helpers/constants'
-import { InstanceSocketEvents } from 'types/sockets'
+import { DomainSocketEvents, InstanceSocketEvents } from 'types/sockets'
 import ApplicationService from '../../services/applicationService'
 
 export default (app: Router, use: any) => {
@@ -87,6 +87,9 @@ const updateOne: API = async (req, res) => {
   const { application_id, id } = req.params
   const instanceService = new InstanceService(new ObjectId(application_id))
   const instance = (await instanceService.updateOne(id, req.body)) || {}
+  io?.io
+    ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+    .emit(DomainSocketEvents.SYNC_APPLICATION_DIRECTIVES, { applicationId: application_id })
   io?.io
     ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
     .emit(constants.SOCKET_EVENTS.UPDATE_INSTANCE_CLIENT_DATA, { instance_id: id })

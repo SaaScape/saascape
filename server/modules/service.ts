@@ -210,9 +210,7 @@ export default class Service {
     for (const secret of existingSecrets) {
       try {
         await dockerClient.getSecret(secret.ID).remove()
-      } catch (err) {
-        console.log('error removing secret', err)
-      }
+      } catch (err) {}
     }
   }
 
@@ -443,7 +441,6 @@ export default class Service {
       return
     }
 
-    console.log('updating instance :)')
     if (!this.instanceClient.serviceId) return
     const dockerClient = await this.getDockerClient()
     const service = dockerClient.getService(this.instanceClient.serviceId)
@@ -496,21 +493,6 @@ export default class Service {
         Order: 'stop-first',
       },
     })
-
-    console.log(
-      JSON.stringify({
-        ...serviceObj.Spec,
-        version: +serviceObj.Version.Index,
-        UpdateConfig: {
-          Parallelism: 1,
-          Delay: 1000000000,
-          FailureAction: 'pause',
-          Monitor: 15000000000,
-          MaxFailureRatio: 0,
-          Order: 'stop-first',
-        },
-      }),
-    )
 
     await this.removeSecrets()
   }
