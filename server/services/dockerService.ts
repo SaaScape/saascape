@@ -6,6 +6,7 @@ import Dockerode from 'dockerode'
 import { ISwarm } from 'types/schemas/Swarms'
 import constants from '../helpers/constants'
 import { IIntegration, NodeType } from '../schemas/Integrations'
+import { misc } from 'types/enums'
 
 export default class DockerService {
   server_id: ObjectId
@@ -217,6 +218,15 @@ export default class DockerService {
         },
       },
     )
+
+    await dockerClient
+      .createNetwork({
+        Name: misc.DOCKER_SAASCAPE_NETWORK,
+        Driver: 'overlay',
+      })
+      .catch((err) => {
+        console.log('Error creating network', err)
+      })
 
     return { swarm, document: { ...payload, _id: response?.insertedId } }
   }

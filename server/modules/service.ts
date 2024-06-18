@@ -17,7 +17,7 @@ import constants from '../helpers/constants'
 import Instance from './instance'
 import { ILinkedId } from '../interfaces/interfaces'
 import DomainService, { DecipheredCertificates } from '../services/domainsService'
-import { instanceHealth, InstanceVariables } from 'types/enums'
+import { instanceHealth, InstanceVariables, misc } from 'types/enums'
 import moment from 'moment'
 
 // TODO: Instead of deleting secret, update it when forcing update
@@ -183,6 +183,9 @@ export default class Service {
       environmentVariables.push(`${value.name}=${value.value}`)
     }
 
+    const isSslEnabled = this.instanceClient.instance.domain?.enable_ssl
+    const domainUrl = `http${isSslEnabled ? 's' : ''}://${this.instanceClient.instance.domain?.domain_name}`
+
     // const domainName = this.instanceClient.instance.domain?.domain_name || ''
     // TODO: Get database name from database collection here
     const dbName = this.instanceClient.instance.is_custom_database ? this.instanceClient.instance.database : ''
@@ -191,7 +194,7 @@ export default class Service {
         `${InstanceVariables.SAASCAPE_PORT}=${this.instanceClient.instance.port}`,
         `${InstanceVariables.SAASCAPE_DATABASE_NAME}=${dbName}`,
         `${InstanceVariables.SAASCAPE_SECRET_NAMES}=${(await this.getSecretNames()).join(',')}`,
-        `${InstanceVariables.SAASCAPE_DOMAIN_NAME}=${this.instanceClient.instance.domain?.domain_name}`,
+        `${InstanceVariables.SAASCAPE_DOMAIN_NAME}=${domainUrl}`,
       ],
     )
 
@@ -329,11 +332,24 @@ export default class Service {
     return !!service
   }
 
+  async createNetwork() {
+    const dockerClient = await this.getDockerClient()
+    const networks = await dockerClient.listNetworks({ filters: { name: [misc.DOCKER_SAASCAPE_NETWORK] } })
+    console.log(networks)
+    if (networks.length) return
+    await dockerClient.createNetwork({
+      Name: misc.DOCKER_SAASCAPE_NETWORK,
+      Driver: 'overlay',
+    })
+  }
+
   async createService() {
     // Check if service exists
     if (await this.checkServiceExists()) {
       throw new Error('Service already exists')
     }
+
+    await this.createNetwork()
 
     // Ensure that instance is in a state where it can be created
 
@@ -368,6 +384,11 @@ export default class Service {
         RestartPolicy: {
           Condition: 'any',
         },
+        Networks: [
+          {
+            Target: misc.DOCKER_SAASCAPE_NETWORK,
+          },
+        ],
       },
       EndpointSpec: {
         Ports: [
@@ -442,21 +463,33 @@ export default class Service {
     }
 
     if (!this.instanceClient.serviceId) return
+
     const dockerClient = await this.getDockerClient()
+
+    await this.createNetwork()
+
     const service = dockerClient.getService(this.instanceClient.serviceId)
     const serviceObj = await service.inspect()
     const environmentVariables = [...((await this.getEnvironmentVariables()) || []), ...[`MANAGEMENT_ENGINE=SAASCAPE`]]
     const secrets = await this.getSecrets()
+    const image = await this.downloadImage()
 
     // Container spec
     serviceObj.Spec.TaskTemplate.ContainerSpec = {
       ...serviceObj.Spec.TaskTemplate.ContainerSpec,
+      Image: image,
       Env: environmentVariables,
       Secrets: secrets,
       Labels: {
         versionId: this.instanceClient.instance.version_id.toString(),
       },
     }
+    //Networks
+    serviceObj.Spec.TaskTemplate.Networks = [
+      {
+        Target: misc.DOCKER_SAASCAPE_NETWORK,
+      },
+    ]
     // Endpoint spec
     serviceObj.Spec.EndpointSpec = {
       ...serviceObj.Spec.EndpointSpec,

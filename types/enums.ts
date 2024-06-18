@@ -21,6 +21,7 @@ export enum misc {
   NOT_ASSIGNED = 'Not Assigned',
   BACKGROUND = 'background',
   CLIENT = 'client',
+  DOCKER_SAASCAPE_NETWORK = 'SaaScape-overlay',
 }
 
 export type SocketType = misc.BACKGROUND | misc.CLIENT
