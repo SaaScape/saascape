@@ -1,40 +1,25 @@
-import Search from "antd/es/input/Search"
-import { IViewProps } from "./DomainsContainer"
-import { Button } from "antd"
-import PaginatedTable from "../../components/PaginatedTable"
+import Search from 'antd/es/input/Search'
+import { IViewProps } from './DomainsContainer'
+import { Button } from 'antd'
+import PaginatedTable from '../../components/PaginatedTable'
 
 const Domains = (props: IViewProps) => {
-  const {
-    loading,
-    columns,
-    functions,
-    paginatedData,
-    tableConfig,
-    onTableChange,
-  } = props
+  const { loading, columns, functions, paginatedData, tableConfig, onTableChange } = props
   return (
-    <section className='servers'>
-      <div className='top-bar d-flex justify-between align-center'>
-        <div className='left'>
-          <div className='search-container'>
-            <Search
-              disabled={loading}
-              placeholder='Search for domain'
-              onSearch={functions?.onSearch}
-            />
+    <section className="domains">
+      <div className="top-bar d-flex justify-between align-center">
+        <div className="left">
+          <div className="search-container">
+            <Search disabled={loading} placeholder="Search for domain" onSearch={functions?.onSearch} />
           </div>
         </div>
-        <div className='right'>
-          <Button
-            disabled={loading}
-            className='btn-add'
-            onClick={functions?.onAddDomainClick}
-          >
+        <div className="right">
+          <Button disabled={loading} className="btn-add" onClick={functions?.onAddDomainClick}>
             Add new Domain
           </Button>
         </div>
       </div>
-      <div className='table-container'>
+      <div className="table-container">
         <PaginatedTable
           loading={loading}
           columns={columns}

@@ -4,7 +4,7 @@
 
 import fsp from 'fs/promises'
 import path from 'path'
-import { IDomain } from '../schemas/Domains'
+import { IDomain } from 'types/schemas/Domains'
 import SSHService from '../services/sshService'
 import IInstance from 'types/schemas/Instances'
 import { IApplication } from '../schemas/Applications'
@@ -95,6 +95,36 @@ export const updateNginxConfigFile = async (ssh: SSHService, config: IUpdateNgin
     await checkNginxStatus(ssh)
     throw {
       message: `Nginx config update failed: ${err.message}`,
+    }
+  })
+
+  // Reload nginx
+  await ssh.execCommand('sudo nginx -s reload')
+}
+
+export const deleteNginxConfigFile = async (ssh: SSHService, location: string, force?: boolean) => {
+  // Check if file exists
+  const exists = await ssh.checkIfFileExists(location)
+  if (!exists) return
+
+  const { stdout } = exists
+    ? await ssh.execCommand(`sudo cat ${location}`)
+    : {
+        stdout: undefined,
+      }
+  let existingContent = stdout || ''
+  existingContent = existingContent.replaceAll(/\$/gi, '\\$')
+
+  // Delete file
+  await ssh.execCommand(`sudo rm ${force ? '-rf' : ''} ${location}`)
+
+  // Check nginx status
+  await checkNginxStatus(ssh).catch(async (err) => {
+    // Restore original content
+    await ssh.execCommand(`echo "${existingContent}" | sudo tee ${location}`)
+    await checkNginxStatus(ssh)
+    throw {
+      message: `Nginx config delete failed: ${err.message}`,
     }
   })
 

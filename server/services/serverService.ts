@@ -9,7 +9,7 @@ import { ObjectId } from 'mongodb'
 import SSHService from './sshService'
 import { IIntegration } from '../schemas/Integrations'
 import { IEncryptedData, ILinkedId } from '../interfaces/interfaces'
-import { IDomain } from '../schemas/Domains'
+import { DomainStatus, IDomain } from 'types/schemas/Domains'
 import { camelCase } from 'lodash'
 import { clients, initializeDockerClients, initializeSSHClients } from '../clients/clients'
 import DockerService from './dockerService'
@@ -747,7 +747,10 @@ export default class ServerService {
             },
           }),
     }
-    const domains = await db.managementDb?.collection<IDomain>('domains').find(findObj).toArray()
+    const domains = await db.managementDb
+      ?.collection<IDomain>('domains')
+      .find({ ...findObj, status: { $nin: [DomainStatus.DELETED] } })
+      .toArray()
 
     if (!domains?.length) return
 

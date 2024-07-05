@@ -8,7 +8,7 @@ import { db } from '../../db'
 import { IServer } from '../../schemas/Servers'
 import constants from '../../helpers/constants'
 import { logError } from '../../helpers/error'
-import { IDomain } from '../../schemas/Domains'
+import { DomainStatus, IDomain } from 'types/schemas/Domains'
 import { ObjectId } from 'mongodb'
 import SSL from '../../modules/ssl'
 import moment from 'moment'
@@ -42,6 +42,7 @@ const renewDomains = async () => {
   const domains = await db.managementDb
     ?.collection<IDomain>('domains')
     .find({
+      status: DomainStatus.ACTIVE,
       'SSL.end_date': { $lte: moment().add(30, 'days').toDate() },
       'SSL.status': {
         $in: [constants.SSL_STATUSES.EXPIRED, constants.SSL_STATUSES.EXPIRING, constants.SSL_STATUSES.ACTIVE],
@@ -109,6 +110,7 @@ const bulkApplySSLCer = async () => {
   const domains = await db.managementDb
     ?.collection<IDomain>('domains')
     .find({
+      status: DomainStatus.ACTIVE,
       'SSL.status': {
         $in: [constants.SSL_STATUSES.EXPIRING, constants.SSL_STATUSES.ACTIVE],
       },

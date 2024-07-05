@@ -6,13 +6,15 @@ import usePaginatedTable, { IPaginatedViewProps } from '../../hooks/usePaginated
 import ManageDomainModal from '../../components/Domains/ManageDomainModal'
 import { apiAxios } from '../../helpers/axios'
 import { toast } from 'react-toastify'
-import { Popover, TableColumnProps } from 'antd'
+import { Popconfirm, Popover, TableColumnProps } from 'antd'
 import { IEncryptedData } from '../../interfaces/interfaces'
 import { serverLookupByIp } from '../../helpers/utils'
 import RecordLink from '../../components/RecordLink'
 import constants from '../../helpers/constants/constants'
 import Icon from '../../components/Icon'
 import moment from 'moment'
+import MenuContainer from '../../components/MenuContainer.tsx'
+import MenuIcon from '../../components/MenuIcon.tsx'
 
 export type DomainSSLStatus = 'active' | 'pending_initialization' | 'initializing' | 'expiring' | 'expired'
 export interface IDomain {
@@ -96,6 +98,18 @@ export const DomainsContainer = () => {
     setShowManageDomainModal(false)
   }
 
+  const onDomainDelete = async (domain: IDomain) => {
+    document.body.click()
+
+    const {
+      data: { success },
+    } = await apiAxios.delete(`/domains/${domain._id}`)
+
+    if (!success) return
+
+    reload()
+  }
+
   const columns: TableColumnProps<IDomain>[] = [
     { title: 'Domain Name', dataIndex: 'domain_name', key: 'domain_name' },
     {
@@ -162,6 +176,16 @@ export const DomainsContainer = () => {
         )
       },
     },
+    {
+      title: '',
+      align: 'right',
+      key: 'actions',
+      render: (_, record) => (
+        <MenuContainer MenuComponent={<DomainsMenu domain={record} onDomainDelete={onDomainDelete} />}>
+          <MenuIcon />
+        </MenuContainer>
+      ),
+    },
   ]
 
   const viewProps: IViewProps = {
@@ -189,5 +213,39 @@ export const DomainsContainer = () => {
       <Domains {...viewProps} />
       <ManageDomainModal {...manageDomainModalProps} />
     </>
+  )
+}
+
+interface IDomainMenuProps {
+  domain: IDomain
+  onDomainDelete: (domain: IDomain) => void
+}
+
+const DomainsMenu = (props: IDomainMenuProps) => {
+  return (
+    <ul className={'domain-popup-menu'}>
+      <li>
+        <span>
+          <Popconfirm
+            onPopupClick={(e) => e.stopPropagation()}
+            onConfirm={() => props.onDomainDelete(props.domain)}
+            title={'Are you sure you want to delete this domain?'}
+          >
+            Delete
+          </Popconfirm>
+        </span>
+      </li>
+      {props.domain?.enable_ssl && (
+        <li>
+          {' '}
+          <span>Renew SSL</span>{' '}
+        </li>
+      )}
+      {props.domain?.enable_ssl && props?.domain?.SSL?.certificates?.key && (
+        <li>
+          <span>Re-apply SSL</span>
+        </li>
+      )}
+    </ul>
   )
 }

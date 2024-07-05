@@ -6,7 +6,7 @@ import { ObjectId } from 'mongodb'
 import { IEnvironmentVariablesConfig, ISecretsConfig } from '../../server/schemas/Applications'
 import IVersion from '../../server/schemas/Versions'
 import { ILinkedIdEnabledDocument } from '../../server/interfaces/interfaces'
-import { IDomain } from '../../server/schemas/Domains'
+import { IDomain } from 'types/schemas/Domains'
 import { instanceHealth, updateStatus } from '../enums'
 
 export enum InstanceServiceStatus {

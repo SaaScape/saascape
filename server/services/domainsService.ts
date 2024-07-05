@@ -6,10 +6,10 @@ import { ObjectId } from 'mongodb'
 import { db } from '../db'
 import constants from '../helpers/constants'
 import Pagination from '../helpers/pagination'
-import { IDomain } from '../schemas/Domains'
+import { DomainStatus, IDomain } from 'types/schemas/Domains'
 import ServerService from './serverService'
 import { IServer } from '../schemas/Servers'
-import { getDomainConfigFile } from '../modules/nginx'
+import { deleteNginxConfigFile, getDomainConfigFile } from '../modules/nginx'
 import { logError } from '../helpers/error'
 import queues from '../helpers/queues'
 import SSL from '../modules/ssl'
@@ -18,6 +18,8 @@ import IInstance, { instanceDbStatus } from 'types/schemas/Instances'
 import { IApplication } from '../schemas/Applications'
 import { SSLStatus } from 'types/enums'
 import { decipherData } from '../helpers/utils'
+import { io } from '../init/sockets'
+import { DomainSocketEvents } from 'types/sockets'
 
 export default class DomainService {
   async findMany(query: any) {
@@ -82,7 +84,7 @@ export default class DomainService {
 
     const payload: IDomain = {
       domain_name: data.domain_name,
-      status: constants.STATUSES.ACTIVE_STATUS,
+      status: DomainStatus.ACTIVE,
       description: data.description,
       enable_ssl: data?.enable_ssl,
       SSL: {
@@ -311,7 +313,7 @@ export default class DomainService {
   async cronCheckDnsData() {
     const domains = await db.managementDb
       ?.collection<IDomain>('domains')
-      .find({ status: constants.STATUSES.ACTIVE_STATUS })
+      .find({ status: DomainStatus.ACTIVE })
       .toArray()
 
     if (!domains?.length) return
@@ -359,6 +361,68 @@ export default class DomainService {
       key: certificates.key && decipherData(certificates.key.encryptedData, certificates.key.iv),
       csr: certificates.csr && decipherData(certificates.csr.encryptedData, certificates.csr.iv),
     }
+  }
+
+  async deleteDomain(id: string) {
+    const domain = await db.managementDb?.collection('domains').findOne({ _id: new ObjectId(id) })
+    if (!domain) throw { showError: 'Domain not found' }
+    //   Check if domain is linked to an instance
+    const instance = await db.managementDb
+      ?.collection<IInstance>('instances')
+      .findOne({ domain_id: domain?._id, status: { $ne: instanceDbStatus.DELETED } })
+    if (instance) throw { showError: `Cannot delete this domain as it is linked to the instance ${instance?.name}` }
+
+    const deleteResult = await db.managementDb
+      ?.collection<IDomain>('domains')
+      .updateOne({ _id: new ObjectId(id) }, { $set: { status: DomainStatus.DELETED } })
+
+    if (!deleteResult?.modifiedCount) throw { showError: 'Failed to delete domain' }
+
+    io.io?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS).emit(DomainSocketEvents.DELETE_DOMAIN, { _id: id })
+  }
+
+  private async removeDomainFromNginx(domain: IDomain) {
+    const serverService = new ServerService()
+    const servers = await db.managementDb
+      ?.collection<IServer>('servers')
+      .find({ status: constants.STATUSES.ACTIVE_STATUS, availability: constants.AVAILABILITY.ONLINE })
+      .toArray()
+
+    for (const server of servers || []) {
+      try {
+        if (server?.availability === constants.AVAILABILITY.OFFLINE) continue
+        console.log('removing domain from server', server?._id.toString())
+        const ssh = await serverService.getSSHClient(server?._id.toString())
+        const locations = {
+          mainConfig: `/etc/nginx/sites-enabled/${domain?.domain_name}`,
+          appConfig: `/etc/nginx/saascape/${domain?.domain_name}/application.conf`,
+          sslCert: `/saascape/certificates/domains/${domain?.domain_name}.crt`,
+          sslKey: `/saascape/certificates/domains/${domain?.domain_name}.key`,
+          indexHtml: `/var/www/${domain?.domain_name}/index.html`,
+        }
+        await deleteNginxConfigFile(ssh, locations.mainConfig, true)
+        await deleteNginxConfigFile(ssh, locations.appConfig, true)
+        await deleteNginxConfigFile(ssh, locations.sslCert, true)
+        await deleteNginxConfigFile(ssh, locations.sslKey, true)
+        await deleteNginxConfigFile(ssh, locations.indexHtml, true)
+      } catch (err) {
+        console.log(err)
+      }
+    }
+  }
+
+  async domainDeleteCleanUp(domain: IDomain) {
+    //   Check if domain is linked to an instance
+    const instance = await db.managementDb
+      ?.collection<IInstance>('instances')
+      .findOne({ domain_id: domain?._id, status: { $ne: instanceDbStatus.DELETED } })
+    if (instance) throw { showError: `Cannot delete this domain as it is linked to the instance ${instance?.name}` }
+    const ssl = new SSL(domain?._id, domain)
+    //   First we need to revoke SSL certificates and disable enable ssl
+    await ssl.revokeCertificate()
+    // Then we need to remove domain config from NGINX
+    await this.removeDomainFromNginx(domain)
+    console.log('finished deleting domain', domain.domain_name)
   }
 }
 

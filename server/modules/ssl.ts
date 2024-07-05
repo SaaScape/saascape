@@ -4,7 +4,7 @@
 
 import { ObjectId } from 'mongodb'
 import { db } from '../db'
-import { IDomain } from '../schemas/Domains'
+import { DomainStatus, IDomain } from 'types/schemas/Domains'
 import constants from '../helpers/constants'
 import acme, { Authorization } from 'acme-client'
 import ServerService from '../services/serverService'
@@ -15,14 +15,15 @@ import { logError } from '../helpers/error'
 export default class SSL {
   domainId: string
   domain?: IDomain
-  constructor(domainId: string) {
+  constructor(domainId: string, domain?: IDomain) {
     this.domainId = domainId
+    this.domain = domain
   }
 
   async getDomain() {
     const domain = await db?.managementDb?.collection<IDomain>('domains').findOne({
       _id: new ObjectId(this.domainId),
-      status: 'active',
+      status: DomainStatus.ACTIVE,
     })
 
     if (!domain) throw new Error('Domain not found')
@@ -211,5 +212,34 @@ export default class SSL {
       notBefore,
       notAfter,
     }
+  }
+
+  async revokeCertificate() {
+    if (!this.domain?.SSL?.certificates?.key) return
+    const acmeClient = await this.getAcmeClient()
+
+    const { SSL } = this.domain
+    const { cert, key, csr } = SSL?.certificates || {}
+
+    const decipheredCerts = {
+      cert: cert && decipherData(cert.encryptedData, cert.iv),
+      key: key && decipherData(key.encryptedData, key.iv),
+      csr: csr && decipherData(csr.encryptedData, csr.iv),
+    }
+
+    await acmeClient.revokeCertificate(decipheredCerts.cert || '')
+
+    // Update domain status
+    await db.managementDb?.collection<IDomain>('domains').updateOne(
+      { _id: this?.domain?._id },
+      {
+        $set: {
+          enable_ssl: false,
+        },
+        $unset: {
+          SSL: 1,
+        },
+      },
+    )
   }
 }

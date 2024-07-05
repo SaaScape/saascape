@@ -11,4 +11,5 @@ export enum InstanceSocketEvents {
 
 export enum DomainSocketEvents {
   SYNC_APPLICATION_DIRECTIVES = 'sync_application_directives',
+  DELETE_DOMAIN = 'delete_domain',
 }
