@@ -43,6 +43,18 @@ export default class SSL {
     return acmeClient
   }
 
+  async downloadIntermediateCertificate() {
+    try {
+      const intermediateCertUrl = 'https://letsencrypt.org/certs/lets-encrypt-r3.pem'
+      const intermediateCert = await fetch(intermediateCertUrl)
+      const intermediateCertText = await intermediateCert.text()
+      return intermediateCertText
+    } catch (err) {
+      //   TODO: Log error, notify via app and email to admin that there was an issue with downloading intermediate certificate
+      return ''
+    }
+  }
+
   async initializeSSL(renewal: boolean = false) {
     try {
       // Check if domain is ssl_enabled
@@ -69,6 +81,8 @@ export default class SSL {
       )
 
       const acmeClient = await this.getAcmeClient()
+
+      const intermediateCertificate = await this.downloadIntermediateCertificate()
 
       console.log('Creating CSR for domain', this.domain?.domain_name)
       const [key, csr] = await acme.crypto.createCsr({
@@ -102,7 +116,7 @@ export default class SSL {
 
       const keyString = key.toString()
       const csrString = csr.toString()
-      const certString = cert.toString()
+      const certString = `${cert.toString()}\n${intermediateCertificate ? intermediateCertificate : ''}`
 
       const encryptedData = {
         key: encryptData(keyString),

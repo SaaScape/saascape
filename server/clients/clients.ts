@@ -118,6 +118,44 @@ const initializeClients = async (type: 'background' | 'primary') => {
   console.log('Clients have been initialized')
 }
 
+const getAllClients = async (
+  type: 'docker' | 'ssh',
+  swarmRole?: 'manager' | 'worker',
+  options?: { swarmId?: string },
+) => {
+  const returnClients = []
+  for (const client of Object.values(clients[type])) {
+    try {
+      switch (type) {
+        case 'docker':
+          const dockerClient = client as Dockerode
+
+          await dockerClient.ping()
+          if (swarmRole) {
+            const dockerInfo = await dockerClient.info()
+            const {
+              NodeID,
+              RemoteManagers,
+              Cluster: { ID },
+            } = dockerInfo?.Swarm
+            const isManager = RemoteManagers?.some((manager: any) => manager?.NodeID === NodeID)
+
+            if (options?.swarmId && options?.swarmId !== ID) continue
+            if (swarmRole === 'manager' && !isManager) continue
+            if (swarmRole === 'worker' && isManager) continue
+          }
+
+          returnClients.push(client)
+        case 'ssh':
+          returnClients.push(client)
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }
+  return returnClients
+}
+
 const getClient = async (
   type: 'docker' | 'ssh',
   swarmRole?: 'manager' | 'worker',
@@ -154,5 +192,5 @@ const getClient = async (
   }
 }
 
-export { clients, getClient }
+export { clients, getClient, getAllClients }
 export default initializeClients

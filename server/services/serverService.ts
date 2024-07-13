@@ -18,6 +18,7 @@ import moment from 'moment'
 import DomainService from './domainsService'
 import { logError } from '../helpers/error'
 import { updateNginxConfigFile } from '../modules/nginx'
+import { SwarmNodeTypes } from 'types/enums'
 
 export default class ServerService {
   _id?: ObjectId
@@ -583,7 +584,7 @@ export default class ServerService {
     // Join/Create Swarm
     const dockerService = new DockerService(id)
 
-    const { create_swarm, swarm_id, node_type = 'worker' } = this?.server?.temp_config || {}
+    const { create_swarm, swarm_id, node_type = SwarmNodeTypes.WORKER } = this?.server?.temp_config || {}
 
     if (!create_swarm && swarm_id) {
       await dockerService.joinSwarm(swarm_id, node_type)

@@ -5,8 +5,8 @@ import { decipherData, encryptData } from '../helpers/utils'
 import Dockerode from 'dockerode'
 import { ISwarm } from 'types/schemas/Swarms'
 import constants from '../helpers/constants'
-import { IIntegration, NodeType } from '../schemas/Integrations'
-import { misc } from 'types/enums'
+import { IIntegration } from '../schemas/Integrations'
+import { misc, SwarmNodeTypes } from 'types/enums'
 
 export default class DockerService {
   server_id: ObjectId
@@ -118,7 +118,7 @@ export default class DockerService {
     return servers as IServer[]
   }
 
-  async joinSwarm(swarmId: ObjectId, nodeType: NodeType) {
+  async joinSwarm(swarmId: ObjectId, nodeType: SwarmNodeTypes) {
     const dockerClient = await this.getDockerClient()
     const swarm = (await this.getSwarms(swarmId))?.[0]
     if (!swarm) throw new Error('Swarm not found')
@@ -213,7 +213,7 @@ export default class DockerService {
         $set: {
           'config.swarm': {
             swarm_id: new ObjectId(response?.insertedId),
-            node_type: 'manager',
+            node_type: SwarmNodeTypes.MANAGER,
           },
         },
       },

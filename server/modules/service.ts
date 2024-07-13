@@ -3,7 +3,7 @@
  */
 
 import IInstance, { InstanceServiceStatus, IReplicaStates } from 'types/schemas/Instances'
-import { getClient } from '../clients/clients'
+import { getAllClients, getClient } from '../clients/clients'
 import { db } from '../db'
 import { ISwarm } from 'types/schemas/Swarms'
 import { ObjectId } from 'mongodb'
@@ -54,6 +54,18 @@ export default class Service {
       throw new Error('Docker client not found')
     }
     return dockerClient
+  }
+
+  async getAllDockerClients() {
+    const swarm = await db.managementDb
+      ?.collection<ISwarm>('swarms')
+      .findOne({ _id: new ObjectId(this.instanceClient.instance?.swarm_id) })
+
+    const dockerClients = (await getAllClients('docker', 'manager', { swarmId: swarm?.ID })) as Dockerode[]
+    if (!dockerClients?.length) {
+      throw new Error('Docker clients not found')
+    }
+    return dockerClients
   }
 
   async deleteSecret(id: string) {
@@ -311,13 +323,23 @@ export default class Service {
 
     const versionService = new VersionService(application?._id?.toString())
 
+    const dockerClients = await this.getAllDockerClients()
+
+    const timeStamp = Date.now()
+
     const { tag: newTag, image: newImage } = await versionService.pullImage(
       application,
       dockerClient,
       namespace,
       repository,
       tag,
+      timeStamp,
     )
+
+    for (const client of dockerClients || []) {
+      await versionService.pullImage(application, client, namespace, repository, tag, timeStamp)
+    }
+
     return newImage
   }
 

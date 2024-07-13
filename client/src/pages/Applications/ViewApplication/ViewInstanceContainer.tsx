@@ -176,7 +176,15 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
       ]
       instanceMenuItems.unshift(...items)
     }
-    setInstanceMenuItems(instanceMenuItems)
+    setInstanceMenuItems([
+      ...instanceMenuItems,
+      [
+        {
+          text: 'Redeploy Instance',
+          onClick: deployInstance,
+        },
+      ],
+    ])
   }, [instance])
 
   const deployInstance = async () => {

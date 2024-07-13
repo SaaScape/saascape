@@ -1,14 +1,11 @@
-import { Document, ObjectId } from "mongodb"
-import {
-  IEncryptedData,
-  ILinkedIdEnabledDocument,
-} from "../interfaces/interfaces"
-import { NodeType } from "./Integrations"
+import { Document, ObjectId } from 'mongodb'
+import { IEncryptedData, ILinkedIdEnabledDocument } from '../interfaces/interfaces'
+import { SwarmNodeTypes } from 'types/enums'
 
 export interface IServer extends Document, ILinkedIdEnabledDocument {
   temp_config?: {
     swarm_id?: ObjectId
-    node_type: NodeType
+    node_type: SwarmNodeTypes
     create_swarm: boolean
   }
   server_ip_address: string

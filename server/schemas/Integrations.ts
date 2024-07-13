@@ -1,6 +1,5 @@
-import { ObjectId } from "mongodb"
-
-export type NodeType = "manager" | "worker"
+import { ObjectId } from 'mongodb'
+import { SwarmNodeTypes } from 'types/enums'
 
 export interface IIntegration {
   _id: ObjectId
@@ -12,7 +11,7 @@ export interface IIntegration {
     [key: string]: any
     swarm?: {
       swarm_id: ObjectId
-      node_type: NodeType
+      node_type: SwarmNodeTypes
     }
   }
   type: string

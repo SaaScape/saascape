@@ -58,3 +58,8 @@ export enum InstanceVariables {
   SAASCAPE_SSL_CA = 'SAASCAPE_SSL_CSR',
   SAASCAPE_DOMAIN_NAME = 'SAASCAPE_DOMAIN_NAME',
 }
+
+export enum SwarmNodeTypes {
+  MANAGER = 'manager',
+  WORKER = 'worker',
+}

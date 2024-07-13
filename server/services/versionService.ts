@@ -48,14 +48,21 @@ export default class VersionService {
     }
   }
 
-  pullImage(application: IApplication, dockerClient: Dockerode, namespace: string, repository: string, tag: string) {
+  pullImage(
+    application: IApplication,
+    dockerClient: Dockerode,
+    namespace: string,
+    repository: string,
+    tag: string,
+    timeStamp: number = Date.now(),
+  ) {
     return new Promise<{ tag: string; image: string }>(async (resolve, reject) => {
       let repo = `${repository}`
       if (namespace) {
         repo = `${namespace}/${repository}`
       }
       const dockerImage = `${repo}:${tag}`
-      const newImageTag = `${tag}-${Date.now()}`
+      const newImageTag = `${tag}-${timeStamp}`
 
       const encryptedData = {
         username: application.config?.version_config?.docker_hub_username,
