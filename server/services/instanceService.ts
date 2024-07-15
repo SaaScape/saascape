@@ -156,9 +156,9 @@ export default class InstanceService {
   }
 
   async create(data: any) {
-    const { version_id, swarm_id, name, is_custom_database, database, domain_id } = data
+    const { version_id, swarm_id, name, is_custom_database, database, domain_id, run_command } = data
 
-    if (!version_id || !swarm_id || !name || !database || !domain_id) throw { showError: 'Missing required fields' }
+    if (!version_id || !swarm_id || !name || !database) throw { showError: 'Missing required fields' }
 
     // Check if instance already exists with the same name
     const foundInstance = await db.managementDb
@@ -169,7 +169,7 @@ export default class InstanceService {
       throw { showError: 'Instance already exists' }
     }
 
-    const domainInUse = await this.checkDomainInUse(new ObjectId(domain_id))
+    const domainInUse = domain_id && (await this.checkDomainInUse(new ObjectId(domain_id)))
     if (domainInUse) throw { showError: `Domain is already in use by ${domainInUse.name}` }
 
     const application = await db.managementDb
@@ -187,6 +187,7 @@ export default class InstanceService {
       config: {
         environment_config: application?.config?.environment_config,
         secrets_config: application?.config?.secrets_config,
+        run_command: run_command && run_command?.split(',').map((cmd: string) => cmd.trim()),
       },
       port_assignment: 'auto',
       is_custom_database,
@@ -200,7 +201,7 @@ export default class InstanceService {
       linked_ids: [], // This will be an array of docker services etc
       tags: ['New Instance'],
       deployed_at: null,
-      domain_id: new ObjectId(domain_id),
+      domain_id: domain_id && new ObjectId(domain_id),
       created_at: new Date(),
       updated_at: new Date(),
     }
@@ -444,22 +445,22 @@ export default class InstanceService {
       ?.findOne({ _id: new ObjectId(id), application_id: this.applicationId })
     if (!instance) throw { showError: 'Instance not found' }
 
-    const { swarm_id, name, database, replicas, isCustomDatabase, port, domain_id } = data
+    const { swarm_id, name, database, replicas, isCustomDatabase, port, domain_id, run_command } = data
 
-    if (!swarm_id || !name || !database || !(replicas >= 0) || !(port >= 1) || !domain_id)
-      throw { showError: 'Missing required fields' }
+    if (!swarm_id || !name || !database || !(replicas >= 0)) throw { showError: 'Missing required fields' }
 
     // Check if domain is in use by other instance
-    const domainInUse = await this.checkDomainInUse(new ObjectId(id), new ObjectId(domain_id))
+    const domainInUse = domain_id && (await this.checkDomainInUse(new ObjectId(id), new ObjectId(domain_id)))
     if (domainInUse) throw { showError: `Domain is already in use by ${domainInUse.name}` }
     const payload: any = {
       name,
       is_custom_database: isCustomDatabase,
       database: isCustomDatabase ? database : new ObjectId(database),
+      'config.run_command': run_command && run_command?.split(',').map((cmd: string) => cmd.trim()),
       port,
       replicas,
       swarm_id: new ObjectId(swarm_id),
-      domain_id: new ObjectId(domain_id),
+      domain_id: domain_id && new ObjectId(domain_id),
       updated_at: new Date(),
     }
 
@@ -480,7 +481,7 @@ export default class InstanceService {
     // Check update status
     if (update_status !== updateStatus.READY) throw { showError: 'Instance is not ready to be updated' }
 
-    if (!name || !database || !port || !(replicas > 0) || !swarm_id || !domain_id || !version_id)
+    if (!name || !database || !(replicas > 0) || !swarm_id || !version_id)
       throw { showError: 'Missing required fields' }
 
     const payload: { status: instanceDbStatus; service_status?: InstanceServiceStatus } = {

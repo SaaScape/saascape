@@ -154,7 +154,7 @@ const CreateInstanceModal = ({ open, onCancel, selectedApplication, onFinish }: 
               </Button>
             </Tooltip>
           </div>
-          <Form.Item label="Domain" name="domain_id" rules={[{ required: true, message: 'Please select a domain' }]}>
+          <Form.Item label="Domain" name="domain_id">
             <Select
               onClick={(e) => e.stopPropagation()}
               loading={isFetchingDomains}
@@ -162,6 +162,7 @@ const CreateInstanceModal = ({ open, onCancel, selectedApplication, onFinish }: 
               showSearch
               onSearch={getDomains}
               filterOption={false}
+              allowClear={true}
             />
           </Form.Item>
         </div>

@@ -431,6 +431,8 @@ export default class ApplicationService {
         const ssh = await serverService.getSSHClient(server?._id.toString())
         //   If this application has nginx directives, then we need to ensure that every connected domain has those directives in place
         for (const instance of instances || []) {
+          // Do not apply nginx directives to instances that are do not require nginx
+          if (!instance?.domain?.domain_name || !(instance?.port > 0)) continue
           try {
             await ssh.execCommand(`sudo mkdir -p /etc/nginx/saascape/${instance?.domain?.domain_name}`)
             const location = `/etc/nginx/saascape/${instance?.domain?.domain_name}/application.conf`

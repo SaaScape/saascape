@@ -33,6 +33,13 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
     getDomains('')
   }, [])
 
+  useEffect(() => {
+    const defaultValues = {
+      run_command: instance?.config?.run_command?.join(','),
+    }
+    form.setFieldsValue(defaultValues)
+  }, [instance, form])
+
   const toolTips = {
     port:
       instance?.port_assignment === 'manual'
@@ -88,6 +95,9 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
           <Form.Item label={'Instance Name'} name={'name'} rules={requiredFormItemRules}>
             <Input />
           </Form.Item>
+          <Form.Item label={'Run Command'} name={'run_command'}>
+            <Input />
+          </Form.Item>
           <Form.Item label={'Swarm'} name={'swarm_id'} rules={requiredFormItemRules}>
             <Select
               onClick={(e) => e.stopPropagation()}
@@ -97,7 +107,7 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
               }))}
             />
           </Form.Item>
-          <Form.Item label="Domain" name="domain_id" rules={[{ required: true, message: 'Please select a domain' }]}>
+          <Form.Item label="Domain" name="domain_id">
             <Select
               onClick={(e) => e.stopPropagation()}
               loading={isFetchingDomains}
@@ -105,9 +115,10 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
               showSearch
               onSearch={getDomains}
               filterOption={false}
+              allowClear={true}
             />
           </Form.Item>
-          <Form.Item tooltip={toolTips?.port} label={'Port'} name={'port'} rules={requiredFormItemRules}>
+          <Form.Item tooltip={toolTips?.port} label={'Port'} name={'port'}>
             <InputNumber min={0} max={65535} />
           </Form.Item>
           <Form.Item label={'Replicas'} name={'replicas'} rules={requiredFormItemRules}>

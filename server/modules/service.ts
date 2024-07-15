@@ -139,6 +139,7 @@ export default class Service {
   }
 
   async getDomainSSLSecrets() {
+    if (!this.instanceClient?.instance?.domain_id) return
     const domainService = new DomainService()
     const certificates: DecipheredCertificates | false = await domainService
       .getSSLCerts(this.instanceClient.instance?.domain_id)
@@ -365,6 +366,11 @@ export default class Service {
     })
   }
 
+  getRunCommand() {
+    const { run_command = ['npm', 'start'] } = this.instanceClient.instance.config
+    return run_command
+  }
+
   async createService() {
     // Check if service exists
     if (await this.checkServiceExists()) {
@@ -401,7 +407,7 @@ export default class Service {
           Labels: { versionId: this.instanceClient.instance.version_id.toString() },
           Env: environmentVariables,
           Secrets: await this.getSecrets(),
-          Command: ['npm', 'start'], //Temp just for testing
+          Command: this.getRunCommand(),
         },
         RestartPolicy: {
           Condition: 'any',
@@ -413,13 +419,17 @@ export default class Service {
         ],
       },
       EndpointSpec: {
-        Ports: [
-          {
-            Protocol: 'tcp',
-            TargetPort: this.instanceClient.instance.port,
-            PublishedPort: this.instanceClient.instance.port,
-          },
-        ],
+        Ports:
+          this?.instanceClient?.instance?.port > 0
+            ? [
+                {
+                  Protocol: 'tcp',
+                  TargetPort: this.instanceClient.instance.port,
+                  PublishedPort: this.instanceClient.instance.port,
+                  PublishMode: 'ingress',
+                },
+              ]
+            : [],
       },
       Mode: {
         Replicated: {
@@ -505,6 +515,7 @@ export default class Service {
       Labels: {
         versionId: this.instanceClient.instance.version_id.toString(),
       },
+      Command: this.getRunCommand(),
     }
     //Networks
     serviceObj.Spec.TaskTemplate.Networks = [
@@ -515,14 +526,17 @@ export default class Service {
     // Endpoint spec
     serviceObj.Spec.EndpointSpec = {
       ...serviceObj.Spec.EndpointSpec,
-      Ports: [
-        {
-          Protocol: 'tcp',
-          TargetPort: this.instanceClient.instance.port,
-          PublishedPort: this.instanceClient.instance.port,
-          PublishMode: 'ingress',
-        },
-      ],
+      Ports:
+        this?.instanceClient?.instance?.port > 0
+          ? [
+              {
+                Protocol: 'tcp',
+                TargetPort: this.instanceClient.instance.port,
+                PublishedPort: this.instanceClient.instance.port,
+                PublishMode: 'ingress',
+              },
+            ]
+          : [],
     }
     // Mode
     serviceObj.Spec.Mode = {

@@ -71,6 +71,7 @@ export default interface IInstance extends ILinkedIdEnabledDocument {
   config: {
     environment_config: IEnvironmentVariablesConfig
     secrets_config: ISecretsConfig
+    run_command?: string[]
   }
   tenant?: ObjectId | string
   version_id: ObjectId
@@ -80,7 +81,7 @@ export default interface IInstance extends ILinkedIdEnabledDocument {
   swarm_id: ObjectId | string
   deployed_at?: Date | null
   tags?: string[]
-  domain_id: ObjectId
+  domain_id?: ObjectId
   domain?: IDomain
   created_at: Date
   updated_at: Date
