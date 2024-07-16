@@ -101,12 +101,68 @@ export default {
       },
     ]
   },
+  VIEW_APPLICATION_INSTANCE: (
+    appText: string,
+    appId: string,
+    instanceId: string,
+    instanceText: string
+  ) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: appText,
+        path: `/applications/${appId}`,
+        type: "application_select",
+      },
+      {
+        title: "Instances",
+        path: `/applications/${appId}/instances`,
+      },
+      {
+        title: instanceText,
+        path: `/applications/${appId}/instances/${instanceId}`,
+      },
+    ]
+  },
+  VIEW_APPLICATION_CONFIGURATION: (text: string, id: string) => {
+    return [
+      {
+        title: "Applications",
+        path: "/applications",
+      },
+      {
+        title: text,
+        path: `/applications/${id}`,
+        type: "application_select",
+      },
+      {
+        title: "Configuration",
+        path: `/applications/${id}/configuration`,
+      },
+    ]
+  },
   SERVERS: [
     {
       title: "Servers",
       path: "/servers",
     },
   ],
+  VIEW_SERVER: (text: string, id: string) => {
+    return [
+      {
+        title: "Servers",
+        path: "/servers",
+      },
+      {
+        title: text,
+        path: `/servers/${id}`,
+        type: "server_select",
+      },
+    ]
+  },
   DOMAINS: [
     {
       title: "Domains",
@@ -123,6 +179,30 @@ export default {
     {
       title: "Tenants",
       path: "/tenants",
+    },
+  ],
+  CONTACTS: [
+    {
+      title: "Contacts",
+      path: "/contacts",
+    },
+  ],
+  VIEW_CONTACT: (text: string, id: string) => {
+    return [
+      {
+        title: "Contacts",
+        path: "/contacts",
+      },
+      {
+        title: text,
+        path: `/contacts/${id}`,
+      },
+    ]
+  },
+  SETTINGS: [
+    {
+      title: "Settings",
+      path: "/settings",
     },
   ],
 }

@@ -1,3 +1,9 @@
+/*
+Copyright (c) 2024 Keir Davie <keir@keirdavie.me>
+Author: Keir Davie <keir@keirdavie.me>
+
+*/
+
 import { useEffect, useState } from "react"
 import Plans from "./Plans"
 import ManagePlanModal, {
@@ -14,6 +20,7 @@ import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
 import breadcrumbs from "../../../helpers/constants/breadcrumbs"
 import { IApplicationProps } from "../ApplicationRouteHandler"
 import { ILinkedIdEnabledDocument } from "../../../interfaces/interfaces"
+import { Moment } from "moment"
 
 export interface IPlan extends ILinkedIdEnabledDocument {
   _id: string
@@ -24,6 +31,8 @@ export interface IPlan extends ILinkedIdEnabledDocument {
   status: string
   application_id: string
   price: number
+  addon_plans?: IPlan[]
+  additional_configuration?: { property: string; value: string | Moment }[]
   created_at: Date
   updated_at: Date
 }
@@ -171,7 +180,7 @@ const PlansContainer = (props: IApplicationProps) => {
   return (
     <>
       <Plans {...planProps} />
-      <ManagePlanModal {...managePlanModalProps} />
+      {showManagePlanModal && <ManagePlanModal {...managePlanModalProps} />}
     </>
   )
 }

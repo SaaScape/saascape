@@ -1,15 +1,25 @@
-@import "./header.less";
-@import "./aside.less";
-@import "./menuContainer.less";
-@import "./userMenu.less";
-@import "./notificationMenu.less";
-@import "./breadcrumbs.less";
-@import "./statisticBanner.less";
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+@import './header.less';
+@import './aside.less';
+@import './menuContainer.less';
+@import './userMenu.less';
+@import './notificationMenu.less';
+@import './breadcrumbs.less';
+@import './statisticBanner.less';
+@import './instances.less';
 
 .custom-component {
   &.integrations-bar {
+    &.transparent {
+      background-color: transparent;
+    }
+    &.full {
+      background-color: lighten(@dark-blue, 70%);
+    }
     padding: 5px;
-    background-color: lighten(@dark-blue, 70%);
     border-radius: 10px;
     margin-left: 20px;
     .integration-item {
@@ -41,5 +51,184 @@
         }
       }
     }
+  }
+}
+
+.application-custom-fields {
+  .ant-form-item {
+    margin-bottom: 0;
+    input {
+      border: 1px solid @gray-border;
+      padding: 0;
+    }
+  }
+  .field-info-column {
+    color: @dark-gray;
+    .title {
+      font-size: 0.8rem;
+      margin-right: 5px;
+      font-weight: 500;
+    }
+    .value {
+      font-size: 0.7rem;
+      padding-top: 2px;
+    }
+  }
+}
+
+.create-instance-modal {
+  .top-bar {
+    padding: 10px 0;
+    margin: 20px 0;
+    border-bottom: 1px solid @gray-border;
+    .title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    p {
+      color: @text-color;
+    }
+  }
+
+  form {
+    padding-right: 50px;
+    .ant-form-item {
+      .ant-form-item-label {
+        width: 120px;
+      }
+    }
+    .database-selection-container {
+      width: 100%;
+      .ant-form-item {
+        width: 100%;
+        padding-right: 10px;
+      }
+      .icon {
+        width: 30px;
+        margin-bottom: 24px;
+      }
+    }
+  }
+}
+
+form {
+  .database-selection-container {
+    width: 100%;
+    .ant-form-item {
+      width: 100%;
+      padding-right: 10px;
+    }
+    .icon {
+      width: 30px;
+      margin-bottom: 24px;
+    }
+  }
+}
+
+// TAGS
+.tag-interface {
+  .title {
+    font-size: 14px;
+  }
+  .footer-bar {
+    background-color: @light-gray;
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+.tag-container {
+  flex-wrap: wrap;
+  .ant-tag {
+    margin-bottom: 8px;
+  }
+}
+
+/**
+  Full Side Menu Component
+ */
+@keyframes overlay-dark {
+  0% {
+    background: transparent;
+  }
+  100% {
+    background: rgba(0, 0, 0, 0.5);
+  }
+}
+@keyframes remove-overlay-dark {
+  0% {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    background: transparent;
+  }
+}
+@keyframes slide-from-right {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes slide-to-right {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.custom-component.full-side-menu-container {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  //background: rgba(0,0,0,0.5);
+  width: 100%;
+  animation: overlay-dark 0.3s forwards;
+
+  &.overlay-animation-container-exit {
+    animation: remove-overlay-dark 0.3s forwards;
+  }
+
+  .full-side-menu {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    background-color: white;
+    width: auto;
+    box-shadow: @box-shadow;
+    width: 400px;
+    &.visible {
+      animation: slide-from-right 0.3s forwards;
+    }
+    &.hidden {
+      animation: slide-to-right 0.3s forwards;
+    }
+
+    display: grid;
+    grid-template-rows: 1fr;
+      &:has(.full-side-menu-header) {
+        grid-template-rows: 50px 1fr;
+      }
+
+    .full-side-menu-header {
+      padding: 10px;
+      border-bottom: 1px solid @gray-border;
+    }
+  }
+}
+
+.edit-instance-container{
+  height: 100%;
+  .body{}
+  .footer{
+    border-top: 1px solid @gray-border;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
   }
 }

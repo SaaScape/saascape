@@ -3,8 +3,12 @@
     "antd",
     "fontawesome",
     "fortawesome",
+    "geekblue",
+    "ISSH",
+    "mountpoints",
     "Popconfirm",
     "reduxjs",
+    "saascape",
     "toastify"
   ]
 }

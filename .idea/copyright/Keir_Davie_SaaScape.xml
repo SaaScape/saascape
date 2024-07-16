@@ -1,0 +1,7 @@
+<component name="CopyrightManager">
+  <copyright>
+    <option name="allowReplaceRegexp" value="no" />
+    <option name="notice" value="Copyright SaaScape (c) &amp;#36;originalComment.match(&quot;Copyright \(c\) (\d+)&quot;, 1, &quot;-&quot;, &quot;&amp;#36;today.year&quot;)&amp;#36;today.year. " />
+    <option name="myName" value="Keir Davie SaaScape" />
+  </copyright>
+</component>

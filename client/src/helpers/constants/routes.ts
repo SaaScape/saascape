@@ -19,4 +19,18 @@ export default {
     ALL_TENANTS: "/tenants",
     VIEW_TENANT: "/tenants/:id",
   },
+  CONTACTS: {
+    ALL_CONTACTS: "/contacts",
+    VIEW_CONTACT: "/contacts/:id",
+  },
+  SERVERS: {
+    ALL_SERVERS: "/servers",
+    VIEW_SERVER: "/servers/:id",
+  },
+  SETTINGS: {
+    VIEW_SETTINGS: "/settings/*",
+    GENERAL: "/general",
+    DOCKER: "/docker",
+    APPLICATION_SETTINGS: "/application-settings",
+  },
 }

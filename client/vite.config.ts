@@ -1,9 +1,10 @@
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
+import tsconfigPaths from "vite-tsconfig-paths"
 
 export default defineConfig(({ command, mode, isSsrBuild, isPreview }) => {
   const returnObj: { [key: string]: any } = {
-    plugins: [react()],
+    plugins: [react(), tsconfigPaths()],
   }
 
   if (command === "serve") {

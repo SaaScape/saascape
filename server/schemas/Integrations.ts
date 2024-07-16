@@ -1,4 +1,5 @@
-import { ObjectId } from "mongodb"
+import { ObjectId } from 'mongodb'
+import { SwarmNodeTypes } from 'types/enums'
 
 export interface IIntegration {
   _id: ObjectId
@@ -6,5 +7,13 @@ export interface IIntegration {
   status: string
   created_at: Date
   updated_at: Date
-  config: object
+  config: {
+    [key: string]: any
+    swarm?: {
+      swarm_id: ObjectId
+      node_type: SwarmNodeTypes
+    }
+  }
+  type: string
+  module?: string
 }

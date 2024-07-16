@@ -9,6 +9,8 @@ import { retrieveAndSetApplications } from "../../helpers/utils"
 import { Spin } from "antd"
 import InstancesContainer from "./ViewApplication/InstancesContainer"
 import ViewPlanContainer from "./Plan/ViewPlanContainer"
+import ConfigurationContainer from "./ViewApplication/ConfigurationContainer"
+import ViewInstanceContainer from "./ViewApplication/ViewInstanceContainer"
 
 export interface IApplicationProps {
   setId: (id?: string) => void
@@ -77,6 +79,24 @@ const ApplicationRouteHandler = () => {
           <ProtectedRoute
             component={<InstancesContainer {...allProps} />}
             permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+          />
+        }
+      />
+      <Route
+        path={":id/instances/:instanceId"}
+        element={
+          <ProtectedRoute
+            component={<ViewInstanceContainer {...allProps} />}
+            permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+          />
+        }
+      />
+      <Route
+        path={":id/configuration"}
+        element={
+          <ProtectedRoute
+            component={<ConfigurationContainer {...allProps} />}
+            permissions={[permissions.APPLICATIONS.UPDATE_APPLICATIONS]}
           />
         }
       />

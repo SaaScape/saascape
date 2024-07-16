@@ -1,0 +1,44 @@
+section.view-settings {
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: flex-start;
+    gap: 20px;
+
+    .setting-component {
+      padding: 5px;
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+      &:hover {
+        background-color: @light-gray;
+        border-radius: 5px;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+      .icon-container {
+        width: 60px;
+        height: 60px;
+        background-color: @light-gray;
+        margin-right: 20px;
+        border-radius: 5px;
+        svg {
+          font-size: 1.2rem;
+          color: @gray;
+        }
+      }
+      .info-container {
+        h3 {
+          font-size: 1rem;
+          font-weight: 600;
+          color: @primary-blue;
+        }
+        p {
+          font-size: 1rem;
+          color: @dark-gray;
+        }
+      }
+    }
+  }
+}

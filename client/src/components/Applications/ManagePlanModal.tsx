@@ -1,8 +1,27 @@
+/*
+Copyright (c) 2024 Keir Davie <keir@keirdavie.me>
+Author: Keir Davie <keir@keirdavie.me>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 import {
   Button,
-  Card,
+  Checkbox,
   Collapse,
   CollapseProps,
+  DatePicker,
   Form,
   Input,
   Modal,
@@ -14,6 +33,12 @@ import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons"
 import { ICurrency } from "../../store/slices/configData"
 import constants from "../../helpers/constants/constants"
 import { IPlan } from "../../pages/Applications/ViewApplication/PlansContainer"
+import { useSelector } from "react-redux"
+import { IStore } from "../../store/store"
+import { useEffect, useState } from "react"
+import moment, { Moment } from "moment"
+import momentGenerateConfig from "rc-picker/lib/generate/moment"
+const MyDatePicker = DatePicker.generatePicker<Moment>(momentGenerateConfig)
 
 export interface IManagePlanModalProps {
   open: boolean
@@ -22,10 +47,84 @@ export interface IManagePlanModalProps {
   onPlanCreate?: (values: any) => void
   onPlanUpdate?: (values: any) => void
   onPlanDelete?: () => void
+  onAddonCreate?: (values: any) => void
+  onAddonUpdate?: (values: any) => void
+  onAddonDelete?: () => void
   plan?: IPlan | null
+  isAddon?: boolean
+  addonId?: string | null
+}
+
+interface IAdditionalField {
+  property: string
+  fieldType: string
+  options?: string[]
 }
 
 const ManagePlanModal = (props: IManagePlanModalProps) => {
+  const { plan, addonId, isAddon } = props
+
+  const { selectedApplication } = useSelector(
+    (state: IStore) => state?.applications
+  )
+
+  const [additionalFields, setAdditionalFields] = useState<{
+    [key: number]: IAdditionalField
+  }>({})
+
+  const [form] = Form.useForm()
+
+  const { custom_fields: customFields = [] } = selectedApplication || {}
+
+  useEffect(() => {
+    const obj = isAddon
+      ? plan?.addon_plans?.find((addon) => addon._id === addonId)
+      : plan
+    setAdditionalFields(
+      Object.fromEntries(
+        obj?.additional_configuration?.map((field, i) => {
+          const customField = customFields.find(
+            (customField) => customField.field === field.property
+          )
+
+          return [
+            i,
+            {
+              property: field.property,
+              fieldType: customField?.type || "text",
+              options: customField?.options,
+            },
+          ]
+        }) || []
+      )
+    )
+    form.setFieldsValue(initialValues())
+  }, [plan, addonId, isAddon])
+
+  const renderCustomField = (key: number) => {
+    const additionalField = additionalFields?.[key] || {}
+    const { fieldType, options } = additionalField
+    switch (fieldType) {
+      case "number":
+        return <Input type='number' />
+      case "checkbox":
+        return <Checkbox />
+      case "dropdown":
+        return (
+          <Select
+            options={options?.map((option) => ({
+              label: option,
+              value: option,
+            }))}
+          />
+        )
+      case "date":
+        return <MyDatePicker />
+      default:
+        return <Input />
+    }
+  }
+
   const additionalConfigCollapseItems: CollapseProps["items"] = [
     {
       key: "1",
@@ -34,29 +133,53 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
         <Form.List name='additional_configuration'>
           {(fields, { add, remove }) => (
             <>
-              {fields.map(({ key, name, ...restField }) => (
-                <Space
-                  key={key}
-                  style={{ display: "flex", marginBottom: 8 }}
-                  align='baseline'
-                >
-                  <Form.Item
-                    {...restField}
-                    name={[name, "property"]}
-                    rules={[{ required: true }]}
+              {fields.map(({ key, name, ...restField }) => {
+                const field = additionalFields[key]
+                return (
+                  <Space
+                    key={key}
+                    style={{ display: "flex", marginBottom: 8 }}
+                    align='baseline'
                   >
-                    <Input placeholder='Property' />
-                  </Form.Item>
-                  <Form.Item
-                    {...restField}
-                    name={[name, "value"]}
-                    rules={[{ required: true }]}
-                  >
-                    <Input placeholder='Value' />
-                  </Form.Item>
-                  <MinusCircleOutlined onClick={() => remove(name)} />
-                </Space>
-              ))}
+                    <Form.Item
+                      {...restField}
+                      name={[name, "property"]}
+                      rules={[{ required: true }]}
+                    >
+                      <Select
+                        onChange={(value) => {
+                          const customField = customFields.find(
+                            (field) => field?.field === value
+                          )
+                          setAdditionalFields((curr) => ({
+                            ...curr,
+                            [key]: {
+                              property: value,
+                              fieldType: customField?.type || "",
+                              options: customField?.options,
+                            },
+                          }))
+                        }}
+                        options={customFields.map((field) => ({
+                          value: field?.field,
+                          label: field?.label,
+                        }))}
+                      />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, "value"]}
+                      rules={[{ required: field?.fieldType !== "checkbox" }]}
+                      valuePropName={
+                        field?.fieldType === "checkbox" ? "checked" : "value"
+                      }
+                    >
+                      {renderCustomField(key)}
+                    </Form.Item>
+                    <MinusCircleOutlined onClick={() => remove(name)} />
+                  </Space>
+                )
+              })}
               <Form.Item>
                 <Button
                   type='dashed'
@@ -74,12 +197,17 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
     },
   ]
 
-  const isUpdate = !!props?.plan?._id
-  const isReadOnly = isUpdate
+  const isUpdate =
+    !!props?.plan?._id &&
+    (props.isAddon ? (!!props?.addonId ? true : false) : true)
+  const isReadOnly = isUpdate || props?.isAddon
 
   const title = (
     <div className='top-bar'>
-      <div className='title'>{props?.plan?._id ? "Edit" : "Create"} Plan</div>
+      <div className='title'>
+        {props?.plan?._id && props?.addonId ? "Edit" : "Create"}{" "}
+        {props?.isAddon ? "Add-on" : ""} Plan
+      </div>
       <div className='description'>
         A plan allows you to create subscriptions for your application
       </div>
@@ -87,9 +215,43 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
   )
 
   const onSave = async (values: any) => {
-    props?.plan?._id
-      ? props?.onPlanUpdate?.(values)
-      : props?.onPlanCreate?.(values)
+    values.isAddon = props?.isAddon
+    if (isUpdate) {
+      props?.isAddon
+        ? props?.onAddonUpdate?.({ _id: props?.addonId, ...values })
+        : props?.onPlanUpdate?.({ _id: props?.plan?._id, ...values })
+    } else {
+      props?.isAddon
+        ? props?.onAddonCreate?.({ _id: props?.plan?._id, ...values })
+        : props?.onPlanCreate?.(values)
+    }
+  }
+
+  const initialValues = () => {
+    const planValues = { ...props?.plan }
+    const addonPlan = props?.plan?.addon_plans?.find(
+      (addon) => addon?._id === props?.addonId
+    )
+
+    if (isAddon) {
+      planValues.plan_name = addonPlan?.plan_name || ""
+      planValues.price = addonPlan?.price || 0
+      planValues.additional_configuration =
+        addonPlan?.additional_configuration || []
+    }
+
+    planValues.additional_configuration =
+      planValues?.additional_configuration?.map((obj) => {
+        const customField = customFields.find(
+          (field) => field?.field === obj?.property
+        )
+        if (customField?.type === "date") {
+          obj.value = moment(obj.value)
+        }
+        return obj
+      })
+
+    return planValues
   }
 
   return (
@@ -103,11 +265,15 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
       width={800}
     >
       <Form
+        form={form}
         layout='vertical'
         onFinish={onSave}
         preserve={false}
-        initialValues={props?.plan || {}}
+        initialValues={initialValues() || {}}
       >
+        <Form.Item hidden name={"isAddon"}>
+          <Input type='checkbox' checked={props?.isAddon} />
+        </Form.Item>
         <div className='grid c-2'>
           <Form.Item
             label='Plan Name'
@@ -183,7 +349,9 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
           {isUpdate && (
             <Popconfirm
               title='Are you sure you want to delete this plan?'
-              onConfirm={props?.onPlanDelete}
+              onConfirm={
+                props?.isAddon ? props?.onAddonDelete : props?.onPlanDelete
+              }
             >
               <Button className='m-r-10' danger>
                 Delete
@@ -191,7 +359,7 @@ const ManagePlanModal = (props: IManagePlanModalProps) => {
             </Popconfirm>
           )}
           <Button htmlType='submit' type='primary'>
-            {props?.plan?._id ? "Update" : "Create"} Plan
+            {isUpdate ? "Update" : "Create"} Plan
           </Button>
         </div>
       </Form>

@@ -29,11 +29,24 @@ export default class IntegrationService {
 
     for (const integration of foundIntegrations) {
       integrations[integration?.name] ??= []
-      const obj = {
+      const obj: { [key: string]: any } = {
         _id: integration?._id,
         status: integration?.status,
+        type: integration?.type,
+        module: integration?.module,
         created_at: integration?.created_at,
         updated_at: integration?.updated_at,
+      }
+
+      switch (integration?.name) {
+        case constants.INTEGRATIONS.DOCKER:
+          obj.config = {
+            swarm: {
+              swarm_id: integration?.config?.swarm?.swarm_id,
+              node_type: integration?.config?.swarm?.node_type,
+            },
+          }
+          break
       }
       integrations[integration?.name].push(obj)
       enabledIntegrations[integration?.name] = true

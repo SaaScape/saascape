@@ -20,11 +20,33 @@ export default {
     DELETE_TENANTS: "delete_tenants",
   },
 
+  // Contacts
+  CONTACTS: {
+    VIEW_CONTACTS: "view_contacts",
+    CREATE_CONTACTS: "create_contacts",
+    UPDATE_CONTACTS: "update_contacts",
+    DELETE_CONTACTS: "delete_contacts",
+  },
+
   // Plans
   PLANS: {
     VIEW_PLANS: "view_plans",
     CREATE_PLANS: "create_plans",
     UPDATE_PLANS: "update_plans",
     DELETE_PLANS: "delete_plans",
+  },
+
+  // Servers
+  SERVERS: {
+    VIEW_SERVERS: "view_servers",
+    CREATE_SERVERS: "create_servers",
+    UPDATE_SERVERS: "update_servers",
+    DELETE_SERVERS: "delete_servers",
+  },
+
+  // SETTINGS
+  SETTINGS: {
+    VIEW_SETTINGS: "view_settings",
+    UPDATE_SETTINGS: "update_settings",
   },
 }

@@ -7,6 +7,11 @@ import { DomainsContainer } from "../pages/Domains/DomainsContainer"
 import ApplicationsContainer from "../pages/Applications/ApplicationsContainer"
 import TenantsContainer from "../pages/Tenants/TenantsContainer"
 import ApplicationRouteHandler from "../pages/Applications/ApplicationRouteHandler"
+import ContactsContainer from "../pages/Contacts/ContactsContainer"
+import ViewContactContainer from "../pages/Contacts/ViewContactContainer"
+import ServersContainer from "../pages/Servers/ServersContainer"
+import SettingsRouter from "../pages/Settings/SettingsRouter"
+import ViewServerContainer from "../pages/Servers/ViewServerContainer"
 
 const MainRoutes = () => {
   return (
@@ -60,6 +65,55 @@ const MainRoutes = () => {
           }
         />
       </Route>
+      <Route path='/contacts'>
+        <Route
+          path={routes.CONTACTS.ALL_CONTACTS}
+          element={
+            <ProtectedRoute
+              component={<ContactsContainer />}
+              permissions={[permissions.CONTACTS.VIEW_CONTACTS]}
+            />
+          }
+        />
+        <Route
+          path={routes.CONTACTS.VIEW_CONTACT}
+          element={
+            <ProtectedRoute
+              component={<ViewContactContainer />}
+              permissions={[permissions.CONTACTS.VIEW_CONTACTS]}
+            />
+          }
+        />
+      </Route>
+      <Route path='/servers'>
+        <Route
+          path={routes.SERVERS.ALL_SERVERS}
+          element={
+            <ProtectedRoute
+              component={<ServersContainer />}
+              permissions={[permissions.SERVERS.VIEW_SERVERS]}
+            />
+          }
+        />
+        <Route
+          path={routes.SERVERS.VIEW_SERVER}
+          element={
+            <ProtectedRoute
+              component={<ViewServerContainer />}
+              permissions={[permissions.SERVERS.VIEW_SERVERS]}
+            />
+          }
+        />
+      </Route>
+      <Route
+        path={routes.SETTINGS.VIEW_SETTINGS}
+        element={
+          <ProtectedRoute
+            component={<SettingsRouter />}
+            permissions={[permissions.SETTINGS.VIEW_SETTINGS]}
+          />
+        }
+      />
       <Route path='*' element={<div>404</div>} />
     </Routes>
   )

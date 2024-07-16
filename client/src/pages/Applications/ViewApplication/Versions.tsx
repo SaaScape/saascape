@@ -1,9 +1,19 @@
-import { Button, Card, Table } from "antd"
+import { Button } from "antd"
+import Search from "antd/es/input/Search"
 import { IVersionProps } from "./VersionsContainer"
 import StatisticBanner from "../../../components/StatisticBanner"
+import PaginatedTable from "../../../components/PaginatedTable"
 
 const Versions = (props: IVersionProps) => {
-  const { versionColumns } = props
+  const {
+    versionColumns,
+    loading,
+    functions,
+    tableConfig,
+    paginatedData,
+    onTableChange,
+    dataFetching,
+  } = props
 
   return (
     <section className='sub-section versions p-relative'>
@@ -17,41 +27,43 @@ const Versions = (props: IVersionProps) => {
             </p>
           </div>
           <div className='right'>
-            <Button type='primary'>Create Version</Button>
+            <Button type='primary' onClick={functions?.openManageVersionModal}>
+              Create Version
+            </Button>
           </div>
         </div>
       </div>
-      <main>
-        <StatisticBanner loading={props?.loading}>
+      <StatisticBanner loading={props?.loading}>
+        <div>
+          <div className='title'>Total New Versions</div>
+          <div className='value'>22</div>
+        </div>
+        <div>
           <div>
             <div className='title'>Total New Versions</div>
             <div className='value'>22</div>
           </div>
-          <div>
-            <div>
-              <div className='title'>Total New Versions</div>
-              <div className='value'>22</div>
-            </div>
-          </div>
-        </StatisticBanner>
+        </div>
+      </StatisticBanner>
 
-        {/* <Card className='data-card'>
-          <div className='top-bar'>
-            <div className='title'>Latest Version</div>
-          </div>
-          <div className='content'>
-            <Table columns={versionColumns} dataSource={[]} />
-          </div>
-        </Card>
-        <Card className='data-card'>
-          <div className='top-bar'>
-            <div className='title'>Version History</div>
-          </div>
-          <div className='content'>
-            <Table columns={versionColumns} dataSource={[]} />
-          </div>
-        </Card> */}
-      </main>
+      <div className='search-container'>
+        <Search
+          disabled={loading}
+          placeholder='Search for version'
+          onSearch={functions?.onSearch}
+        />
+      </div>
+
+      <div className='table-container'>
+        <PaginatedTable
+          loading={dataFetching}
+          columns={versionColumns}
+          tableConfig={tableConfig}
+          paginatedData={paginatedData}
+          onTableChange={onTableChange}
+          functions={functions}
+        />
+      </div>
     </section>
   )
 }

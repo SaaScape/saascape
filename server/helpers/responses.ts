@@ -1,35 +1,28 @@
-import { Request, Response } from "express"
-import moment from "moment"
-import IError from "../interfaces/error"
+/*
+ * Copyright SaaScape (c) 2024.
+ */
 
-export const sendErrorResponse = async (
-  err: IError,
-  req: Request,
-  res: Response
-) => {
+import { Request, Response } from 'express'
+import moment from 'moment'
+import IError from '../interfaces/error'
+
+export const sendErrorResponse = async (err: IError, req: Request, res: Response) => {
   try {
     const { status = 404 } = err
-    const errorMessage =
-      err?.message ||
-      err?.showError ||
-      err?.showWarning ||
-      "An unknown error occurred"
-    const formattedDate = moment().format("DD-MM-YYYY HH:mm:ss")
-    const statusType = err?.message || err?.showError ? "error" : "warning"
+    const errorMessage = err?.message || err?.showError || err?.showWarning || 'An unknown error occurred'
+    const formattedDate = moment().format('DD-MM-YYYY HH:mm:ss')
+    const statusType = err?.message || err?.showError ? 'error' : 'warning'
 
-    console.log(
-      `API ${statusType} occurred - ${formattedDate} - ${errorMessage}`
-    )
+    console.log(`API ${statusType} occurred - ${formattedDate} - ${errorMessage}`)
 
-    const responseObj: { error?: string; warning?: string; success: boolean } =
-      { success: false }
+    const responseObj: { error?: string; warning?: string; success: boolean } = { success: false }
 
     if (err.showError) {
       responseObj.error = err.showError
     } else if (err.showWarning) {
       responseObj.warning = err.showWarning
     } else {
-      responseObj.error = "An unexpected error has occurred!"
+      responseObj.error = 'An unexpected error has occurred!'
     }
     res.status(status).json(responseObj)
   } catch (err) {
@@ -37,11 +30,7 @@ export const sendErrorResponse = async (
   }
 }
 
-export const sendSuccessResponse = async (
-  data: any,
-  req: Request,
-  res: Response
-) => {
+export const sendSuccessResponse = async (data: any, req: Request, res: Response) => {
   try {
     res.json({ data, success: true })
   } catch (err) {

@@ -9,6 +9,7 @@ import MenuContainer from "../MenuContainer"
 interface IProps {
   linkedIds: ILinkedId[]
   supportedIntegrations?: string[]
+  type?: "transparent" | "full"
 }
 interface IAddIntegrationProps {
   children: React.ReactNode
@@ -18,6 +19,7 @@ interface IAddIntegrationProps {
 }
 
 const IntegrationsBar = (props: IProps) => {
+  const { type = "full" } = props
   const [availableIntegrations, setAvailableIntegrations] = useState<string[]>(
     []
   )
@@ -93,7 +95,9 @@ const IntegrationsBar = (props: IProps) => {
   }
 
   return (
-    <div className='custom-component integrations-bar d-flex align-center justify-center'>
+    <div
+      className={`custom-component integrations-bar ${type} d-flex align-center justify-center`}
+    >
       {linkedIds?.map((linkedId) => generateIntegrationItem(linkedId))}
       <AddIntegrationMenu
         availableIntegrations={availableIntegrations}

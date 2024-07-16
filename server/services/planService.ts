@@ -1,6 +1,24 @@
+/*
+Copyright (c) 2024 Keir Davie <keir@keirdavie.me>
+Author: Keir Davie <keir@keirdavie.me>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 import { ObjectId } from "mongodb"
 import { db } from "../db"
-import { IPlan } from "../schemas/Plans"
+import { IAddonPlan, IPlan } from "../schemas/Plans"
 import constants from "../helpers/constants"
 import Pagination from "../helpers/pagination"
 import { IQuery } from "../interfaces/pagination"
@@ -50,13 +68,12 @@ export default class PlanService {
     ])
 
     //   Check if plan exists
-    const plans =
-      (await db.managementDb?.collection<IPlan>("plans").countDocuments({
-        plan_name,
-        application_id: new ObjectId(this.applicationId),
-      })) || 0
+    const plans = await db.managementDb?.collection<IPlan>("plans").findOne({
+      plan_name,
+      application_id: new ObjectId(this.applicationId),
+    })
 
-    if (plans > 0) {
+    if (plans) {
       throw { showError: "Plan already exists" }
     }
 
@@ -70,6 +87,7 @@ export default class PlanService {
       price,
       linked_ids: [],
       additional_configuration,
+      addon_plans: [],
       created_at: new Date(),
       updated_at: new Date(),
     }
@@ -90,7 +108,13 @@ export default class PlanService {
     if (!this.applicationId)
       throw { showError: "Missing required param: applicationId" }
 
-    const { plan_name, price, additional_configuration = [] } = data
+    const {
+      plan_name,
+      price,
+      additional_configuration = [],
+      isAddon = false,
+      _id: addonPlanId,
+    } = data
 
     checkForMissingParams(data, ["plan_name", "currency", "price"])
 
@@ -107,35 +131,96 @@ export default class PlanService {
     }
 
     // Check if plan name is in use
-
-    const plansUsingName =
-      (await db.managementDb?.collection<IPlan>("plans").countDocuments({
-        plan_name,
-        application_id: new ObjectId(this.applicationId),
-        _id: { $ne: new ObjectId(_id) },
-      })) || 0
-
-    if (plansUsingName > 0) {
-      throw { showError: "A plan with this name already exists" }
-    }
-
-    const payload = {
-      plan_name,
-      price,
-      additional_configuration,
-      updated_at: new Date(),
-    }
-
-    const updatedPlan = await db.managementDb
-      ?.collection<IPlan>("plans")
-      .findOneAndUpdate(
-        { _id: new ObjectId(_id) },
-        { $set: { ...payload } },
-        {
-          returnDocument: "after",
-        }
+    if (isAddon) {
+      const hasAddonWithSameName = planToBeUpdated?.addon_plans?.some(
+        (plan) =>
+          plan?.plan_name?.toLowerCase() === plan_name?.toLowerCase() &&
+          plan?.status === constants.STATUSES.ACTIVE_STATUS &&
+          plan?._id?.toString() !== addonPlanId
       )
-    return { updatedPlan }
+
+      if (hasAddonWithSameName)
+        throw { showError: "Addon plan with this name already exists" }
+
+      const addonObj = planToBeUpdated?.addon_plans?.find(
+        (plan) => plan?._id?.toString() === addonPlanId
+      )
+
+      let result
+      if (addonObj) {
+        console.log("updating addon plan")
+        result = await db.managementDb?.collection<IPlan>("plans").updateOne(
+          {
+            _id: new ObjectId(_id),
+            addon_plans: {
+              $elemMatch: { _id: new ObjectId(addonPlanId) },
+            },
+          },
+          {
+            $set: {
+              "addon_plans.$.plan_name": plan_name,
+              "addon_plans.$.price": price,
+              "addon_plans.$.additional_configuration":
+                additional_configuration,
+              "addon_plans.$.updated_at": new Date(),
+            },
+          }
+        )
+      } else {
+        // Create new addon
+        const payload: IAddonPlan = {
+          _id: new ObjectId(),
+          plan_name,
+          status: constants.STATUSES.ACTIVE_STATUS,
+          price,
+          additional_configuration,
+          linked_ids: [],
+          created_at: new Date(),
+          updated_at: new Date(),
+        }
+        result = await db.managementDb
+          ?.collection<IPlan>("plans")
+          ?.updateOne(
+            { _id: new ObjectId(_id) },
+            { $push: { addon_plans: payload } }
+          )
+      }
+
+      if (!result) throw { showError: "Failed to update addon plan" }
+      if (!result.modifiedCount)
+        throw { showError: "Failed to update addon plan" }
+
+      return { success: true }
+    } else {
+      const plansUsingName =
+        (await db.managementDb?.collection<IPlan>("plans").countDocuments({
+          plan_name,
+          application_id: new ObjectId(this.applicationId),
+          _id: { $ne: new ObjectId(_id) },
+        })) || 0
+
+      if (plansUsingName > 0) {
+        throw { showError: "A plan with this name already exists" }
+      }
+
+      const payload = {
+        plan_name,
+        price,
+        additional_configuration,
+        updated_at: new Date(),
+      }
+
+      const updatedPlan = await db.managementDb
+        ?.collection<IPlan>("plans")
+        .findOneAndUpdate(
+          { _id: new ObjectId(_id) },
+          { $set: { ...payload } },
+          {
+            returnDocument: "after",
+          }
+        )
+      return { success: true }
+    }
   }
 
   async findPlan(id: string) {
@@ -190,6 +275,37 @@ export default class PlanService {
 
     if (updateResult?.modifiedCount !== 1)
       throw { showError: "Plan not deleted" }
+
+    return { success: true }
+  }
+
+  async removeAddonPlan(id: string, data: IPlan) {
+    if (!this.applicationId)
+      throw { showError: "Missing required param: applicationId" }
+    const { addonPlanId } = data
+    checkForMissingParams(data, ["addonPlanId"])
+
+    // Find plan
+    await this.findPlan(id)
+
+    const updateResult = await db.managementDb
+      ?.collection<IPlan>("plans")
+      .updateOne(
+        {
+          _id: new ObjectId(id),
+          addon_plans: {
+            $elemMatch: { _id: new ObjectId(addonPlanId) },
+          },
+        },
+        {
+          $set: {
+            "addon_plans.$.status": constants.STATUSES.DELETED_STATUS,
+          },
+        }
+      )
+
+    if (!updateResult?.modifiedCount)
+      throw { showError: "Addon plan not deleted" }
 
     return { success: true }
   }
