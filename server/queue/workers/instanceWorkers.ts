@@ -15,6 +15,8 @@ import { socket } from '../../background/init/sockets'
 import { InstanceSocketEvents } from 'types/sockets'
 import Instance from '../../modules/instance'
 import { clients } from '../../clients/clients'
+import { createNotifications, NotificationMethods } from '../../helpers/utils'
+import { notificationType } from 'types/schemas/Notifications'
 
 const setInstanceUpdateStatus = async (instanceId: string, status: updateStatus) => {
   await db.managementDb
@@ -54,6 +56,9 @@ const deployInstanceQueue = async () => {
   })
 
   queue.on('failed', async (job) => {
+    const instance = await db.managementDb?.collection<IInstance>('instances').findOne({
+      _id: new ObjectId(job.data?.instance_id),
+    })
     console.warn('failed to deploy instance', job.data?.instance_id)
     await logError({
       error: { message: job.failedReason },
@@ -67,13 +72,39 @@ const deployInstanceQueue = async () => {
       instance_id: job.data?.instance_id,
       error: { message: job.failedReason },
     })
+    await createNotifications(
+      {
+        title: 'Instance Deployment Failed',
+        body: `Instance ${instance?.name} has failed to deploy`,
+        link: `/applications/${instance?.application_id}/instances/${job.data?.instance_id}`,
+        sendMail: true,
+        type: notificationType.ERROR,
+        from: 'system',
+      },
+      NotificationMethods.BACKGROUND,
+    )
   })
   queue.on('completed', async (job) => {
+    const instance = await db.managementDb?.collection<IInstance>('instances').findOne({
+      _id: new ObjectId(job.data?.instance_id),
+    })
+    if (!instance) throw new Error('Instance not found at completion')
     //   At this stage we will set updating status to ready
     await setInstanceUpdateStatus(job.data?.instance_id, updateStatus.READY)
     //   SOCKET
     console.log('completed instance deployment', job.data?.instance_id)
     socket?.emit(InstanceSocketEvents.INSTANCE_DEPLOYED, { instance_id: job.data?.instance_id })
+    await createNotifications(
+      {
+        title: 'Instance Deployed',
+        body: `Instance ${instance?.name} has been deployed successfully`,
+        link: `/applications/${instance?.application_id}/instances/${job.data?.instance_id}`,
+        sendMail: true,
+        type: notificationType.INFO,
+        from: 'system',
+      },
+      NotificationMethods.BACKGROUND,
+    )
   })
 }
 

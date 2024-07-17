@@ -3,6 +3,15 @@ import { IApplication } from '../schemas/Applications'
 import fsp from 'fs/promises'
 import path from 'path'
 import IInstance from 'types/schemas/Instances'
+import NotificationService, { INotificator } from '../services/notificationService'
+import { db } from '../db'
+import { IUser } from '../schemas/Users'
+import constants from './constants'
+import { clientIO } from '../background/init/sockets'
+import { NotificationEvents } from 'types/sockets'
+import { notificationType } from 'types/schemas/Notifications'
+import { ObjectId } from 'mongodb'
+import { sendEmail } from './email'
 const algorithm = 'aes-256-cbc'
 
 export const checkForMissingParams = (params: { [key: string]: any }, requiredParams: string[]) => {
@@ -128,4 +137,62 @@ export const prepareApplicationPayloadForTransport = async (entity: IApplication
   }
 
   entity.config.secrets_config = preparedSecrets
+}
+
+export interface INotificationFromBackground {
+  title: string
+  body: string
+  sendMail: boolean
+  type: notificationType
+  link?: string
+  from: 'system' | ObjectId
+}
+
+export enum NotificationMethods {
+  BACKGROUND = 'background',
+  MAIN_SERVER = 'main_server',
+}
+
+export const createNotifications = async (
+  { title, body, sendMail, type, link, from }: INotificationFromBackground,
+  method: NotificationMethods,
+) => {
+  const notificationPayloads: INotificator[] = []
+  const users =
+    (await db.managementDb
+      ?.collection<IUser>('users')
+      .find({
+        status: constants.STATUSES.ACTIVE_STATUS,
+      })
+      .toArray()) || []
+
+  for (const user of users) {
+    notificationPayloads.push({
+      title,
+      body,
+      type,
+      from,
+      to: user._id,
+      sendMail,
+      link,
+      isBackground: method === NotificationMethods.BACKGROUND,
+    })
+  }
+
+  if (method === NotificationMethods.MAIN_SERVER) {
+    const notificationService = new NotificationService()
+    await notificationService.createMany(notificationPayloads)
+  } else {
+    clientIO.emit(NotificationEvents.NEW_NOTIFICATIONS, notificationPayloads)
+    if (sendMail) {
+      // Ensure that in this case we are sending the mail from the background server to prevent clogging the main server
+      const emailString = users?.map((user) => user.email).join(',')
+      if (!emailString) return
+      await sendEmail({
+        bcc: emailString,
+        subject: title,
+        html: body,
+      })
+    }
+  }
 }

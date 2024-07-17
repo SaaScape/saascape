@@ -14,13 +14,21 @@ import { setApplications } from './store/slices/applicationSlice'
 import { setServers } from './store/slices/serverSlice'
 import { setSwarms } from './store/slices/swarmSlice'
 import ManageInstances from './components/InstanceManager.tsx'
+import { setNotifications } from './store/slices/notificationsSlice.ts'
 
 const MainLayout = () => {
   const dispatch = useDispatch()
   // const user = useSelector((state: IStore) => state.user)
 
   useEffect(() => {
-    Promise.allSettled([getIntegrations(), getCurrencies(), getApplications(), getServers(), getSwarms()])
+    Promise.allSettled([
+      getIntegrations(),
+      getCurrencies(),
+      getApplications(),
+      getServers(),
+      getSwarms(),
+      getNotifications(),
+    ])
   }, [])
 
   const getCurrencies = async () => {
@@ -61,9 +69,17 @@ const MainLayout = () => {
     const {
       data: { data, success },
     } = await apiAxios.get('/servers/swarms')
-
     if (success) {
       dispatch(setSwarms(data?.swarms))
+    }
+  }
+
+  const getNotifications = async () => {
+    const {
+      data: { data, success },
+    } = await apiAxios.get('/notifications')
+    if (success) {
+      dispatch(setNotifications(data))
     }
   }
 

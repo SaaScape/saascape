@@ -1,21 +1,18 @@
-import express, { NextFunction, Request, Response } from "express"
-import { sendErrorResponse, sendSuccessResponse } from "../../helpers/responses"
-import cookieParser from "cookie-parser"
-import IError from "../../interfaces/error"
-import withAuth from "../../middleware/withAuth"
-import users from "./users"
-import applications from "./applications"
-import integrations from "./integrations"
-import plans from "./plans"
-import contacts from "./contacts"
-import servers from "./servers"
-import domains from "./domains"
+import express, { NextFunction, Request, Response } from 'express'
+import { sendErrorResponse, sendSuccessResponse } from '../../helpers/responses'
+import cookieParser from 'cookie-parser'
+import IError from '../../interfaces/error'
+import withAuth from '../../middleware/withAuth'
+import users from './users'
+import applications from './applications'
+import integrations from './integrations'
+import plans from './plans'
+import contacts from './contacts'
+import servers from './servers'
+import domains from './domains'
+import notifications from './notifications'
 
-export type routeFunction = (
-  req: Request,
-  res: Response,
-  next?: NextFunction
-) => any
+export type routeFunction = (req: Request, res: Response, next?: NextFunction) => any
 
 export default (app: express.Application) => {
   const use =
@@ -27,7 +24,7 @@ export default (app: express.Application) => {
   router.use(express.json())
   router.use(cookieParser())
 
-  app.use("/api", router)
+  app.use('/api', router)
 
   // Authenticated routes below here
   router.use(use(withAuth))
@@ -39,15 +36,11 @@ export default (app: express.Application) => {
   contacts(router, use)
   servers(router, use)
   domains(router, use)
+  notifications(router, use)
 
   router.use(catchError)
 }
 
-const catchError = async (
-  err: IError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const catchError = async (err: IError, req: Request, res: Response, next: NextFunction) => {
   sendErrorResponse(err, req, res)
 }
