@@ -7,18 +7,16 @@ import { IStore } from '../store/store.ts'
 import {
   addDeployment as addDeploymentReducer,
   deploymentStages,
-  IInstanceHealth,
   removeDeployment as removeDeploymentReducer,
   updateInstanceHealth,
   updateStage as updateStageReducer,
 } from '../store/slices/instancesSlice.ts'
-import IInstance from 'types/schemas/Instances.ts'
+import IInstance, { IInstanceHealth } from 'types/schemas/Instances.ts'
 import { toast } from 'react-toastify'
 import { useEffect, useRef } from 'react'
 import { apiAxiosClean } from '../helpers/axios.ts'
 import socket from '../sockets/sockets.ts'
 import { InstanceSocketEvents } from 'types/sockets.ts'
-import { instanceHealth } from 'types/enums.ts'
 
 interface IToasts {
   deployments: {

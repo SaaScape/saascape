@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../VX3/Projects/panther/.idea/panther.iml" filepath="$PROJECT_DIR$/../VX3/Projects/panther/.idea/panther.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/saascape.iml" filepath="$PROJECT_DIR$/.idea/saascape.iml" />
     </modules>
   </component>

@@ -4,11 +4,12 @@
   "description": "All-in-one software as a service management dashboard",
   "main": "server.ts",
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
     "startd": "nodemon -r tsconfig-paths/register -r dotenv/config server.ts",
     "startd-bg": "nodemon -r tsconfig-paths/register -r dotenv/config background/server.ts",
-    "start": "ts-node -r tsconfig-paths/register -r dotenv/config server.ts",
-    "start-bg": "ts-node -r tsconfig-paths/register -r dotenv/config background/server.ts"
+    "start": "node -r tsconfig-paths/register dist/server/server.js",
+    "start-bg": "node -r tsconfig-paths/register dist/server/background/server.js"
   },
   "author": "Keir Davie",
   "license": "GPL-3.0",
