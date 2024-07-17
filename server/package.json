@@ -4,12 +4,12 @@
   "description": "All-in-one software as a service management dashboard",
   "main": "server.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r public dist/server/public",
     "test": "echo \"Error: no test specified\" && exit 1",
     "startd": "nodemon -r tsconfig-paths/register -r dotenv/config server.ts",
     "startd-bg": "nodemon -r tsconfig-paths/register -r dotenv/config background/server.ts",
-    "start": "node -r tsconfig-paths/register dist/server/server.js",
-    "start-bg": "node -r tsconfig-paths/register dist/server/background/server.js"
+    "start": "node -r dotenv/config dist/server/server.js",
+    "start-bg": "node -r dotenv/config dist/server/background/server.js"
   },
   "author": "Keir Davie",
   "license": "GPL-3.0",
@@ -20,8 +20,10 @@
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/lodash": "^4.14.202",
+    "@types/module-alias": "^2.0.4",
     "@types/ping": "^0.4.4",
     "dotenv": "^16.3.1",
+    "module-alias": "^2.2.3",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.2"
@@ -44,5 +46,8 @@
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.3",
     "tsconfig-paths": "^4.2.0"
+  },
+  "_moduleAliases": {
+    "types": "dist/types"
   }
 }

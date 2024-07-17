@@ -7,7 +7,7 @@ import { IApplication } from '../../../store/slices/applicationSlice'
 import { Button, Card, Tag } from 'antd'
 import moment from 'moment'
 import { useSelector } from 'react-redux'
-import { IStore } from 'client/src/store/store'
+
 import Icon from '../../Icon'
 import MenuContainer, { useMenuContainer } from '../../MenuContainer'
 import { TagContainer, TagInterface } from '../../Tags'
@@ -15,6 +15,7 @@ import { apiAxios } from '../../../helpers/axios'
 import { UpdateType, ConfigModules } from 'types/enums'
 
 import { useState } from 'react'
+import { IStore } from '../../../store/store'
 
 interface IProps {
   instance?: IInstance
