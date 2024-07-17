@@ -13,3 +13,10 @@ export enum DomainSocketEvents {
   SYNC_APPLICATION_DIRECTIVES = 'sync_application_directives',
   DELETE_DOMAIN = 'delete_domain',
 }
+
+export enum NotificationEvents {
+  NEW_NOTIFICATION = 'new_notification',
+  NEW_NOTIFICATIONS = 'new_notifications',
+  READ_NOTIFICATION = 'read_notification',
+  DELETED_NOTIFICATION = 'deleted_notification',
+}

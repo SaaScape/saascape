@@ -8,7 +8,7 @@ import { db } from '../db'
 import { ISwarm } from 'types/schemas/Swarms'
 import { ObjectId } from 'mongodb'
 import Dockerode from 'dockerode'
-import { decipherData } from '../helpers/utils'
+import { createNotifications, decipherData, NotificationMethods } from '../helpers/utils'
 import lodash from 'lodash'
 import VersionService from '../services/versionService'
 import { IApplication } from '../schemas/Applications'
@@ -19,6 +19,7 @@ import { ILinkedId } from '../interfaces/interfaces'
 import DomainService, { DecipheredCertificates } from '../services/domainsService'
 import { instanceHealth, InstanceVariables, misc } from 'types/enums'
 import moment from 'moment'
+import { notificationType } from 'types/schemas/Notifications'
 
 // TODO: Instead of deleting secret, update it when forcing update
 
@@ -341,6 +342,17 @@ export default class Service {
       await versionService.pullImage(application, client, namespace, repository, tag, timeStamp)
     }
 
+    await createNotifications(
+      {
+        title: `Updated image pulled`,
+        body: `New image pulled for ${this.instanceClient.instance.name}`,
+        sendMail: false,
+        type: notificationType.INFO,
+        from: 'system',
+      },
+      NotificationMethods.BACKGROUND,
+    )
+
     return newImage
   }
 
@@ -398,7 +410,6 @@ export default class Service {
 
     const dockerService = await dockerClient.createService({
       // TODO: Prevent instances from being created with the same name
-      // TODO: Allow custom launch commands
       Name: lodash.snakeCase(this.instanceClient.instance?.name),
       Labels: { instanceId: this.instanceClient.instance?._id?.toString() },
       TaskTemplate: {

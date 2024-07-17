@@ -63,6 +63,8 @@ const socketRoutes = (socket: Socket) => {
   socket.onAny(listener)
 }
 
+export let clientIO: Socket
+
 export const initSocketClient = async () => {
   return new Promise((resolve, reject) => {
     const socketIo = io(process?.env?.BACKEND_URL || '', {
@@ -71,6 +73,7 @@ export const initSocketClient = async () => {
         token: process.env?.BACKGROUND_SOCKET_TOKEN,
       },
     })
+    clientIO = socketIo
     socketIo.on('connect', () => {
       console.log('Background server connected to main server on', socketIo?.id)
       socket = socketIo

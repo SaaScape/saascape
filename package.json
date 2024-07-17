@@ -9,6 +9,10 @@
   "author": "Keir Davie",
   "license": "GPL-3.0",
   "devDependencies": {
-    "@types/mongodb": "^4.0.7"
+    "@types/mongodb": "^4.0.7",
+    "@types/nodemailer": "^6.4.15"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.14"
   }
 }

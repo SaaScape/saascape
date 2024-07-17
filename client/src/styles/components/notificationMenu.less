@@ -19,6 +19,9 @@
       font-size: 0.875rem;
       border-bottom: 1px solid @gray-border;
       transition: all 0.3s;
+      &.new {
+        background-color: lighten(@primary-blue, 40%);
+      }
       &:hover {
         background-color: @body-background;
       }
@@ -40,6 +43,15 @@
           }
           .message {
             font-size: 0.75rem;
+          }
+        }
+      }
+      .actions {
+        svg {
+          font-size: 1rem;
+          margin-right: 10px;
+          &:hover {
+            transform: scale(1.05);
           }
         }
       }

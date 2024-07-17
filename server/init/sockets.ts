@@ -32,6 +32,10 @@ class SocketServer {
     this.initRoutes()
   }
 
+  getUserRoom(userId: string) {
+    return `user:${userId}`
+  }
+
   private initRoutes() {
     if (!this.io) return
     const { io } = this
@@ -64,6 +68,7 @@ class SocketServer {
           const jwt = await jwtHelper.decipherJwt.access(cookies?.accessToken)
           this.connections[socket.id].userId = jwt?._id
           socket.data.userId = jwt?._id
+          socket.join(`user:${jwt?._id}`)
           return next()
         }
       } catch (error: any) {

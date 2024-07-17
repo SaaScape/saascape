@@ -5,12 +5,14 @@
 import IInstance, { instanceDbStatus, InstanceServiceStatus, IReplicaStates } from 'types/schemas/Instances'
 import { instanceHealth } from 'types/enums'
 import constants from '../helpers/constants'
-import { clients, getClient } from '../clients/clients'
+import { clients } from '../clients/clients'
 import { db } from '../db'
 import Service, { IHealthObj } from './service'
 import moment from 'moment'
 import { socket } from '../background/init/sockets'
 import { InstanceSocketEvents } from 'types/sockets'
+import { notificationType } from 'types/schemas/Notifications'
+import { createNotifications, NotificationMethods } from '../helpers/utils'
 
 export default class Instance {
   instance: IInstance
@@ -174,7 +176,6 @@ export default class Instance {
       for (const [lastXMinutes, obj] of Object.entries(notifIntervals)) {
         if (lastXMinutes !== 'other' && minutesSinceLastUpdate > +lastXMinutes) continue
 
-        console.log(shouldSendNotification, lastXMinutes, obj.sendEveryXMinutes)
         if (!(+minutesSinceLastNotified >= obj.sendEveryXMinutes)) break
         shouldSendNotification = true
         break
@@ -182,11 +183,6 @@ export default class Instance {
     }
 
     if (!shouldSendNotification) return
-
-    // Send notification
-    console.log('Sending notification')
-
-    // TODO: Implement email and socket notifications here
 
     await db.managementDb?.collection<IInstance>('instances').updateOne(
       { _id: this.instance._id },
@@ -196,6 +192,17 @@ export default class Instance {
         },
       },
     )
+
+    await createNotifications(
+      {
+        title: `Instance ${this.instance.name} is unhealthy`,
+        body: `The instance ${this.instance.name} is unhealthy and needs attention`,
+        type: notificationType.WARNING,
+        sendMail: true,
+        from: 'system',
+      },
+      NotificationMethods.BACKGROUND,
+    )
   }
 
   async deleteInstance() {
@@ -204,6 +211,18 @@ export default class Instance {
     await db.managementDb
       ?.collection<IInstance>('instances')
       .updateOne({ _id: this.instance._id }, { $set: { status: instanceDbStatus.DELETED } })
+
+    await createNotifications(
+      {
+        title: `Instance ${this.instance.name} has been deleted`,
+        body: `The instance ${this.instance.name} has been deleted`,
+        sendMail: true,
+        type: notificationType.INFO,
+        from: 'system',
+      },
+      NotificationMethods.BACKGROUND,
+    )
+
     this.removeFromClients()
   }
 }
