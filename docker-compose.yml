@@ -1,0 +1,25 @@
+version: '3.9'
+services:
+  staging:
+    image: 'index.docker.io/pantherkeir/saascape:0.0.1'
+    container_name: 'saascape'
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    env_file:
+      - .env
+#    volumes:
+    environment:
+      - NODE_ENV=production
+    command: npm run start
+
+  panel-bg:
+    image: 'index.docker.io/pantherkeir/saascape:0.0.1'
+    container_name: 'saascape-bg'
+    restart: unless-stopped
+    env_file:
+      - .env
+#    volumes:
+    environment:
+      - NODE_ENV=production
+    command: npm run startb
