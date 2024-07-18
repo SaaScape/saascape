@@ -1,7 +1,7 @@
 /*
  * Copyright SaaScape (c) 2024.
  */
-import 'module-alias/register'
+import '../modules/getModuleAlias'
 import { db } from '../db'
 import './init/sockets'
 import { initSocketClient } from './init/sockets'

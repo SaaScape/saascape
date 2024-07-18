@@ -1,7 +1,7 @@
 /*
  * Copyright SaaScape (c) 2024.
  */
-import 'module-alias/register'
+import './modules/getModuleAlias'
 import express from 'express'
 import http from 'http'
 import https from 'https'
