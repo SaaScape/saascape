@@ -22,4 +22,4 @@ services:
 #    volumes:
     environment:
       - NODE_ENV=production
-    command: npm run startb
+    command: npm run start-bg

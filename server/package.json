@@ -4,12 +4,12 @@
   "description": "All-in-one software as a service management dashboard",
   "main": "server.ts",
   "scripts": {
-    "build": "tsc && cp -r public dist/server/public",
+    "build": "tsc && cp -r public dist/server/public && cp -r configs dist/server",
     "test": "echo \"Error: no test specified\" && exit 1",
     "startd": "nodemon -r tsconfig-paths/register -r dotenv/config server.ts launch_command=startd",
     "startd-bg": "nodemon -r tsconfig-paths/register -r dotenv/config background/server.ts launch_command=startd-bg",
-    "start": "node -r dotenv/config dist/server/server.js launch_command=start",
-    "start-bg": "node -r dotenv/config dist/server/background/server.js launch_command=start-bg"
+    "start": "node dist/server/server.js launch_command=start",
+    "start-bg": "node dist/server/background/server.js launch_command=start-bg"
   },
   "author": "Keir Davie",
   "license": "GPL-3.0",
@@ -23,7 +23,6 @@
     "@types/module-alias": "^2.0.4",
     "@types/ping": "^0.4.4",
     "dotenv": "^16.3.1",
-    "module-alias": "^2.2.3",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.2"
@@ -39,9 +38,11 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
+    "module-alias": "^2.2.3",
     "moment": "^2.29.4",
     "mongodb": "^6.3.0",
     "node-ssh": "^13.1.0",
+    "nodemailer": "^6.9.14",
     "ping": "^0.4.4",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.3",

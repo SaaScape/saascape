@@ -11,4 +11,7 @@ RUN cd ./server && npm ci --omit=dev -f
 COPY ./server/dist ./server/dist
 
 ENV NODE_ENV=production
+
+WORKDIR /app/server/dist
+
 CMD ["npm","start"]
