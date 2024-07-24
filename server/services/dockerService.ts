@@ -96,7 +96,7 @@ export default class DockerService {
                 cond: {
                   $eq: ['$$integration.name', constants.INTEGRATIONS.DOCKER],
                 },
-                limit: 1,
+                //limit: 1 // Only available in newer version of MongoDB,
               },
             },
           },
