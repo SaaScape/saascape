@@ -4,7 +4,7 @@
   "description": "All-in-one software as a service management dashboard",
   "main": "server.ts",
   "scripts": {
-    "build": "tsc && cp -r public dist/server/public && cp -r configs dist/server",
+    "build": "tsc && cp -r public dist/server/public && cpx 'scripts/**/*.sh' dist/server/scripts && cpx 'configs/*' dist/server/configs ",
     "test": "echo \"Error: no test specified\" && exit 1",
     "startd": "nodemon -r tsconfig-paths/register -r dotenv/config server.ts launch_command=startd",
     "startd-bg": "nodemon -r tsconfig-paths/register -r dotenv/config background/server.ts launch_command=startd-bg",
@@ -22,6 +22,7 @@
     "@types/lodash": "^4.14.202",
     "@types/module-alias": "^2.0.4",
     "@types/ping": "^0.4.4",
+    "cpx": "^1.5.0",
     "dotenv": "^16.3.1",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
