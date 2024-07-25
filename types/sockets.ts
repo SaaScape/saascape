@@ -20,3 +20,7 @@ export enum NotificationEvents {
   READ_NOTIFICATION = 'read_notification',
   DELETED_NOTIFICATION = 'deleted_notification',
 }
+
+export enum VersionEvents {
+  VERSION_WEBHOOK = 'version_webhook',
+}

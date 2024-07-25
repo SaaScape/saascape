@@ -54,6 +54,7 @@ export default {
     SERVER: 'server',
     DOMAIN: 'domain',
     INSTANCE: 'instance',
+    VERSION: 'version',
   },
   SOCKET_EVENTS: {
     SERVER_CONNECT: 'server_connect',
