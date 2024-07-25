@@ -45,22 +45,11 @@ const ViewInstance = ({
       </Card>
 
       {/* 
-     TODO: IF Instance has domain configured then we will update that domains nginx config to point to this
-    instance. If not then instance will only be accessible by port and ip
-    
+     TODO:
     Do we want to allow users to access the applications at their respective ports directly?
-
-    Need to add custom nginx directives for applications
-
     Instances can have linked ids to tenants
-
     Add instance controls, such as stop, start, restart, update version
-
-
     Show instance run time
-
-    
-
      */}
 
       <Tabs items={instanceTabs} className="instance-nav" />

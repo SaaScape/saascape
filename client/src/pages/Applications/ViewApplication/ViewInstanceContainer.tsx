@@ -95,7 +95,6 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   }, [instanceId])
 
   useEffect(() => {
-    // TODO: Ensure that the instance can be updated in most cases
     if (!instance) return
     const instanceMenuItems: instanceMenuItem = [
       [
@@ -120,21 +119,16 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
       ],
     ]
 
-    if (!instance?.tenant) {
-      instanceMenuItems.unshift([{ text: 'Allocate Tenant', onClick: () => {} }])
-    }
+    // if (!instance?.tenant) {
+    //   instanceMenuItems.unshift([{ text: 'Allocate Tenant', onClick: () => {} }])
+    // }
 
     if (instanceStatusMap.running.includes(instance.service_status)) {
       const runningItems: instanceMenuItem = [
-        [{ text: 'Deploy Version', onClick: () => {} }],
         [
           {
             text: 'Stop Instance',
             onClick: () => {},
-          },
-          {
-            text: 'Redeploy Instance',
-            onClick: deployInstance,
           },
         ],
       ]
@@ -176,15 +170,26 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
       ]
       instanceMenuItems.unshift(...items)
     }
-    setInstanceMenuItems([
-      ...instanceMenuItems,
-      [
-        {
-          text: 'Redeploy Instance',
-          onClick: deployInstance,
-        },
-      ],
-    ])
+
+    setInstanceMenuItems(
+      instanceStatusMap.preConfig.includes(instance.service_status)
+        ? instanceMenuItems
+        : [
+            ...instanceMenuItems,
+            [
+              {
+                text: 'Redeploy Instance',
+                onClick: deployInstance,
+              },
+              {
+                text: 'Select Version',
+                onClick: () => {
+                  toggleVersionSelectionModal(true)
+                },
+              },
+            ],
+          ],
+    )
   }, [instance])
 
   const deployInstance = async () => {
