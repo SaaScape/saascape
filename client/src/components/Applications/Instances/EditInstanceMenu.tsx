@@ -36,6 +36,7 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
   useEffect(() => {
     const defaultValues = {
       run_command: instance?.config?.run_command?.join(','),
+      volumes: instance?.config?.volumes?.join(','),
     }
     form.setFieldsValue(defaultValues)
   }, [instance, form])
@@ -139,6 +140,10 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
               </Button>
             </Tooltip>
           </div>
+
+          <Form.Item label={'Volumes'} name={'volumes'}>
+            <Input />
+          </Form.Item>
 
           <Form.Item label="Tenant">{instance?.tenant ? instance.tenant?.toString() : misc.NOT_ASSIGNED}</Form.Item>
         </Form>

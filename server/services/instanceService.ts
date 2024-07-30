@@ -156,7 +156,7 @@ export default class InstanceService {
   }
 
   async create(data: any) {
-    const { version_id, swarm_id, name, is_custom_database, database, domain_id, run_command } = data
+    const { version_id, swarm_id, name, is_custom_database, database, domain_id, run_command, volumes } = data
 
     if (!version_id || !swarm_id || !name || !database) throw { showError: 'Missing required fields' }
 
@@ -188,6 +188,7 @@ export default class InstanceService {
         environment_config: application?.config?.environment_config,
         secrets_config: application?.config?.secrets_config,
         run_command: run_command && run_command?.split(',').map((cmd: string) => cmd.trim()),
+        volumes: volumes && volumes?.split(',').map((volume: string) => volume.trim()),
       },
       port_assignment: 'auto',
       is_custom_database,
@@ -445,7 +446,7 @@ export default class InstanceService {
       ?.findOne({ _id: new ObjectId(id), application_id: this.applicationId })
     if (!instance) throw { showError: 'Instance not found' }
 
-    const { swarm_id, name, database, replicas, isCustomDatabase, port, domain_id, run_command } = data
+    const { swarm_id, name, database, replicas, isCustomDatabase, port, domain_id, run_command, volumes } = data
 
     if (!swarm_id || !name || !database || !(replicas >= 0)) throw { showError: 'Missing required fields' }
 
@@ -457,6 +458,7 @@ export default class InstanceService {
       is_custom_database: isCustomDatabase,
       database: isCustomDatabase ? database : new ObjectId(database),
       'config.run_command': run_command && run_command?.split(',').map((cmd: string) => cmd.trim()),
+      'config.volumes': volumes && volumes?.split(',').map((volume: string) => volume.trim()),
       port,
       replicas,
       swarm_id: new ObjectId(swarm_id),

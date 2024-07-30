@@ -1,6 +1,6 @@
 version: '3.9'
 services:
-  staging:
+  saascape:
     image: 'index.docker.io/pantherkeir/saascape:0.0.1'
     container_name: 'saascape'
     restart: unless-stopped
@@ -13,7 +13,7 @@ services:
       - NODE_ENV=production
     command: npm run start
 
-  panel-bg:
+  saascape-bg:
     image: 'index.docker.io/pantherkeir/saascape:0.0.1'
     container_name: 'saascape-bg'
     restart: unless-stopped

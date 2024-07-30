@@ -3,11 +3,11 @@
  */
 
 import IInstance, { InstanceServiceStatus, IReplicaStates } from 'types/schemas/Instances'
-import { getAllClients, getClient } from '../clients/clients'
+import { clients, getAllClients, getClient } from '../clients/clients'
 import { db } from '../db'
 import { ISwarm } from 'types/schemas/Swarms'
 import { ObjectId } from 'mongodb'
-import Dockerode from 'dockerode'
+import Dockerode, { MountSettings } from 'dockerode'
 import { createNotifications, decipherData, NotificationMethods } from '../helpers/utils'
 import lodash from 'lodash'
 import VersionService from '../services/versionService'
@@ -383,6 +383,37 @@ export default class Service {
     return run_command
   }
 
+  async getMounts() {
+    const volumes = this.instanceClient.instance?.config?.volumes
+    let mounts: MountSettings[] = []
+    for (const volume of volumes || []) {
+      const [Source, Target] = volume?.split(':')
+      mounts.push({
+        Target,
+        Source,
+        Type: 'bind',
+        ReadOnly: false,
+        Consistency: 'default',
+      })
+    }
+
+    const failedMounts: string[] = []
+
+    // Get servers and create directory on all
+    for (const [serverId, ssh] of Object.entries(clients.ssh || {})) {
+      for (const mount of mounts) {
+        try {
+          await ssh.execCommand(`sudo mkdir -p ${mount.Source}`)
+        } catch (err) {
+          console.warn(`Unable to create mount directory for ${mount.Source} on server ${serverId}`)
+          failedMounts.push(mount.Source)
+        }
+      }
+    }
+
+    return mounts.filter((mount) => !failedMounts.includes(mount.Source))
+  }
+
   async createService() {
     // Check if service exists
     if (await this.checkServiceExists()) {
@@ -419,6 +450,7 @@ export default class Service {
           Env: environmentVariables,
           Secrets: await this.getSecrets(),
           Command: this.getRunCommand(),
+          Mounts: await this.getMounts(),
         },
         RestartPolicy: {
           Condition: 'any',
@@ -527,6 +559,7 @@ export default class Service {
         versionId: this.instanceClient.instance.version_id.toString(),
       },
       Command: this.getRunCommand(),
+      Mounts: await this.getMounts(),
     }
     //Networks
     serviceObj.Spec.TaskTemplate.Networks = [

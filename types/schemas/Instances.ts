@@ -72,6 +72,7 @@ export default interface IInstance extends ILinkedIdEnabledDocument {
     environment_config: IEnvironmentVariablesConfig
     secrets_config: ISecretsConfig
     run_command?: string[]
+    volumes?: string[]
   }
   tenant?: ObjectId | string
   version_id: ObjectId
