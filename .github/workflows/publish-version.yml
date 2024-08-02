@@ -57,7 +57,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/saascape:${{ github.ref }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/saascape:${{ github.ref_name }}
           
       - name: Changelog
         uses: scottbrenner/generate-changelog-action@master
@@ -72,7 +72,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: Release ${{ github.ref_name }}
           body: |
             ${{ steps.Changelog.outputs.changelog }}
           draft: true
