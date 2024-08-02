@@ -3,7 +3,7 @@ import { initializeDomainQueueProducer } from '../../queue/producers/domainProdu
 import { DomainSocketEvents } from 'types/sockets'
 import ApplicationService from '../../services/applicationService'
 import { db } from '../../db'
-import { IApplication } from '../../schemas/Applications'
+import { IApplication } from 'types/schemas/Applications'
 import { ObjectId } from 'mongodb'
 import DomainService from '../../services/domainsService'
 import { DomainStatus, IDomain } from 'types/schemas/Domains'

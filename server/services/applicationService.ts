@@ -5,7 +5,7 @@
 import { ObjectId } from 'mongodb'
 import { db } from '../db'
 import constants from '../helpers/constants'
-import { IApplication, ICustomField } from '../schemas/Applications'
+import { IApplication, ICustomField } from 'types/schemas/Applications'
 import { cleanVersionConfig, encryptData, prepareApplicationPayloadForTransport } from '../helpers/utils'
 import ServerService from './serverService'
 import IInstance, { IInstanceHealths, instanceDbStatus } from 'types/schemas/Instances'

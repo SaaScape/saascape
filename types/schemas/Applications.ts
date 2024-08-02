@@ -3,7 +3,7 @@
  */
 
 import { Document, ObjectId } from 'mongodb'
-import { IEncryptedData, ILinkedIdEnabledDocument } from '../interfaces/interfaces'
+import { IEncryptedData, ILinkedIdEnabledDocument } from '../../server/interfaces/interfaces'
 
 export type ContactType = 'tenant' | 'lead'
 

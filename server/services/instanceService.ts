@@ -7,7 +7,7 @@ import { db } from '../db'
 import IInstance, { instanceDbStatus, InstanceServiceStatus } from 'types/schemas/Instances'
 import { ConfigModules, instanceHealth, updateStatus, UpdateType } from 'types/enums'
 import constants from '../helpers/constants'
-import { IApplication } from '../schemas/Applications'
+import { IApplication } from 'types/schemas/Applications'
 import { encryptData, prepareApplicationPayloadForTransport } from '../helpers/utils'
 
 interface IUpdateConfigData {

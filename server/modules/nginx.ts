@@ -7,7 +7,7 @@ import path from 'path'
 import { IDomain } from 'types/schemas/Domains'
 import SSHService from '../services/sshService'
 import IInstance from 'types/schemas/Instances'
-import { IApplication } from '../schemas/Applications'
+import { IApplication } from 'types/schemas/Applications'
 export const getDomainConfigFile = async (
   domain: IDomain,
   isSSLDomain: boolean,

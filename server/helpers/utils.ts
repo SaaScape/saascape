@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { IApplication } from '../schemas/Applications'
+import { IApplication } from 'types/schemas/Applications'
 import fsp from 'fs/promises'
 import path from 'path'
 import IInstance from 'types/schemas/Instances'

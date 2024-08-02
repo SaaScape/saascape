@@ -3,10 +3,10 @@
  */
 
 import { ObjectId } from 'mongodb'
-import { IEnvironmentVariablesConfig, ISecretsConfig } from '../../server/schemas/Applications'
+import { IEnvironmentVariablesConfig, ISecretsConfig } from './Applications'
 import IVersion from '../../server/schemas/Versions'
 import { ILinkedIdEnabledDocument } from '../../server/interfaces/interfaces'
-import { IDomain } from 'types/schemas/Domains'
+import { IDomain } from './Domains'
 import { instanceHealth, updateStatus } from '../enums'
 
 export enum InstanceServiceStatus {
@@ -56,8 +56,6 @@ export default interface IInstance extends ILinkedIdEnabledDocument {
   service_health: instanceHealth
   service_health_updated_at: Date
   service_health_notified_at?: Date
-  // TODO: Utilise the update status to prevent multiple updates
-  // TODO: How do we handle failed updates? Since we will be using queue
 
   update_status: updateStatus
   update_status_updated_at?: Date
@@ -74,6 +72,7 @@ export default interface IInstance extends ILinkedIdEnabledDocument {
     run_command?: string[]
     volumes?: string[]
   }
+  deployment_group?: ObjectId
   tenant?: ObjectId | string
   version_id: ObjectId
   version?: IVersion

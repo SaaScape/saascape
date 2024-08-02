@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { IApplication } from '../schemas/Applications'
+import { IApplication } from 'types/schemas/Applications'
 import { API } from '../types/types'
 
 export const checkDockerHubWebhookEnabled: API = async (req, res, next) => {
