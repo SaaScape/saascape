@@ -37,14 +37,18 @@ jobs:
           node-version: '20.x'
           cache: 'npm'
       - name: Install dependencies
-        run: npm ci -f
+        run: npm ci
+      - name: Install Client Dependencies
+        run: cd ./client && npm ci
+      - name: Install Server Dependencies
+        run: cd ./server && npm ci
       - name: Set up node_env
         run: echo NODE_ENV="production" > production.env
         # BUILD
       - name: Build Client
         run: cd ./client && npm run build
       - name: Build Server
-        run: cd ../server && npm run build
+        run: cd ./server && npm run build
         
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
