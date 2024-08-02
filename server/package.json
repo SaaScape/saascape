@@ -1,6 +1,6 @@
 {
   "name": "saascape_server",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "All-in-one software as a service management dashboard",
   "main": "server.ts",
   "scripts": {
