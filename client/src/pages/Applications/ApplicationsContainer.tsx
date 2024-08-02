@@ -1,18 +1,16 @@
-import { useEffect, useState } from "react"
-import useSetBreadcrumbs from "../../middleware/useSetBreadcrumbs"
-import Applications from "./Applications"
-import breadcrumbs from "../../helpers/constants/breadcrumbs"
-import { apiAxios } from "../../helpers/axios"
-import { Avatar } from "antd"
-import { useNavigate } from "react-router-dom"
-import ManageApplicationModal from "../../components/Applications/ManageApplicationModal"
-import { toast } from "react-toastify"
-import { useDispatch, useSelector } from "react-redux"
-import { IStore } from "../../store/store"
-import {
-  IApplication,
-  setApplications,
-} from "../../store/slices/applicationSlice"
+import { useEffect, useState } from 'react'
+import useSetBreadcrumbs from '../../middleware/useSetBreadcrumbs'
+import Applications from './Applications'
+import breadcrumbs from '../../helpers/constants/breadcrumbs'
+import { apiAxios } from '../../helpers/axios'
+import { Avatar } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import ManageApplicationModal from '../../components/Applications/ManageApplicationModal'
+import { toast } from 'react-toastify'
+import { useDispatch, useSelector } from 'react-redux'
+import { IStore } from '../../store/store'
+import { setApplications } from '../../store/slices/applicationSlice'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 export interface IProps {
   columns: any[]
@@ -25,25 +23,25 @@ export interface IProps {
 
 const columns = [
   {
-    title: "Name",
-    dataIndex: "application_name",
-    key: "application_name",
+    title: 'Name',
+    dataIndex: 'application_name',
+    key: 'application_name',
     render: (text: any, record: IApplication) => {
       const abbreviation = record?.application_name
-        ?.split(" ")
+        ?.split(' ')
         .map((t) => t[0])
         .slice(0, 2)
-        .join("")
+        .join('')
         .toUpperCase()
 
       return (
-        <div className='d-flex align-center'>
-          <Avatar className='m-r-10' shape='square' size='large'>
+        <div className="d-flex align-center">
+          <Avatar className="m-r-10" shape="square" size="large">
             {abbreviation}
           </Avatar>
-          <div className='application-name-container'>
-            <span className='application-name'> {text}</span>
-            <p className='application-description'>{record?.description}</p>
+          <div className="application-name-container">
+            <span className="application-name"> {text}</span>
+            <p className="application-description">{record?.description}</p>
           </div>
         </div>
       )
@@ -54,8 +52,7 @@ const columns = [
 const ApplicationsContainer = () => {
   const [loading, setLoading] = useState(false)
   const { applications } = useSelector((state: IStore) => state.applications)
-  const [showManageApplicationModal, setShowManageApplicationModal] =
-    useState(false)
+  const [showManageApplicationModal, setShowManageApplicationModal] = useState(false)
   const [application, setApplication] = useState<IApplication | null>(null)
   const setBreadcrumbs = useSetBreadcrumbs()
   const navigate = useNavigate()
@@ -81,19 +78,14 @@ const ApplicationsContainer = () => {
   const onApplicationSave = async (values: any) => {
     setLoading(true)
 
-    const data = await apiAxios?.[values?._id ? "put" : "post"](
-      `/applications`,
-      values
-    )
+    const data = await apiAxios?.[values?._id ? 'put' : 'post'](`/applications`, values)
 
     if (data?.data?.success) {
       setShowManageApplicationModal(false)
       toast.success(
-        <p className='toast-text'>
-          {values?._id
-            ? "Application updated successfully"
-            : "Application created successfully"}
-        </p>
+        <p className="toast-text">
+          {values?._id ? 'Application updated successfully' : 'Application created successfully'}
+        </p>,
       )
       return getApplications()
     }

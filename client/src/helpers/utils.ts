@@ -1,10 +1,11 @@
-import { IApplication, setApplications, setSelectedApplication } from '../store/slices/applicationSlice'
+import { setApplications, setSelectedApplication } from '../store/slices/applicationSlice'
 import { store } from '../store/store'
 import { apiAxios } from './axios'
 import constants from './constants/constants'
 // import publicKeyJson from '../data/clientTransportKeys/publicKey.json'
 // import JSEncrypt from 'jsencrypt'
 import { snakeCase } from 'lodash'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 export const queryParamBuilder = (query: { [key: string]: string | number | undefined }) => {
   return `?${Object.entries(query)
