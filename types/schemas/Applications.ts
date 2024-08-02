@@ -36,6 +36,15 @@ export interface ISecretsConfig {
   [key: string]: ISecret
 }
 
+interface IDeploymentGroups {
+  [id: string]: IDeploymentGroup
+}
+
+export interface IDeploymentGroup {
+  _id: ObjectId
+  name: string
+}
+
 export interface IApplicationConfig {
   version_config: {
     docker_hub_username?: IEncryptedData
@@ -49,6 +58,7 @@ export interface IApplicationConfig {
   nginx: {
     directives?: string
   }
+  deployment_groups?: IDeploymentGroups
 }
 
 export interface IApplication extends Document, ILinkedIdEnabledDocument {

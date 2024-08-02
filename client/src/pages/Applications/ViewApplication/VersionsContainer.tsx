@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import Versions from './Versions'
-import { IApplication } from '../../../store/slices/applicationSlice'
 import { useSelector } from 'react-redux'
 import { IStore } from '../../../store/store'
 import { useParams } from 'react-router-dom'
@@ -13,6 +12,7 @@ import { toast } from 'react-toastify'
 import usePaginatedTable from '../../../hooks/usePaginatedTable'
 import { Popover, TableColumnProps } from 'antd'
 import moment from 'moment'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 export interface IVersion {
   _id: string

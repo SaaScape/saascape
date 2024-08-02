@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react'
 import { apiAxios } from '../../../helpers/axios.ts'
-import { IApplication } from '../../../store/slices/applicationSlice.ts'
+import { IApplication } from 'types/schemas/Applications.ts'
 import { IVersion } from '../../../pages/Applications/ViewApplication/VersionsContainer.tsx'
 import { Button, Form, Modal, Select } from 'antd'
 

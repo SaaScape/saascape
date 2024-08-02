@@ -2,10 +2,10 @@
  * Copyright SaaScape (c) 2024.
  */
 
-import { IApplication, updateApplication } from '../../../store/slices/applicationSlice.ts'
-import { Button, Card, Checkbox, Form, Input } from 'antd'
+import { updateApplication } from '../../../store/slices/applicationSlice.ts'
+import { IApplication } from 'types/schemas/Applications.ts'
+import { Button, Card, Form } from 'antd'
 import { useState } from 'react'
-import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import TextArea from 'antd/es/input/TextArea'
 import { toast } from 'react-toastify'

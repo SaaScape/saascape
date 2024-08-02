@@ -4,23 +4,21 @@ Author: Keir Davie <keir@keirdavie.me>
 
 */
 
-import { useEffect, useState } from "react"
-import Plans from "./Plans"
-import ManagePlanModal, {
-  IManagePlanModalProps,
-} from "../../../components/Applications/ManagePlanModal"
-import { useSelector } from "react-redux"
-import { IStore } from "../../../store/store"
-import { apiAxios } from "../../../helpers/axios"
-import { toast } from "react-toastify"
-import { planTermConverter, queryParamBuilder } from "../../../helpers/utils"
-import { IApplication } from "../../../store/slices/applicationSlice"
-import { useNavigate, useParams } from "react-router-dom"
-import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
-import breadcrumbs from "../../../helpers/constants/breadcrumbs"
-import { IApplicationProps } from "../ApplicationRouteHandler"
-import { ILinkedIdEnabledDocument } from "../../../interfaces/interfaces"
-import { Moment } from "moment"
+import { useEffect, useState } from 'react'
+import Plans from './Plans'
+import ManagePlanModal, { IManagePlanModalProps } from '../../../components/Applications/ManagePlanModal'
+import { useSelector } from 'react-redux'
+import { IStore } from '../../../store/store'
+import { apiAxios } from '../../../helpers/axios'
+import { toast } from 'react-toastify'
+import { planTermConverter, queryParamBuilder } from '../../../helpers/utils'
+import { useNavigate, useParams } from 'react-router-dom'
+import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
+import breadcrumbs from '../../../helpers/constants/breadcrumbs'
+import { IApplicationProps } from '../ApplicationRouteHandler'
+import { ILinkedIdEnabledDocument } from '../../../interfaces/interfaces'
+import { Moment } from 'moment'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 export interface IPlan extends ILinkedIdEnabledDocument {
   _id: string
@@ -53,15 +51,13 @@ const PlansContainer = (props: IApplicationProps) => {
   const [loading, setLoading] = useState(false)
   const [plans, setPlans] = useState<{ [page: number]: IPlan[] }>({})
   const { id } = useParams()
-  const { selectedApplication } = useSelector(
-    (state: IStore) => state.applications
-  )
+  const { selectedApplication } = useSelector((state: IStore) => state.applications)
 
   const [showManagePlanModal, setShowManagePlanModal] = useState(false)
   const configData = useSelector((state: IStore) => state.configData)
   const [planQueryConfig] = useState({
-    limit: "20",
-    page: "1",
+    limit: '20',
+    page: '1',
   })
 
   const navigate = useNavigate()
@@ -73,24 +69,22 @@ const PlansContainer = (props: IApplicationProps) => {
   const { currencies } = configData
 
   const planColumns = [
-    { title: "Plan", dataIndex: "plan_name", key: "plan_name" },
+    { title: 'Plan', dataIndex: 'plan_name', key: 'plan_name' },
     {
-      title: "Billing Frequency",
-      dataIndex: "billing_interval",
-      key: "billing_interval",
+      title: 'Billing Frequency',
+      dataIndex: 'billing_interval',
+      key: 'billing_interval',
       render: (text: any, record: IPlan) => {
         const { billing_interval_count } = record
         const value = planTermConverter(text)
-        return `${billing_interval_count} ${value}${
-          billing_interval_count > 1 ? "s" : ""
-        }`
+        return `${billing_interval_count} ${value}${billing_interval_count > 1 ? 's' : ''}`
       },
     },
     {
-      title: "Price",
-      dataIndex: "price",
-      key: "price",
-      align: "right",
+      title: 'Price',
+      dataIndex: 'price',
+      key: 'price',
+      align: 'right',
       render: (text: any, record: IPlan) => {
         const { symbol } = currencies?.[record?.currency] || {}
         return `${symbol} ${(+text)?.toFixed(2)}`
@@ -101,12 +95,7 @@ const PlansContainer = (props: IApplicationProps) => {
   const setBreadcrumbs = useSetBreadcrumbs()
   useEffect(() => {
     if (!id) return
-    setBreadcrumbs(
-      breadcrumbs.VIEW_APPLICATION_PLANS(
-        selectedApplication?.application_name || id,
-        id
-      )
-    )
+    setBreadcrumbs(breadcrumbs.VIEW_APPLICATION_PLANS(selectedApplication?.application_name || id, id))
   }, [selectedApplication])
 
   useEffect(() => {
@@ -130,7 +119,7 @@ const PlansContainer = (props: IApplicationProps) => {
       `/plans${queryParamBuilder({
         ...planQueryConfig,
         applicationId: selectedApplication?._id,
-      })}`
+      })}`,
     )
     if (success) {
       const { page, records } = data?.plans?.paginatedData || {}
@@ -142,12 +131,9 @@ const PlansContainer = (props: IApplicationProps) => {
   const onPlanCreate = async (values: any) => {
     const {
       data: { success },
-    } = await apiAxios.post(
-      `/plans?applicationId=${selectedApplication?._id}`,
-      values
-    )
+    } = await apiAxios.post(`/plans?applicationId=${selectedApplication?._id}`, values)
     if (success) {
-      toast.success("Plan created successfully")
+      toast.success('Plan created successfully')
       await getPlans()
       setCreateModalVisible(false)
     }

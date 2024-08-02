@@ -27,6 +27,7 @@ import { toast } from 'react-toastify'
 import { useManageInstances } from '../../../components/InstanceManager.tsx'
 import { updateInstanceHealth } from '../../../store/slices/instancesSlice.ts'
 import { IInstanceHealth } from 'types/schemas/Instances.ts'
+import { IDeploymentGroup } from 'types/schemas/Applications.ts'
 
 export interface IViewProps {
   instance?: IInstance
@@ -35,6 +36,7 @@ export interface IViewProps {
   toggleInstanceEdit: (open: boolean) => void
   instanceMenuContainer: IMenuContainerRef
   instanceHealthObj: IInstanceHealth
+  deploymentGroup?: IDeploymentGroup
 }
 
 type instanceMenuItem = {
@@ -73,6 +75,10 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
   const dispatch = useDispatch()
 
   const { addDeployment } = useManageInstances()
+
+  const deploymentGroup = Object.values(selectedApplication?.config?.deployment_groups || {})?.find(
+    ({ _id }) => _id.toString() === instance?.deployment_group?.toString(),
+  )
 
   useEffect(() => {
     setId(id)
@@ -318,6 +324,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
         instanceMenuItems={instanceMenuItems}
         instanceMenuContainer={instanceMenuContainer}
         instanceHealthObj={instanceHealthObj}
+        deploymentGroup={deploymentGroup}
       />
       <SideFullMenu
         onClose={() => {
@@ -333,6 +340,7 @@ const ViewInstanceContainer = ({ setId }: IApplicationProps) => {
             toggleInstanceEdit(false)
           }}
           onSave={onInstanceSave}
+          selectedApplication={selectedApplication}
         />
       </SideFullMenu>
 

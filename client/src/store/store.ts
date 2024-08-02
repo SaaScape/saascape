@@ -4,11 +4,12 @@ import notificationsReducer from './slices/notificationsSlice'
 import configDataReducer, { IConfigData } from './slices/configData'
 import breadcrumbsReducer, { IBreadcrumbs } from './slices/breadcrumbs'
 import layoutConfigReducer, { ILayoutConfig } from './slices/layoutConfig'
-import applicationsReducer, { IApplication } from './slices/applicationSlice'
+import applicationsReducer from './slices/applicationSlice'
 import serverReducer, { IServerState } from './slices/serverSlice'
 import swarmReducer, { ISwarm } from './slices/swarmSlice'
 import instanceReducer, { IInstancesState } from './slices/instancesSlice'
 import { INotification } from 'types/schemas/Notifications.ts'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 export interface IStore {
   user: IUserState

@@ -1,6 +1,7 @@
 import { Button, Card, Form, Input, Popconfirm, Table } from 'antd'
 import IInstance from 'types/schemas/Instances'
-import { IApplication, updateApplication } from '../../../store/slices/applicationSlice'
+import { updateApplication } from '../../../store/slices/applicationSlice'
+import { IApplication } from 'types/schemas/Applications.ts'
 import { useEffect, useState } from 'react'
 import useEditableTable, { IColumnProps } from '../../../hooks/useEditableTable'
 import { useForm } from 'antd/es/form/Form'

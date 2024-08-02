@@ -5,13 +5,13 @@
 import { ObjectId } from 'mongodb'
 import { db } from '../db'
 import constants from '../helpers/constants'
-import { IApplication, ICustomField } from 'types/schemas/Applications'
+import { IApplication, ICustomField, IDeploymentGroup } from 'types/schemas/Applications'
 import { cleanVersionConfig, encryptData, prepareApplicationPayloadForTransport } from '../helpers/utils'
 import ServerService from './serverService'
 import IInstance, { IInstanceHealths, instanceDbStatus } from 'types/schemas/Instances'
 import InstanceService from './instanceService'
 import { getDomainApplicationDirectives, updateNginxConfigFile } from '../modules/nginx'
-import { ConfigModules } from 'types/enums'
+import { ConfigModules, DeploymentGroupErrors } from 'types/enums'
 
 interface IUpdateConfigData {
   configModule: ConfigModules
@@ -366,7 +366,144 @@ export default class ApplicationService {
       case ConfigModules.NGINX_DIRECTIVE:
         result = await this.updateNginxDirectives(id, data)
         return { application: result }
+      case ConfigModules.DEPLOYMENT_GROUPS:
+        result = await this.updateDeploymentGroups(id, data)
+        return { application: result }
     }
+  }
+
+  async updateDeploymentGroups(id: string, data: any) {
+    const application = await db.managementDb
+      ?.collection<IApplication>('applications')
+      .findOne({ _id: new ObjectId(id) })
+    if (!application) throw { showError: 'Application not found' }
+    const { deploymentGroups: newDeploymentGroups } = data
+    const { deployment_groups: deploymentGroups } = application?.config
+
+    const errors: { [id: string]: any } = {}
+
+    const bulkWrites = [
+      {
+        updateOne: {
+          filter: { _id: new ObjectId(id) },
+          update: { $set: { updated_at: new Date() } },
+        },
+      },
+    ]
+
+    const newNames: Set<string> = new Set()
+
+    for (const fieldType in newDeploymentGroups) {
+      switch (fieldType) {
+        case 'newFields':
+          const insertObj: any = {
+            updateOne: {
+              filter: {
+                _id: new ObjectId(id),
+              },
+              update: {
+                $set: {},
+              },
+            },
+          }
+          for (const newField in newDeploymentGroups[fieldType]) {
+            const obj = newDeploymentGroups[fieldType][newField]
+
+            // Check if deployment group already exists
+            const hasOrder = Object.values(deploymentGroups || {})?.findIndex(
+              (deploymentGroup) => deploymentGroup.name.toLowerCase() === obj?.name?.toLowerCase(),
+            )
+
+            if (hasOrder >= 0 || newNames.has(obj.name)) {
+              errors[fieldType] ??= {}
+              errors[fieldType][newField] = { error: DeploymentGroupErrors.GROUP_NAME_ALREADY_EXISTS, name: obj.name }
+              continue
+            }
+
+            newNames.add(obj.name)
+
+            const newId = new ObjectId()
+
+            const payload: IDeploymentGroup = {
+              _id: newId,
+              name: obj.name,
+            }
+            insertObj.updateOne.update.$set[`config.${ConfigModules.DEPLOYMENT_GROUPS}.${newId.toString()}`] = payload
+          }
+
+          bulkWrites.push(insertObj)
+          break
+        case 'deleted':
+          const deleteObj: any = {
+            updateOne: {
+              filter: {
+                _id: new ObjectId(id),
+              },
+              update: {
+                $unset: {},
+              },
+            },
+          }
+
+          for (const id in newDeploymentGroups[fieldType]) {
+            deleteObj.updateOne.update.$unset[`config.${ConfigModules.DEPLOYMENT_GROUPS}.${id?.toString()}`] = true
+          }
+          bulkWrites.push(deleteObj)
+          break
+        default:
+          const updateId = fieldType
+          const obj = newDeploymentGroups[updateId]
+
+          const updateObj: any = {
+            updateOne: {
+              filter: {
+                _id: new ObjectId(id),
+              },
+              update: {
+                $set: {},
+              },
+            },
+          }
+
+          for (const fieldKey in obj) {
+            const updatePath = `config.${ConfigModules.DEPLOYMENT_GROUPS}.${updateId.toString()}.${fieldKey}`
+
+            if (fieldKey === 'name') {
+              // Check if deployment group already exists
+              const hasOrder = Object.values(deploymentGroups || {}).findIndex(
+                (deploymentGroup) =>
+                  deploymentGroup?._id?.toString() !== updateId &&
+                  deploymentGroup.name.toLowerCase() === obj?.name?.toLowerCase(),
+              )
+
+              if (hasOrder >= 0 || newNames.has(obj.name)) {
+                errors[fieldType] ??= {}
+                errors[fieldType] = { error: DeploymentGroupErrors.GROUP_NAME_ALREADY_EXISTS, name: obj.name }
+                continue
+              }
+
+              obj.name && newNames.add(obj.name)
+            }
+
+            updateObj.updateOne.update.$set[updatePath] = obj[fieldKey]
+          }
+          bulkWrites.push(updateObj)
+          break
+      }
+    }
+
+    await db.managementDb?.collection<IApplication>('applications')?.bulkWrite(bulkWrites)
+
+    const latestApplication = await db.managementDb
+      ?.collection<IApplication>('applications')
+      ?.findOne({ _id: new ObjectId(id) })
+
+    if (!latestApplication) throw { showError: 'Application not found' }
+
+    cleanVersionConfig(latestApplication, ['docker_hub_password', 'docker_hub_username'])
+    await prepareApplicationPayloadForTransport(latestApplication)
+
+    return { latestApplication, errors }
   }
 
   async updateNginxDirectives(id: string, data: any) {

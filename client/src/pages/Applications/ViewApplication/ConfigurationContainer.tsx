@@ -10,15 +10,15 @@ import { useParams } from 'react-router-dom'
 import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs'
 import { IStore } from '../../../store/store'
-import { IApplication } from '../../../store/slices/applicationSlice'
+import { IApplication } from 'types/schemas/Applications.ts'
 import { IBreadcrumbs } from '../../../store/slices/breadcrumbs'
 import { TabsProps } from 'antd'
 import CustomFields from '../../../components/Applications/configuration/CustomFields'
 import VersionConfig from '../../../components/Applications/configuration/VersionConfig'
 import SecretsConfig from '../../../components/Applications/configuration/SecretsConfig'
 import EnvironmentConfig from '../../../components/Applications/configuration/EnvironmentConfig'
-import app from '../../../App.tsx'
 import NginxConfiguration from '../../../components/Applications/configuration/NginxConfiguration.tsx'
+import DeploymentGroups from '../../../components/Applications/configuration/DeploymentGroups.tsx'
 
 export interface IProps {
   loading: boolean
@@ -71,6 +71,11 @@ const ConfigurationContainer = (props: IApplicationProps) => {
       key: 'environment-config',
       label: 'Environment',
       children: application && <EnvironmentConfig application={application} />,
+    },
+    {
+      key: 'deployment_groups',
+      label: 'Deployment Groups',
+      children: application && <DeploymentGroups application={application} />,
     },
     {
       key: 'nginx-config',

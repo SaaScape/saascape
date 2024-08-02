@@ -156,7 +156,17 @@ export default class InstanceService {
   }
 
   async create(data: any) {
-    const { version_id, swarm_id, name, is_custom_database, database, domain_id, run_command, volumes } = data
+    const {
+      version_id,
+      swarm_id,
+      name,
+      is_custom_database,
+      database,
+      domain_id,
+      run_command,
+      volumes,
+      deployment_group,
+    } = data
 
     if (!version_id || !swarm_id || !name || !database) throw { showError: 'Missing required fields' }
 
@@ -203,6 +213,7 @@ export default class InstanceService {
       tags: ['New Instance'],
       deployed_at: null,
       domain_id: domain_id && new ObjectId(domain_id),
+      deployment_group: deployment_group && new ObjectId(deployment_group),
       created_at: new Date(),
       updated_at: new Date(),
     }
@@ -446,7 +457,18 @@ export default class InstanceService {
       ?.findOne({ _id: new ObjectId(id), application_id: this.applicationId })
     if (!instance) throw { showError: 'Instance not found' }
 
-    const { swarm_id, name, database, replicas, isCustomDatabase, port, domain_id, run_command, volumes } = data
+    const {
+      swarm_id,
+      name,
+      database,
+      replicas,
+      isCustomDatabase,
+      port,
+      domain_id,
+      run_command,
+      volumes,
+      deployment_group,
+    } = data
 
     if (!swarm_id || !name || !database || !(replicas >= 0)) throw { showError: 'Missing required fields' }
 
@@ -463,6 +485,7 @@ export default class InstanceService {
       replicas,
       swarm_id: new ObjectId(swarm_id),
       domain_id: domain_id && new ObjectId(domain_id),
+      deployment_group: deployment_group && new ObjectId(deployment_group),
       updated_at: new Date(),
     }
 

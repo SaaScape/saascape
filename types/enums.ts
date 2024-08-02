@@ -10,6 +10,7 @@ export enum ConfigModules {
   VERSION_CONFIG = 'version_config',
   INSTANCE_VERSION = 'instance_version',
   NGINX_DIRECTIVE = 'nginx_directive',
+  DEPLOYMENT_GROUPS = 'deployment_groups',
 }
 
 export enum UpdateType {
@@ -62,4 +63,8 @@ export enum InstanceVariables {
 export enum SwarmNodeTypes {
   MANAGER = 'manager',
   WORKER = 'worker',
+}
+
+export enum DeploymentGroupErrors {
+  GROUP_NAME_ALREADY_EXISTS = 'Deployment group already exists with this name.',
 }

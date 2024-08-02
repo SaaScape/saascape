@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react"
-import useSetBreadcrumbs from "../../../middleware/useSetBreadcrumbs"
-import ViewApplication from "./ViewApplication"
-import breadcrumbs from "../../../helpers/constants/breadcrumbs"
-import { useParams } from "react-router-dom"
-import { useSelector } from "react-redux"
-import { IStore } from "../../../store/store"
-import { IBreadcrumbs } from "../../../store/slices/breadcrumbs"
+import { useEffect, useState } from 'react'
+import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
+import ViewApplication from './ViewApplication'
+import breadcrumbs from '../../../helpers/constants/breadcrumbs'
+import { useParams } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import { IStore } from '../../../store/store'
+import { IBreadcrumbs } from '../../../store/slices/breadcrumbs'
 
-import { IApplication } from "../../../store/slices/applicationSlice"
-import { IApplicationProps } from "../ApplicationRouteHandler"
+import { IApplicationProps } from '../ApplicationRouteHandler'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 export interface IProps {
   loading: boolean
@@ -20,9 +20,7 @@ export interface IProps {
 }
 
 const ViewApplicationContainer = (props: IApplicationProps) => {
-  const { selectedApplication: application } = useSelector(
-    (state: IStore) => state.applications
-  )
+  const { selectedApplication: application } = useSelector((state: IStore) => state.applications)
   const [loading] = useState(false)
   const selectedBreadcrumbs = useSelector((state: IStore) => state.breadcrumbs)
 
@@ -32,9 +30,7 @@ const ViewApplicationContainer = (props: IApplicationProps) => {
   const setBreadcrumbs = useSetBreadcrumbs()
   useEffect(() => {
     if (!id) return
-    setBreadcrumbs(
-      breadcrumbs.VIEW_APPLICATION(application?.application_name || id, id)
-    )
+    setBreadcrumbs(breadcrumbs.VIEW_APPLICATION(application?.application_name || id, id))
   }, [application])
 
   useEffect(() => {

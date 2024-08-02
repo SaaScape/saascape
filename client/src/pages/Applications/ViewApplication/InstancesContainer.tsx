@@ -6,13 +6,13 @@ import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs'
 import { IStore } from '../../../store/store'
 import { useDispatch, useSelector } from 'react-redux'
-import { IApplication } from '../../../store/slices/applicationSlice'
 import { Spin, TableColumnProps } from 'antd'
 import { apiAxios, apiAxiosToast } from '../../../helpers/axios'
 import { toast } from 'react-toastify'
 import IInstance from 'types/schemas/Instances'
 import { bulkUpdateInstanceHealth } from '../../../store/slices/instancesSlice.ts'
 import InstanceHealth from '../../../components/Applications/Instances/InstanceHealth.tsx'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 export interface IProps {
   selectedApplication: IApplication | null
@@ -56,6 +56,12 @@ const InstancesContainer = (props: IApplicationProps) => {
     getInstancesHealth()
   }, [selectedApplication?._id])
 
+  const getDeploymentGroup = (_id: string) => {
+    return Object.entries(selectedApplication?.config?.deployment_groups || {})?.find(
+      ([deploymentGroupId, deploymentGroup]) => deploymentGroupId.toString() === _id,
+    )
+  }
+
   const columns: TableColumnProps<IInstance>[] = [
     {
       title: 'Name',
@@ -85,6 +91,15 @@ const InstancesContainer = (props: IApplicationProps) => {
       key: 'version',
       render: (_, record) => {
         return record?.version?.tag
+      },
+    },
+    {
+      title: 'Deployment Group',
+      key: 'deployment_group',
+      dataIndex: 'deployment_group',
+      render: (deploymentGroupId) => {
+        const deploymentGroup = getDeploymentGroup(deploymentGroupId)?.[1]
+        return deploymentGroup ? deploymentGroup?.name : '-'
       },
     },
   ]

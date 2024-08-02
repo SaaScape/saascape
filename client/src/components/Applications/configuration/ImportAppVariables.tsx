@@ -1,43 +1,30 @@
-import { Button, Form, Modal, Select } from "antd"
-import { IApplication } from "../../../store/slices/applicationSlice"
+import { Button, Form, Modal, Select } from 'antd'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 interface IProps {
   visible: boolean
   onCancel: () => void
-  type: "environment_variables" | "secrets"
+  type: 'environment_variables' | 'secrets'
   application?: IApplication
   variables: { _id: string }[]
   onImport: (values: any) => void
 }
 
 const typeMap = {
-  environment_variables: "Environment Variables",
-  secrets: "Secrets",
+  environment_variables: 'Environment Variables',
+  secrets: 'Secrets',
 }
 
-const ImportAppVariables = ({
-  visible,
-  onCancel,
-  type,
-  application,
-  variables,
-  onImport,
-}: IProps) => {
+const ImportAppVariables = ({ visible, onCancel, type, application, variables, onImport }: IProps) => {
   const generateVariableOptions = () => {
     const appVariables =
-      application?.config?.[
-        type === "environment_variables"
-          ? "environment_config"
-          : "secrets_config"
-      ]
+      application?.config?.[type === 'environment_variables' ? 'environment_config' : 'secrets_config']
 
     const selectedVariableIds = variables?.map((variable) => variable._id)
 
-    const selectableVariables = Object.values(appVariables || {}).filter(
-      (variable) => {
-        return !selectedVariableIds?.includes(variable._id)
-      }
-    )
+    const selectableVariables = Object.values(appVariables || {}).filter((variable) => {
+      return !selectedVariableIds?.includes(variable._id)
+    })
 
     return selectableVariables.map((variable) => {
       return {
@@ -49,11 +36,7 @@ const ImportAppVariables = ({
 
   const onFinish = (values: any) => {
     const appVariables =
-      application?.config?.[
-        type === "environment_variables"
-          ? "environment_config"
-          : "secrets_config"
-      ]
+      application?.config?.[type === 'environment_variables' ? 'environment_config' : 'secrets_config']
 
     const obj = {
       appVariables,
@@ -67,19 +50,14 @@ const ImportAppVariables = ({
   }
 
   return (
-    <Modal
-      title={`Import ${typeMap[type]} from Application`}
-      open={visible}
-      onCancel={onCancel}
-      footer={null}
-    >
-      <div className='m-t-20'>
+    <Modal title={`Import ${typeMap[type]} from Application`} open={visible} onCancel={onCancel} footer={null}>
+      <div className="m-t-20">
         <Form onFinish={onFinish}>
-          <Form.Item name={"variable_id"}>
+          <Form.Item name={'variable_id'}>
             <Select options={generateVariableOptions()} />
           </Form.Item>
           <Form.Item>
-            <Button type='primary' htmlType='submit'>
+            <Button type="primary" htmlType="submit">
               Import
             </Button>
           </Form.Item>

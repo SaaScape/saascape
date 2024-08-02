@@ -11,17 +11,19 @@ import { useEffect, useState } from 'react'
 import { misc } from 'types/enums.ts'
 import { apiAxios } from '../../../helpers/axios.ts'
 import { IDomain } from '../../../pages/Domains/DomainsContainer.tsx'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 interface IProps {
   instance?: IInstance
   onClose: () => void
   onSave: (instance: IInstance) => void
   saving: boolean
+  selectedApplication: IApplication | null
 }
 
 const requiredFormItemRules = [{ required: true }]
 
-const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
+const EditInstanceMenu = ({ instance, onClose, onSave, saving, selectedApplication }: IProps) => {
   const [isCustomDatabase, setIsCustomDatabase] = useState(instance?.is_custom_database)
   const [domains, setDomains] = useState<IDomain[]>([])
   const [isFetchingDomains, setIsFetchingDomains] = useState(false)
@@ -40,6 +42,8 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
     }
     form.setFieldsValue(defaultValues)
   }, [instance, form])
+
+  const deploymentGroups = Object.values(selectedApplication?.config?.deployment_groups || {})
 
   const toolTips = {
     port:
@@ -146,6 +150,16 @@ const EditInstanceMenu = ({ instance, onClose, onSave, saving }: IProps) => {
           </Form.Item>
 
           <Form.Item label="Tenant">{instance?.tenant ? instance.tenant?.toString() : misc.NOT_ASSIGNED}</Form.Item>
+          <Form.Item label="Deployment Group" name={'deployment_group'}>
+            <Select
+              onClick={(e) => e.stopPropagation()}
+              allowClear
+              options={deploymentGroups.map((deploymentGroup) => ({
+                label: deploymentGroup?.name,
+                value: deploymentGroup?._id,
+              }))}
+            />
+          </Form.Item>
         </Form>
       </div>
       <div className="footer p-absolute d-flex justify-end">
