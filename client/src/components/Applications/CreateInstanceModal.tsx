@@ -6,12 +6,13 @@ import { Button, Form, Input, Modal, Select, Tooltip } from 'antd'
 import TextArea from 'antd/es/input/TextArea'
 import { useEffect, useState } from 'react'
 import { IVersion } from '../../pages/Applications/ViewApplication/VersionsContainer'
-import { IApplication } from '../../store/slices/applicationSlice'
+
 import { apiAxios } from '../../helpers/axios'
 import { useSelector } from 'react-redux'
 import { IStore } from '../../store/store'
 import Icon from '../Icon'
 import { IDomain } from '../../pages/Domains/DomainsContainer.tsx'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 interface IProps {
   open: boolean

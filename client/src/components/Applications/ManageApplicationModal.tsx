@@ -1,7 +1,7 @@
-import { Button, Form, Input, Modal } from "antd"
-import { useForm } from "antd/es/form/Form"
-import TextArea from "antd/es/input/TextArea"
-import { IApplication } from "../../store/slices/applicationSlice"
+import { Button, Form, Input, Modal } from 'antd'
+import { useForm } from 'antd/es/form/Form'
+import TextArea from 'antd/es/input/TextArea'
+import { IApplication } from 'types/schemas/Applications.ts'
 
 interface IProps {
   open: boolean
@@ -15,13 +15,9 @@ const ManageApplicationModal = (props: IProps) => {
   const [form] = useForm()
 
   const title = (
-    <div className='top-bar'>
-      <div className='title'>
-        {application ? "Edit Application" : "Create Application"}
-      </div>
-      <div className='description'>
-        An application is an application that you can deploy
-      </div>
+    <div className="top-bar">
+      <div className="title">{application ? 'Edit Application' : 'Create Application'}</div>
+      <div className="description">An application is an application that you can deploy</div>
     </div>
   )
 
@@ -32,41 +28,25 @@ const ManageApplicationModal = (props: IProps) => {
   return (
     <Modal
       onCancel={onCancel}
-      className='manage-application-modal'
+      className="manage-application-modal"
       destroyOnClose={true}
       open={open}
       title={title}
       footer={null}
     >
-      <Form
-        form={form}
-        layout='vertical'
-        initialValues={application || {}}
-        onFinish={onSubmit}
-        preserve={false}
-      >
-        <Form.Item
-          label='Application Name'
-          name='application_name'
-          required
-          rules={[{ required: true }]}
-        >
-          <Input type='text' placeholder='Name your application' />
+      <Form form={form} layout="vertical" initialValues={application || {}} onFinish={onSubmit} preserve={false}>
+        <Form.Item label="Application Name" name="application_name" required rules={[{ required: true }]}>
+          <Input type="text" placeholder="Name your application" />
         </Form.Item>
-        <Form.Item
-          label='Description'
-          name='description'
-          required
-          rules={[{ required: true }]}
-        >
-          <TextArea placeholder='Describe your application' />
+        <Form.Item label="Description" name="description" required rules={[{ required: true }]}>
+          <TextArea placeholder="Describe your application" />
         </Form.Item>
 
-        <div className='d-flex justify-end'>
-          <Button className='m-r-10' onClick={onCancel}>
+        <div className="d-flex justify-end">
+          <Button className="m-r-10" onClick={onCancel}>
             Cancel
           </Button>
-          <Button htmlType='submit' type='primary'>
+          <Button htmlType="submit" type="primary">
             Save
           </Button>
         </div>

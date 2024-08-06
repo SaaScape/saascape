@@ -25,7 +25,7 @@ const Deployments = ({
           </div>
         </div>
         <div className="right">
-          <Button disabled={loading} className="btn-add" onClick={functions?.onManageServer}>
+          <Button disabled={loading} className="btn-add" onClick={functions?.onCreateClick}>
             Create Deployment
           </Button>
         </div>
