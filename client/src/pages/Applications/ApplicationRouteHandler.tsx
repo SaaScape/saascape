@@ -1,16 +1,17 @@
-import { Route, Routes } from "react-router-dom"
-import ProtectedRoute from "../../routes/ProtectedRoutes"
-import permissions from "../../helpers/constants/permissions"
-import PlansContainer from "./ViewApplication/PlansContainer"
-import VersionsContainer from "./ViewApplication/VersionsContainer"
-import ViewApplicationContainer from "./ViewApplication/ViewApplicationContainer"
-import { useEffect, useState } from "react"
-import { retrieveAndSetApplications } from "../../helpers/utils"
-import { Spin } from "antd"
-import InstancesContainer from "./ViewApplication/InstancesContainer"
-import ViewPlanContainer from "./Plan/ViewPlanContainer"
-import ConfigurationContainer from "./ViewApplication/ConfigurationContainer"
-import ViewInstanceContainer from "./ViewApplication/ViewInstanceContainer"
+import { Route, Routes } from 'react-router-dom'
+import ProtectedRoute from '../../routes/ProtectedRoutes'
+import permissions from '../../helpers/constants/permissions'
+import PlansContainer from './ViewApplication/PlansContainer'
+import VersionsContainer from './ViewApplication/VersionsContainer'
+import ViewApplicationContainer from './ViewApplication/ViewApplicationContainer'
+import { useEffect, useState } from 'react'
+import { retrieveAndSetApplications } from '../../helpers/utils'
+import { Spin } from 'antd'
+import InstancesContainer from './ViewApplication/InstancesContainer'
+import ViewPlanContainer from './Plan/ViewPlanContainer'
+import ConfigurationContainer from './ViewApplication/ConfigurationContainer'
+import ViewInstanceContainer from './ViewApplication/ViewInstanceContainer'
+import DeploymentsContainer from './Deployments/DeploymentsContainer.tsx'
 
 export interface IApplicationProps {
   setId: (id?: string) => void
@@ -32,13 +33,13 @@ const ApplicationRouteHandler = () => {
   }
 
   return loading ? (
-    <div className='d-flex justify-center m-t-20'>
-      <Spin spinning={loading} tip='Loading application...' />
+    <div className="d-flex justify-center m-t-20">
+      <Spin spinning={loading} tip="Loading application..." />
     </div>
   ) : (
     <Routes>
       <Route
-        path={"/:id"}
+        path={'/:id'}
         element={
           <ProtectedRoute
             component={<ViewApplicationContainer {...allProps} />}
@@ -47,7 +48,7 @@ const ApplicationRouteHandler = () => {
         }
       />
       <Route
-        path={":id/plans"}
+        path={':id/plans'}
         element={
           <ProtectedRoute
             component={<PlansContainer {...allProps} />}
@@ -56,7 +57,7 @@ const ApplicationRouteHandler = () => {
         }
       />
       <Route
-        path={":id/plans/:planId"}
+        path={':id/plans/:planId'}
         element={
           <ProtectedRoute
             component={<ViewPlanContainer {...allProps} />}
@@ -65,7 +66,7 @@ const ApplicationRouteHandler = () => {
         }
       />
       <Route
-        path={":id/versions"}
+        path={':id/versions'}
         element={
           <ProtectedRoute
             component={<VersionsContainer {...allProps} />}
@@ -74,7 +75,7 @@ const ApplicationRouteHandler = () => {
         }
       />
       <Route
-        path={":id/instances"}
+        path={':id/instances'}
         element={
           <ProtectedRoute
             component={<InstancesContainer {...allProps} />}
@@ -83,7 +84,7 @@ const ApplicationRouteHandler = () => {
         }
       />
       <Route
-        path={":id/instances/:instanceId"}
+        path={':id/instances/:instanceId'}
         element={
           <ProtectedRoute
             component={<ViewInstanceContainer {...allProps} />}
@@ -92,7 +93,16 @@ const ApplicationRouteHandler = () => {
         }
       />
       <Route
-        path={":id/configuration"}
+        path={':id/deployments/'}
+        element={
+          <ProtectedRoute
+            component={<DeploymentsContainer {...allProps} />}
+            permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+          />
+        }
+      />
+      <Route
+        path={':id/configuration'}
         element={
           <ProtectedRoute
             component={<ConfigurationContainer {...allProps} />}

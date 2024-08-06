@@ -1,12 +1,12 @@
-import { Avatar } from "antd"
-import MenuContainer from "./MenuContainer"
-import UserMenu from "./userMenu/UserMenu"
-import { useSelector } from "react-redux"
-import { IStore } from "../store/store"
-import { useState } from "react"
-import permissions from "../helpers/constants/permissions"
-import { Link } from "react-router-dom"
-import Icon, { IconStyles } from "./Icon"
+import { Avatar } from 'antd'
+import MenuContainer from './MenuContainer'
+import UserMenu from './userMenu/UserMenu'
+import { useSelector } from 'react-redux'
+import { IStore } from '../store/store'
+import { useState } from 'react'
+import permissions from '../helpers/constants/permissions'
+import { Link } from 'react-router-dom'
+import Icon, { IconStyles } from './Icon'
 
 interface IMenuItem {
   name: string
@@ -31,104 +31,109 @@ const Aside = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [expandedKeys, setExpandedKeys] = useState<string[]>([])
 
-  const { selectedApplication } = useSelector(
-    (state: IStore) => state.applications
-  )
+  const { selectedApplication } = useSelector((state: IStore) => state.applications)
 
   const asideMenuItems: (IMenuItem | ISubMenuItem)[] = [
     {
-      name: "Dashboard",
-      icon: "DASHBOARD",
-      path: "/",
+      name: 'Dashboard',
+      icon: 'DASHBOARD',
+      path: '/',
       permissions: [permissions.STANDARD_ACCESS],
-      key: "1",
+      key: '1',
     },
     {
-      name: "Applications",
-      icon: "APPLICATION",
-      path: "/applications",
+      name: 'Applications',
+      icon: 'APPLICATION',
+      path: '/applications',
       permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
       subMenu: [
         {
-          name: "Overview",
-          icon: "APPLICATION",
+          name: 'Overview',
+          icon: 'APPLICATION',
           path: `/applications/${selectedApplication?._id}`,
           // Users can quick switch between applications by selecting the application from dropdown in breadcrumbs
           permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
-          key: "1.1",
+          key: '1.1',
         },
         {
-          name: "Plans",
-          icon: "APPLICATION",
+          name: 'Plans',
+          icon: 'APPLICATION',
           path: `/applications/${selectedApplication?._id}/plans`,
           permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
-          key: "1.2",
+          key: '1.2',
         },
         {
-          name: "Versions",
-          icon: "APPLICATION",
+          name: 'Versions',
+          icon: 'APPLICATION',
           path: `/applications/${selectedApplication?._id}/versions`,
           permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
-          key: "1.3",
+          key: '1.3',
         },
         {
-          name: "Instances",
-          icon: "APPLICATION",
+          name: 'Instances',
+          icon: 'APPLICATION',
           path: `/applications/${selectedApplication?._id}/instances`,
           permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
-          key: "1.4",
+          key: '1.4',
         },
         {
-          name: "Configuration",
-          icon: "SETTINGS",
+          name: 'Deployments',
+          icon: 'APPLICATION',
+          path: `/applications/${selectedApplication?._id}/deployments`,
+          permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
+          key: '1.5',
+        },
+        {
+          name: 'Configuration',
+          icon: 'SETTINGS',
           path: `/applications/${selectedApplication?._id}/configuration`,
           permissions: [permissions.APPLICATIONS.VIEW_APPLICATIONS],
-          key: "1.5",
+          key: '1.5',
         },
       ],
-      key: "2",
+      key: '2',
     },
     {
-      name: "Servers",
-      icon: "SERVER",
-      path: "/servers",
+      name: 'Servers',
+      icon: 'SERVER',
+      path: '/servers',
       permissions: [permissions.STANDARD_ACCESS],
-      key: "3",
+      key: '3',
     },
     {
-      name: "Domains",
-      icon: "DOMAIN",
-      path: "/domains",
+      name: 'Domains',
+      icon: 'DOMAIN',
+      path: '/domains',
       permissions: [permissions.STANDARD_ACCESS],
-      key: "4",
+      key: '4',
     },
     {
-      name: "Contacts",
-      icon: "CONTACTS",
-      path: "/contacts",
+      name: 'Contacts',
+      icon: 'CONTACTS',
+      path: '/contacts',
       permissions: [permissions.STANDARD_ACCESS],
-      key: "5",
+      key: '5',
     },
     {
-      name: "Tenants",
-      icon: "TENANT",
-      path: "/tenants",
+      name: 'Tenants',
+      icon: 'TENANT',
+      path: '/tenants',
       permissions: [permissions.TENANTS.VIEW_TENANTS],
-      key: "6",
+      key: '6',
     },
     {
-      name: "Databases",
-      icon: "DATABASE",
-      path: "/databases",
+      name: 'Databases',
+      icon: 'DATABASE',
+      path: '/databases',
       permissions: [permissions.STANDARD_ACCESS],
-      key: "7",
+      key: '7',
     },
     {
-      name: "Settings",
-      icon: "SETTINGS",
-      path: "/settings",
+      name: 'Settings',
+      icon: 'SETTINGS',
+      path: '/settings',
       permissions: [permissions.SUPER_ACCESS],
-      key: "8",
+      key: '8',
     },
   ]
 
@@ -166,65 +171,56 @@ const Aside = () => {
   }
 
   const generateMenuItem = (item: ISubMenuItem | IMenuItem, i: number) => {
-    const isParent = "subMenu" in item && !!item?.subMenu?.length
+    const isParent = 'subMenu' in item && !!item?.subMenu?.length
 
     return isParent ? (
       <ul
         key={i}
-        className={`p-relative ${checkIfActive(item.path) ? "active" : ""} ${
-          checkIfSubMenuExpanded(item.key) ? "expanded" : ""
+        className={`p-relative ${checkIfActive(item.path) ? 'active' : ''} ${
+          checkIfSubMenuExpanded(item.key) ? 'expanded' : ''
         } `}
       >
         <li
           key={i}
-          className={`d-flex align-center p-relative ${
-            checkIfActive(item.path) ? "active" : ""
-          }`}
+          className={`d-flex align-center p-relative ${checkIfActive(item.path) ? 'active' : ''}`}
           onClick={() => toggleSubMenuExpand(item.key)}
         >
           <Link to={item.path}>
-            <span className='icon'>
-              <Icon icon={item.icon} style={item?.iconStyle || "solid"} />
+            <span className="icon">
+              <Icon icon={item.icon} style={item?.iconStyle || 'solid'} />
             </span>
-            <div className='title'>{item.name}</div>
+            <div className="title">{item.name}</div>
           </Link>
         </li>
 
-        {item?.subMenu?.map((subItem, subItemIndex) =>
-          generateMenuItem(subItem, subItemIndex)
-        )}
+        {item?.subMenu?.map((subItem, subItemIndex) => generateMenuItem(subItem, subItemIndex))}
       </ul>
     ) : (
-      <li
-        key={i}
-        className={`d-flex align-center p-relative ${
-          checkIfActive(item.path) ? "active" : ""
-        }`}
-      >
+      <li key={i} className={`d-flex align-center p-relative ${checkIfActive(item.path) ? 'active' : ''}`}>
         <Link to={item.path}>
-          <span className='icon'>
-            <Icon icon={item.icon} style={item?.iconStyle || "solid"} />
+          <span className="icon">
+            <Icon icon={item.icon} style={item?.iconStyle || 'solid'} />
           </span>
-          <div className='title'>{item.name}</div>
+          <div className="title">{item.name}</div>
         </Link>
       </li>
     )
   }
 
   return (
-    <aside className={`aside ${asideOpen ? "" : "hidden"}`}>
+    <aside className={`aside ${asideOpen ? '' : 'hidden'}`}>
       <h1>SaaScape</h1>
-      <div className={`user ${userMenuOpen ? "open" : ""}`}>
+      <div className={`user ${userMenuOpen ? 'open' : ''}`}>
         <MenuContainer MenuComponent={<UserMenu />} onChange={userMenuChange}>
-          <div className='user-menu d-flex justify-start'>
-            <div className='user-image'>
-              <Avatar shape='square' size={"large"}>
+          <div className="user-menu d-flex justify-start">
+            <div className="user-image">
+              <Avatar shape="square" size={'large'}>
                 {user?.first_name?.charAt(0).toUpperCase()}
                 {user?.last_name?.charAt(0).toUpperCase()}
               </Avatar>
             </div>
-            <div className='user-data'>
-              <div className='user-name p-relative'>
+            <div className="user-data">
+              <div className="user-name p-relative">
                 {user?.first_name} {user?.last_name}
               </div>
             </div>

@@ -68,3 +68,7 @@ export enum SwarmNodeTypes {
 export enum DeploymentGroupErrors {
   GROUP_NAME_ALREADY_EXISTS = 'Deployment group already exists with this name.',
 }
+
+export enum GlobalStatuses {
+  ACTIVE = 'active',
+}
