@@ -25,6 +25,8 @@ const InstanceOverview = ({ instance, application, setInstance, toggleInstanceEd
   const [saving, setSaving] = useState(false)
   const swarms = useSelector((state: IStore) => state.swarms)
 
+  const deploymentGroup = application?.config?.deployment_groups?.[instance?.deployment_group?.toString() as string]
+
   const menuContainer = useMenuContainer()
 
   const swarm = swarms.find((swarm) => swarm?._id === instance?.swarm_id)
@@ -98,6 +100,12 @@ const InstanceOverview = ({ instance, application, setInstance, toggleInstanceEd
               <div className="title">Domain</div>
               <div className="d-flex align-center justify-between">
                 <span>{domain?.domain_name || 'None'}</span>
+              </div>
+            </div>
+            <div>
+              <div className="title">Deployment Group</div>
+              <div className="d-flex align-center justify-between">
+                <span>{deploymentGroup?.name || 'None'}</span>
               </div>
             </div>
           </div>

@@ -62,6 +62,7 @@ export interface IApplicationConfig {
 }
 
 export interface IApplication extends Document, ILinkedIdEnabledDocument {
+  _id: ObjectId
   application_name: string
   status: string
   description: string
