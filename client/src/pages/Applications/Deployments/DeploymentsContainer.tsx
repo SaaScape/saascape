@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Deployments from './Deployments.tsx'
 import { IApplicationProps } from '../ApplicationRouteHandler.tsx'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs.tsx'
 import { useSelector } from 'react-redux'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs.ts'
@@ -16,6 +16,7 @@ import { Deployment } from '../../../modules/deployment.ts'
 import usePaginatedTable from '../../../hooks/usePaginatedTable.tsx'
 import moment from 'moment'
 import { Popover } from 'antd'
+import CreateDeploymentModal from '../../../components/Applications/Deployments/CreateDeploymentModal.tsx'
 
 export interface IViewProps {
   loading: boolean
@@ -29,6 +30,8 @@ export interface IViewProps {
 
 const DeploymentsContainer = (props: IApplicationProps) => {
   const [loading, setLoading] = useState<boolean>(false)
+  const [showCreateDeploymentModal, setShowCreateDeploymentModal] = useState(false)
+
   const { selectedApplication } = useSelector((state: IStore) => state.applications)
 
   const deploymentClassRef = useRef<Deployment>()
@@ -37,9 +40,7 @@ const DeploymentsContainer = (props: IApplicationProps) => {
   const setBreadcrumbs = useSetBreadcrumbs()
 
   const getDeploymentGroup = (_id: string) => {
-    return Object.values(selectedApplication?.config?.deployment_groups || {}).find(
-      (deploymentGroupId) => deploymentGroupId.toString() === _id,
-    )
+    return selectedApplication?.config?.deployment_groups?.[_id]
   }
 
   const { tableConfig, paginatedData, onSearch, dataFetching, reload, onTableChange } = usePaginatedTable({
@@ -107,11 +108,29 @@ const DeploymentsContainer = (props: IApplicationProps) => {
     },
   ]
 
+  const toggleShowDeploymentModal = (visible: boolean) => {
+    setShowCreateDeploymentModal(visible)
+  }
+
+  const onCreate = async (values: any) => {
+    deploymentClass?.createDeployment(values)
+    toggleShowDeploymentModal(false)
+    reload?.()
+  }
+
+  const createDeploymentModalProps = {
+    onCancel: () => toggleShowDeploymentModal(false),
+    open: showCreateDeploymentModal,
+    onCreate,
+    selectedApplication,
+  }
+
   const viewProps: IViewProps = {
     loading,
     dataFetching,
     functions: {
       onSearch,
+      onCreateClick: () => toggleShowDeploymentModal(true),
     },
     columns,
     tableConfig,
@@ -119,7 +138,12 @@ const DeploymentsContainer = (props: IApplicationProps) => {
     onTableChange,
   }
 
-  return <Deployments {...viewProps} />
+  return (
+    <>
+      <Deployments {...viewProps} />
+      <CreateDeploymentModal {...createDeploymentModalProps} />
+    </>
+  )
 }
 
 export default DeploymentsContainer
