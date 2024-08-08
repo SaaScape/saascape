@@ -113,6 +113,27 @@ export default {
       },
     ]
   },
+  VIEW_APPLICATION_DEPLOYMENT: (appText: string, appId: string, deploymentId: string, deploymentText?: string) => {
+    return [
+      {
+        title: 'Applications',
+        path: '/applications',
+      },
+      {
+        title: appText,
+        path: `/applications/${appId}`,
+        type: 'application_select',
+      },
+      {
+        title: 'Deployments',
+        path: `/applications/${appId}/deployments`,
+      },
+      {
+        title: deploymentText || deploymentId,
+        path: `/applications/${appId}/deployments/${deploymentId}`,
+      },
+    ]
+  },
   VIEW_APPLICATION_INSTANCE: (appText: string, appId: string, instanceId: string, instanceText: string) => {
     return [
       {

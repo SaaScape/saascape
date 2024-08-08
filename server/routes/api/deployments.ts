@@ -13,18 +13,26 @@ export default (app: Router, use: any) => {
 
   router.get('/', use(findMany))
   router.post('/', use(createDeployment))
+  router.get('/:deploymentId', use(findDeployment))
 }
 
 const findMany: API = async (req, res) => {
   const { application_id } = req.params
-  const deploymentService = new DeploymentService(application_id)
+  const deploymentService = new DeploymentService(application_id, req)
   const { data } = await deploymentService.findMany(req.query)
   return sendSuccessResponse({ data }, req, res)
 }
 
 const createDeployment: API = async (req, res) => {
   const { application_id, id } = req.params
-  const deploymentService = new DeploymentService(application_id)
+  const deploymentService = new DeploymentService(application_id, req)
   const { deployment } = await deploymentService.createDeployment(req.body)
   return sendSuccessResponse({ deployment }, req, res)
+}
+
+const findDeployment: API = async (req, res) => {
+  const { application_id, id } = req.params
+  const deploymentService = new DeploymentService(application_id, req)
+  const { deployment, targetInstances } = await deploymentService.findDeployment(req.params.deploymentId)
+  sendSuccessResponse({ deployment, targetInstances }, req, res)
 }

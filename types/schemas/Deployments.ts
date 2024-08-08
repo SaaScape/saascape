@@ -21,6 +21,7 @@ export interface IDeployment {
   deployment_status: DeploymentStatus
   status: GlobalStatuses
   application_id: ObjectId
+  user_id: ObjectId
   created_at: Date
   updated_at: Date
 }

@@ -5,7 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Deployments from './Deployments.tsx'
 import { IApplicationProps } from '../ApplicationRouteHandler.tsx'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs.tsx'
 import { useSelector } from 'react-redux'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs.ts'
@@ -38,6 +38,7 @@ const DeploymentsContainer = (props: IApplicationProps) => {
   const deploymentClass = deploymentClassRef?.current
   const { id } = useParams()
   const setBreadcrumbs = useSetBreadcrumbs()
+  const navigate = useNavigate()
 
   const getDeploymentGroup = (_id: string) => {
     return selectedApplication?.config?.deployment_groups?.[_id]
@@ -87,6 +88,22 @@ const DeploymentsContainer = (props: IApplicationProps) => {
       },
     },
     {
+      title: 'Initiated by',
+      dataIndex: 'userObj',
+      key: 'userObj',
+      render: (_, deployment) => {
+        const userObj = (deployment as any)?.user_obj
+        let firstName = userObj?.first_name?.split('') || []
+        firstName[0] = firstName?.[0]?.toUpperCase()
+        firstName = firstName?.join('')
+        let lastName = userObj?.last_name?.split('') || []
+        lastName[0] = lastName?.[0]?.toUpperCase()
+        lastName = lastName?.join('')
+
+        return `${firstName} ${lastName}`
+      },
+    },
+    {
       title: 'Updated',
       dataIndex: 'updated_at',
       key: 'updated_at',
@@ -131,6 +148,11 @@ const DeploymentsContainer = (props: IApplicationProps) => {
     functions: {
       onSearch,
       onCreateClick: () => toggleShowDeploymentModal(true),
+      onRow: (record) => ({
+        onClick: () => {
+          navigate(`/applications/${selectedApplication?._id}/deployments/${record?._id}`)
+        },
+      }),
     },
     columns,
     tableConfig,

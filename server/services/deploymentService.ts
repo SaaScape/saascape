@@ -7,6 +7,8 @@ import { db } from '../db'
 import Pagination from '../helpers/pagination'
 import { GlobalStatuses } from 'types/enums'
 import { DeploymentStatus, IDeployment } from 'types/schemas/Deployments'
+import { Request } from 'express'
+import IInstance from 'types/schemas/Instances'
 
 interface IDeploymentService {
   CreateDeployment: {
@@ -21,9 +23,11 @@ interface IDeploymentService {
 
 export default class DeploymentService {
   applicationId: ObjectId
+  user
 
-  constructor(applicationId: string) {
+  constructor(applicationId: string, req: Request) {
     this.applicationId = new ObjectId(applicationId)
+    this.user = req.userObj
   }
 
   async findMany(query: any) {
@@ -48,8 +52,17 @@ export default class DeploymentService {
         },
       },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'user_id',
+          foreignField: '_id',
+          as: 'user_obj',
+        },
+      },
+      {
         $set: {
           version_obj: { $first: '$version_obj' },
+          user_obj: { $first: '$user_obj' },
         },
       },
     ]
@@ -72,6 +85,7 @@ export default class DeploymentService {
       status: GlobalStatuses.ACTIVE,
       deployment_group: new ObjectId(deployment.deployment_group),
       deployment_status: DeploymentStatus.PENDING,
+      user_id: this.user?._id,
       created_at: new Date(),
       updated_at: new Date(),
     }
@@ -93,5 +107,59 @@ export default class DeploymentService {
       .findOneAndUpdate({ _id: payload._id }, { $set: payload }, { upsert: true, returnDocument: 'after' })
 
     return { deployment: insertObj }
+  }
+
+  async findDeployment(deploymentId: string) {
+    const findObj = {
+      _id: new ObjectId(deploymentId),
+      application_id: this.applicationId,
+    }
+    const deployment = await db.managementDb
+      ?.collection<IDeployment>('deployments')
+      ?.aggregate([
+        { $match: findObj },
+        {
+          $lookup: {
+            from: 'versions',
+            localField: 'version',
+            foreignField: '_id',
+            as: 'version_obj',
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_obj',
+          },
+        },
+        {
+          $set: {
+            version_obj: { $first: '$version_obj' },
+            user_obj: { $first: '$user_obj' },
+          },
+        },
+        {
+          $limit: 1,
+        },
+      ])
+      .toArray()
+
+    if (!deployment?.[0]) {
+      throw {
+        showError: 'Deployment not found',
+      }
+    }
+
+    const targetInstances = await db.managementDb
+      ?.collection<IInstance>('instances')
+      .find({
+        application_id: this.applicationId,
+        deployment_group: deployment[0]?.deployment_group,
+      })
+      .toArray()
+
+    return { deployment: deployment[0], targetInstances }
   }
 }

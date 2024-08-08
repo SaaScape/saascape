@@ -5,7 +5,7 @@ interface DeploymentConfig {
   Constructor: {
     applicationId: string
     config: {
-      test: string
+      deploymentId: string
     }
   }
   PaginatedFetch: {
@@ -49,6 +49,20 @@ export class Deployment {
     )
 
     return { data: data.data, success: data?.success }
+  }
+
+  async getDeployment() {
+    const { deploymentId } = this.config || {}
+
+    if (!deploymentId) {
+      return
+    }
+
+    const { data } = await apiAxios.get(`applications/${this.applicationId}/deployments/${deploymentId}`)
+
+    if (data?.success) {
+      return data?.data
+    }
   }
 
   async createDeployment(payload: DeploymentConfig['CreateDeployment']['payload']) {

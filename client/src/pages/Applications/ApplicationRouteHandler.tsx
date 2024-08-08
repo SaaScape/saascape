@@ -12,6 +12,7 @@ import ViewPlanContainer from './Plan/ViewPlanContainer'
 import ConfigurationContainer from './ViewApplication/ConfigurationContainer'
 import ViewInstanceContainer from './ViewApplication/ViewInstanceContainer'
 import DeploymentsContainer from './Deployments/DeploymentsContainer.tsx'
+import ViewDeploymentContainer from './Deployments/ViewDeploymentContainer.tsx'
 
 export interface IApplicationProps {
   setId: (id?: string) => void
@@ -97,6 +98,15 @@ const ApplicationRouteHandler = () => {
         element={
           <ProtectedRoute
             component={<DeploymentsContainer {...allProps} />}
+            permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
+          />
+        }
+      />
+      <Route
+        path={':id/deployments/:deploymentId'}
+        element={
+          <ProtectedRoute
+            component={<ViewDeploymentContainer {...allProps} />}
             permissions={[permissions.APPLICATIONS.VIEW_APPLICATIONS]}
           />
         }
