@@ -8,10 +8,11 @@ import ServerSocket from '../socketServices/serverSocket'
 import DomainSocket from '../socketServices/domainSocket'
 import InstanceSocket from '../socketServices/instanceSocket'
 import VersionSocket from '../socketServices/versionSocket'
+import DeploymentSocket from '../socketServices/deploymentSocket'
 export let socket: Socket | undefined
 
 const generateSocketEventMap = () => {
-  const socketServices = [ServerSocket, DomainSocket, InstanceSocket, VersionSocket]
+  const socketServices = [ServerSocket, DomainSocket, InstanceSocket, VersionSocket, DeploymentSocket]
   const obj: { [key: string]: string } = {}
   for (const Service of socketServices) {
     const service = new Service()
@@ -35,6 +36,7 @@ class SocketEvent {
 
   handleEventError(err: any) {
     console.error(`An error occurred when executing, ${this?.event} : ${JSON.stringify(err)}`)
+    console.error(err)
   }
 
   async handleEvent() {
@@ -54,6 +56,7 @@ class SocketEvent {
     [constants.SOCKET_ROUTES.DOMAIN]: DomainSocket,
     [constants.SOCKET_ROUTES.INSTANCE]: InstanceSocket,
     [constants.SOCKET_ROUTES.VERSION]: VersionSocket,
+    [constants.SOCKET_ROUTES.DEPLOYMENT]: DeploymentSocket,
   }
 }
 

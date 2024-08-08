@@ -6,9 +6,12 @@ import { ObjectId } from 'mongodb'
 import { db } from '../db'
 import Pagination from '../helpers/pagination'
 import { GlobalStatuses } from 'types/enums'
-import { DeploymentStatus, IDeployment } from 'types/schemas/Deployments'
+import { DeploymentStatus, IDeployment, TargetInstance } from 'types/schemas/Deployments'
 import { Request } from 'express'
 import IInstance from 'types/schemas/Instances'
+import { io } from '../init/sockets'
+import constants from '../helpers/constants'
+import { DeploymentEvents } from 'types/sockets'
 
 interface IDeploymentService {
   CreateDeployment: {
@@ -76,20 +79,6 @@ export default class DeploymentService {
   }
 
   async createDeployment(deployment: IDeploymentService['CreateDeployment']['deployment']) {
-    const payload: IDeployment = {
-      _id: new ObjectId(),
-      version: new ObjectId(deployment.version_id),
-      application_id: this.applicationId,
-      name: deployment.name,
-      description: deployment.description,
-      status: GlobalStatuses.ACTIVE,
-      deployment_group: new ObjectId(deployment.deployment_group),
-      deployment_status: DeploymentStatus.PENDING,
-      user_id: this.user?._id,
-      created_at: new Date(),
-      updated_at: new Date(),
-    }
-
     const runningDeployment = await db.managementDb?.collection<IDeployment>('deployments').findOne({
       deployment_status: { $in: [DeploymentStatus.PENDING, DeploymentStatus.RUNNING] },
       application_id: this.applicationId,
@@ -102,9 +91,53 @@ export default class DeploymentService {
       }
     }
 
+    const targetInstances = await db.managementDb
+      ?.collection<IInstance>('instances')
+      .find({
+        application_id: this.applicationId,
+        deployment_group: new ObjectId(deployment.deployment_group),
+      })
+      .toArray()
+
+    if (!targetInstances?.length) {
+      throw { showError: `This deployment group has no target instances` }
+    }
+
+    const targets: IDeployment['targets'] = targetInstances.map((instance) => {
+      const targetInstance: TargetInstance = {
+        _id: new ObjectId(),
+        instance_id: instance?._id,
+        instance_name: instance?.name,
+        deployment_status: DeploymentStatus.PENDING,
+        updated_at: new Date(),
+      }
+
+      return targetInstance
+    })
+    const payload: IDeployment = {
+      _id: new ObjectId(),
+      version: new ObjectId(deployment.version_id),
+      application_id: this.applicationId,
+      name: deployment.name,
+      targets,
+      description: deployment.description,
+      status: GlobalStatuses.ACTIVE,
+      deployment_group: new ObjectId(deployment.deployment_group),
+      deployment_status: DeploymentStatus.PENDING,
+      user_id: this.user?._id,
+      created_at: new Date(),
+      updated_at: new Date(),
+    }
+
     const insertObj = await db.managementDb
       ?.collection<IDeployment>('deployments')
       .findOneAndUpdate({ _id: payload._id }, { $set: payload }, { upsert: true, returnDocument: 'after' })
+
+    console.log('sending socket for deployment crrated')
+    // Send socket event to background to create deployment client and start it
+    io?.io
+      ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)
+      .emit(DeploymentEvents.DEPLOYMENT_CREATED, { deployment_id: payload._id })
 
     return { deployment: insertObj }
   }
@@ -152,14 +185,6 @@ export default class DeploymentService {
       }
     }
 
-    const targetInstances = await db.managementDb
-      ?.collection<IInstance>('instances')
-      .find({
-        application_id: this.applicationId,
-        deployment_group: deployment[0]?.deployment_group,
-      })
-      .toArray()
-
-    return { deployment: deployment[0], targetInstances }
+    return { deployment: deployment[0] }
   }
 }

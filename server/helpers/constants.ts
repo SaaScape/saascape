@@ -55,6 +55,7 @@ export default {
     DOMAIN: 'domain',
     INSTANCE: 'instance',
     VERSION: 'version',
+    DEPLOYMENT: 'deployment',
   },
   SOCKET_EVENTS: {
     SERVER_CONNECT: 'server_connect',

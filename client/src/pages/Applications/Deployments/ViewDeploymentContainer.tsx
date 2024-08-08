@@ -8,24 +8,34 @@ import { IApplicationProps } from '../ApplicationRouteHandler.tsx'
 import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs.tsx'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs.ts'
 import { useParams } from 'react-router-dom'
-import { IDeployment } from 'types/schemas/Deployments.ts'
+import { DeploymentStatus, IDeployment, TargetInstance } from 'types/schemas/Deployments.ts'
 import { useSelector } from 'react-redux'
 import { IStore } from '../../../store/store.ts'
-import { Deployment } from '../../../modules/deployment.ts'
+import { Deployment, TargetDeploymentStatuses } from '../../../modules/deployment.ts'
 import { IApplication } from 'types/schemas/Applications.ts'
 import IInstance from 'types/schemas/Instances.ts'
+import { TableProps } from 'antd/lib'
+import moment from 'moment'
+import RecordLink from '../../../components/RecordLink.tsx'
+
+interface InstanceDeploymentPieData {
+  name: string
+  value: number
+  color: string
+}
 
 export interface ViewProps {
   deployment?: IDeployment
   loading: boolean
   selectedApplication: IApplication | null
-  targetInstances: IInstance[]
+  targetInstanceDistribution?: InstanceDeploymentPieData[]
+  deploymentColumns: TableProps<TargetInstance>['columns']
 }
 
 function ViewDeploymentContainer({ setId }: IApplicationProps) {
   const [deployment, setDeployment] = useState<IDeployment>()
-  const [targetInstances, setTargetInstances] = useState<IInstance[]>([])
   const [loading, setLoading] = useState(true)
+  const [targetInstanceDistribution, setTargetInstanceDistribution] = useState<InstanceDeploymentPieData[]>([])
 
   const deploymentClassRef = useRef<Deployment>()
   const deploymentClass = deploymentClassRef?.current
@@ -63,17 +73,71 @@ function ViewDeploymentContainer({ setId }: IApplicationProps) {
     getDeployment()
   }, [deploymentClass])
 
+  const deploymentColumns: TableProps<TargetInstance>['columns'] = [
+    {
+      title: 'Instance Name',
+      dataIndex: 'instance_name',
+      key: 'instance_name',
+      render: (text, record) => (
+        <RecordLink
+          entity={'instance'}
+          label={text}
+          link={`/applications/${selectedApplication?._id}/instances/${record?.instance_id}`}
+          children={null}
+        />
+      ),
+    },
+    {
+      title: 'Deployment Status',
+      dataIndex: 'deployment_status',
+      key: 'deployment_status',
+    },
+    {
+      title: 'Last Update',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      render: (text) => moment(text).fromNow(),
+    },
+    {
+      title: 'Completed',
+      dataIndex: 'completed_at',
+      key: 'completed_at',
+      render: (text) => {
+        return text ? moment(text).fromNow() : 'N/A'
+      },
+    },
+  ]
+
+  const getPieData = () => {
+    const targetDistribution = deploymentClass?.getTargetStatusDistribution()
+    setTargetInstanceDistribution(
+      Object.entries(targetDistribution || {}).map(([status, { value, color }]) => {
+        return {
+          name: status,
+          value,
+          color,
+        }
+      }),
+    )
+  }
+
   const getDeployment = async () => {
     setLoading(true)
     const response = await deploymentClass?.getDeployment()
-    const { deployment, targetInstances } = response
+    const { deployment } = response || { targetInstances: [] }
     setLoading(false)
     if (!deployment) return
     setDeployment(deployment)
-    setTargetInstances(targetInstances)
+    getPieData()
   }
 
-  const viewProps: ViewProps = { deployment, loading, selectedApplication, targetInstances }
+  const viewProps: ViewProps = {
+    deployment,
+    loading,
+    selectedApplication,
+    targetInstanceDistribution,
+    deploymentColumns,
+  }
 
   return <ViewDeployment {...viewProps} />
 }
