@@ -10,7 +10,9 @@ jobs:
   build:
     name: Build and Tag Docker Image
     runs-on: ubuntu-latest
-
+    permissions:
+      deployments: read/write
+      
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
