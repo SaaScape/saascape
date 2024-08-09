@@ -133,7 +133,6 @@ export default class DeploymentService {
       ?.collection<IDeployment>('deployments')
       .findOneAndUpdate({ _id: payload._id }, { $set: payload }, { upsert: true, returnDocument: 'after' })
 
-    console.log('sending socket for deployment crrated')
     // Send socket event to background to create deployment client and start it
     io?.io
       ?.to(constants.SOCKET_ROOMS.BACKGROUND_SERVERS)

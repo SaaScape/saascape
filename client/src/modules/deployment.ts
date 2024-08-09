@@ -1,6 +1,11 @@
 import { apiAxios, apiAxiosClean } from '../helpers/axios.ts'
 import { queryParamBuilder } from '../helpers/utils.ts'
-import { DeploymentStatus, IDeployment } from 'types/schemas/Deployments.ts'
+import {
+  DeploymentInstanceUpdateSocketData,
+  DeploymentStatus,
+  DeploymentUpdateSocketData,
+  IDeployment,
+} from 'types/schemas/Deployments.ts'
 
 interface DeploymentConfig {
   Constructor: {
@@ -23,13 +28,6 @@ interface DeploymentConfig {
       name: string
     }
   }
-}
-
-export interface TargetDeploymentStatuses {
-  [DeploymentStatus.FAILED]: { value: number; color: string }
-  [DeploymentStatus.PENDING]: { value: number; color: string }
-  [DeploymentStatus.RUNNING]: { value: number; color: string }
-  [DeploymentStatus.COMPLETED]: { value: number; color: string }
 }
 
 export class Deployment {
@@ -80,11 +78,18 @@ export class Deployment {
   }
 
   async createDeployment(payload: DeploymentConfig['CreateDeployment']['payload']) {
-    await apiAxios.post(`applications/${this.applicationId}/deployments`, payload)
+    const deploymentResponse = await apiAxiosClean.post(`applications/${this.applicationId}/deployments`, payload)
+    const { data } = deploymentResponse
+
+    if (data.success) {
+      return { success: data.success, deployment: data?.data?.deployment }
+    } else {
+      return { success: data.success, error: data?.error }
+    }
   }
 
   getTargetStatusDistribution() {
-    const statuses: TargetDeploymentStatuses = {
+    const statuses: { [key: string]: { value: number; color: string } } = {
       [DeploymentStatus.PENDING]: { value: 0, color: '#FFBB28' },
       [DeploymentStatus.RUNNING]: { value: 0, color: '#0088FE' },
       [DeploymentStatus.FAILED]: { value: 0, color: '#FF8042' },
@@ -92,9 +97,29 @@ export class Deployment {
     }
 
     for (const instance of this.deployment?.targets || []) {
+      if (!Object.keys(statuses?.[instance?.deployment_status] || {}).length) continue
       statuses[instance.deployment_status].value++
     }
 
     return statuses
+  }
+
+  updateTargetDeploymentStatus(data: DeploymentInstanceUpdateSocketData) {
+    const { targetId, status, failed_at, completed_at, updated_at } = data
+    const target = this.deployment?.targets?.find((target) => target._id?.toString() === targetId)
+    if (!target) {
+      return
+    }
+    target.deployment_status = status
+    target.updated_at = updated_at
+    completed_at && (target.completed_at = completed_at)
+    failed_at && (target.failed_at = failed_at)
+  }
+
+  updateDeploymentStatus(data: DeploymentUpdateSocketData) {
+    const { status, updated_at } = data
+    if (!this.deployment) return
+    this.deployment.updated_at = updated_at
+    this.deployment.deployment_status = status
   }
 }

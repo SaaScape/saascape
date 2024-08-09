@@ -17,6 +17,7 @@ import usePaginatedTable from '../../../hooks/usePaginatedTable.tsx'
 import moment from 'moment'
 import { Popover } from 'antd'
 import CreateDeploymentModal from '../../../components/Applications/Deployments/CreateDeploymentModal.tsx'
+import { toast } from 'react-toastify'
 
 export interface IViewProps {
   loading: boolean
@@ -130,9 +131,20 @@ const DeploymentsContainer = (props: IApplicationProps) => {
   }
 
   const onCreate = async (values: any) => {
-    deploymentClass?.createDeployment(values)
-    toggleShowDeploymentModal(false)
-    reload?.()
+    const deploymentResponse = await deploymentClass?.createDeployment(values)
+    if (deploymentResponse?.success) {
+      toast.success('Deployment created')
+      toggleShowDeploymentModal(false)
+      const deploymentUrl = `/applications/${selectedApplication?._id}/deployments/${deploymentResponse?.deployment?._id}`
+      navigate(deploymentUrl)
+    } else {
+      toast.error(
+        <div>
+          <strong>Unable to create deployment</strong>
+          <div>{deploymentResponse?.error || 'Error during creation of deployment'}</div>
+        </div>,
+      )
+    }
   }
 
   const createDeploymentModalProps = {

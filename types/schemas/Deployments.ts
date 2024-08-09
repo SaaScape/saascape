@@ -6,6 +6,21 @@ import { ObjectId } from 'mongodb'
 import { GlobalStatuses } from '../enums'
 import IInstance from './Instances'
 
+export interface DeploymentInstanceUpdateSocketData {
+  deploymentId: string
+  targetId: string
+  status: DeploymentStatus
+  updated_at: Date
+  completed_at?: Date
+  failed_at?: Date
+}
+
+export interface DeploymentUpdateSocketData {
+  deploymentId: string
+  status: DeploymentStatus
+  updated_at: Date
+}
+
 export enum DeploymentStatus {
   COMPLETED = 'completed',
   PENDING = 'pending',

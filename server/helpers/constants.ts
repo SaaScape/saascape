@@ -68,6 +68,7 @@ export default {
   },
   SOCKET_ROOMS: {
     BACKGROUND_SERVERS: 'background_servers',
+    DEPLOYMENT: 'deployment_',
   },
   SWARM_NODE_TYPES: {
     MANAGER: 'manager',

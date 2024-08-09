@@ -27,6 +27,9 @@ export enum VersionEvents {
 
 export enum DeploymentEvents {
   DEPLOYMENT_CREATED = 'deployment_created',
+  DEPLOYMENT_INSTANCE_UPDATED = 'deployment_instance_updated',
+  JOIN_DEPLOYMENT_ROOM = 'join_deployment_room',
+  LEAVE_DEPLOYMENT_ROOM = 'leave_deployment',
   DEPLOYMENT_COMPLETED = 'deployment_completed',
   DEPLOYMENT_UPDATED = 'deployment_updated',
 }

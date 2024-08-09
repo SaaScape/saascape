@@ -8,15 +8,21 @@ import { IApplicationProps } from '../ApplicationRouteHandler.tsx'
 import useSetBreadcrumbs from '../../../middleware/useSetBreadcrumbs.tsx'
 import breadcrumbs from '../../../helpers/constants/breadcrumbs.ts'
 import { useParams } from 'react-router-dom'
-import { DeploymentStatus, IDeployment, TargetInstance } from 'types/schemas/Deployments.ts'
+import {
+  DeploymentInstanceUpdateSocketData,
+  DeploymentUpdateSocketData,
+  IDeployment,
+  TargetInstance,
+} from 'types/schemas/Deployments.ts'
 import { useSelector } from 'react-redux'
 import { IStore } from '../../../store/store.ts'
-import { Deployment, TargetDeploymentStatuses } from '../../../modules/deployment.ts'
+import { Deployment } from '../../../modules/deployment.ts'
 import { IApplication } from 'types/schemas/Applications.ts'
-import IInstance from 'types/schemas/Instances.ts'
 import { TableProps } from 'antd/lib'
 import moment from 'moment'
 import RecordLink from '../../../components/RecordLink.tsx'
+import socket from '../../../sockets/sockets.ts'
+import { DeploymentEvents } from 'types/sockets.ts'
 
 interface InstanceDeploymentPieData {
   name: string
@@ -49,6 +55,23 @@ function ViewDeploymentContainer({ setId }: IApplicationProps) {
   useEffect(() => {
     setId(id)
   }, [id])
+
+  useEffect(() => {
+    socket.emit(DeploymentEvents.JOIN_DEPLOYMENT_ROOM, {
+      deploymentId,
+    })
+
+    socket.on(DeploymentEvents.DEPLOYMENT_INSTANCE_UPDATED, onDeploymentInstanceUpdate)
+    socket.on(DeploymentEvents.DEPLOYMENT_UPDATED, onDeploymentUpdate)
+
+    return () => {
+      socket.emit(DeploymentEvents.LEAVE_DEPLOYMENT_ROOM, {
+        deploymentId,
+      })
+      socket.removeListener(DeploymentEvents.DEPLOYMENT_INSTANCE_UPDATED, onDeploymentInstanceUpdate)
+      socket.removeListener(DeploymentEvents.DEPLOYMENT_UPDATED, onDeploymentUpdate)
+    }
+  }, [deploymentClass?.deployment?._id])
 
   useEffect(() => {
     if (!id || !deploymentId) return
@@ -119,6 +142,19 @@ function ViewDeploymentContainer({ setId }: IApplicationProps) {
         }
       }),
     )
+  }
+
+  const onDeploymentInstanceUpdate = (data: DeploymentInstanceUpdateSocketData) => {
+    if (deploymentClass?.deployment?._id?.toString() !== data?.deploymentId) return
+    deploymentClass?.updateTargetDeploymentStatus(data)
+    setDeployment(deploymentClass?.deployment)
+    getPieData()
+  }
+
+  const onDeploymentUpdate = (data: DeploymentUpdateSocketData) => {
+    if (deploymentClass?.deployment?._id?.toString() !== data?.deploymentId) return
+    deploymentClass?.updateDeploymentStatus(data)
+    setDeployment(deploymentClass?.deployment)
   }
 
   const getDeployment = async () => {

@@ -14,8 +14,6 @@ function ViewDeployment({
   targetInstanceDistribution,
   deploymentColumns,
 }: ViewProps) {
-  console.log(deployment)
-
   const deploymentVersion = `${(deployment as any)?.version_obj?.namespace}/${(deployment as any)?.version_obj?.repository}/${(deployment as any)?.version_obj?.tag}`
   const deploymentGroup =
     deployment && selectedApplication?.config?.deployment_groups?.[deployment?.deployment_group?.toString()]

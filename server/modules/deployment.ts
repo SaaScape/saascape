@@ -3,11 +3,19 @@
  */
 
 import { clients } from '../clients/clients'
-import { DeploymentStatus, IDeployment } from 'types/schemas/Deployments'
+import {
+  DeploymentInstanceUpdateSocketData,
+  DeploymentStatus,
+  DeploymentUpdateSocketData,
+  IDeployment,
+} from 'types/schemas/Deployments'
 import { db } from '../db'
 import { ObjectId } from 'mongodb'
 import { startDeploymentQueueProducer } from '../queue/producers/deploymentProducers'
 import { initializeDeploymentWorker } from '../queue/workers/deploymentWorkers'
+import { socket } from '../background/init/sockets'
+import { DeploymentEvents } from 'types/sockets'
+import moment from 'moment'
 
 export default class Deployment {
   deployment: IDeployment
@@ -16,9 +24,11 @@ export default class Deployment {
   }
 
   async updateDeploymentStatus(status: DeploymentStatus) {
-    const payload = {
+    const thisMoment = moment()
+
+    const payload: { [key: string]: any } = {
       deployment_status: status,
-      updated_at: new Date(),
+      updated_at: thisMoment.toDate(),
     }
 
     await db.managementDb?.collection<IDeployment>('deployments').updateOne(
@@ -27,19 +37,36 @@ export default class Deployment {
         $set: payload,
       },
     )
+
+    const socketData: DeploymentUpdateSocketData = {
+      deploymentId: this.deployment?._id.toString(),
+      status,
+      updated_at: payload.updated_at,
+    }
+
+    socket?.emit(DeploymentEvents.DEPLOYMENT_UPDATED, socketData)
   }
 
   async updateTargetStatus(status: DeploymentStatus, targetId: string) {
+    const thisMoment = moment()
+
+    const prePayload: { [key: string]: any } = {
+      updated_at: thisMoment.toDate(),
+      completed_at: thisMoment.toDate(),
+      failed_at: thisMoment.toDate(),
+      deployment_status: status,
+    }
+
     const payload: { [key: string]: any } = {
-      'targets.$[target].deployment_status': status,
-      'targets.$[target].updated_at': new Date(),
+      'targets.$[target].deployment_status': prePayload.deployment_status,
+      'targets.$[target].updated_at': prePayload.updated_at,
     }
 
     if (status === DeploymentStatus.FAILED) {
-      payload['targets.$[target].failed_at'] = new Date()
-      payload['targets.$[target].completed_at'] = new Date()
+      payload['targets.$[target].failed_at'] = prePayload.failed_at
+      payload['targets.$[target].completed_at'] = prePayload.completed_at
     } else if (status === DeploymentStatus.COMPLETED) {
-      payload['targets.$[target].completed_at'] = new Date()
+      payload['targets.$[target].completed_at'] = prePayload.completed_at
     }
 
     const arrayFilters = [{ 'target._id': new ObjectId(targetId) }]
@@ -53,6 +80,21 @@ export default class Deployment {
         arrayFilters,
       },
     )
+
+    const socketData: DeploymentInstanceUpdateSocketData = {
+      deploymentId: this.deployment?._id.toString(),
+      targetId,
+      status,
+      updated_at: prePayload.updated_at,
+    }
+
+    if (status === DeploymentStatus.COMPLETED) {
+      socketData['completed_at'] = prePayload.completed_at
+    } else if (status === DeploymentStatus.FAILED) {
+      socketData['failed_at'] = prePayload.failed_at
+    }
+
+    socket?.emit(DeploymentEvents.DEPLOYMENT_INSTANCE_UPDATED, socketData)
   }
 
   addToClients() {
@@ -102,41 +144,22 @@ export default class Deployment {
     await this.startDeploymentWorker()
   }
 
-  async finishSingleInstanceDeployment(targetId: string, status: DeploymentStatus.FAILED | DeploymentStatus.COMPLETED) {
-    const payload: { [key: string]: any } = {
-      'targets.$[target].deployment_status': status,
-      'targets.$[target].updated_at': new Date(),
-      'targets.$[target].completed_at': new Date(),
-    }
-    if (status === DeploymentStatus.FAILED) {
-      payload['targets.$[target].failed_at'] = new Date()
-    }
+  async finishSingleInstanceDeployment(
+    targetId: string,
+    status: DeploymentStatus.FAILED | DeploymentStatus.COMPLETED,
+    isLastJob: boolean = false,
+  ) {
+    await this.updateTargetStatus(status, targetId)
 
-    await db.managementDb?.collection<IDeployment>('deployments').updateOne(
-      { _id: this.deployment?._id },
-      {
-        $set: payload,
-      },
-      {
-        arrayFilters: [
-          {
-            'target._id': new ObjectId(targetId),
-          },
-        ],
-      },
-    )
+    if (isLastJob) await this.deploymentFinished()
   }
 
   async deploymentFinished() {
     console.log('Deployment finished', this.deployment?._id.toString())
     await this.updateDeploymentDetails()
 
-    // Check status of targets
-    console.log(this.deployment?.targets)
+    const hasFailures = this.deployment?.targets?.some((target) => target.deployment_status === DeploymentStatus.FAILED)
 
-    // If any failures then we need to mark deployment as failed
-    await this.updateDeploymentStatus(DeploymentStatus.COMPLETED)
-
-    //   Send socket update to server which will then forward onto FE.
+    await this.updateDeploymentStatus(hasFailures ? DeploymentStatus.FAILED : DeploymentStatus.COMPLETED)
   }
 }
