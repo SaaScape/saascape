@@ -1,6 +1,6 @@
-import { AggregateOptions, Collection, Db, Document } from "mongodb"
-import { IQuery } from "../interfaces/pagination"
-import moment from "moment"
+import { Collection, Db, Document } from 'mongodb'
+import { IQuery } from '../interfaces/pagination'
+import moment from 'moment'
 
 interface IConfiguration {
   collection?: Collection
@@ -17,22 +17,17 @@ interface IPaginationObj {
   totalDocuments: number
 }
 
-const requiredPaginationParams = ["limit", "page"]
+const requiredPaginationParams = ['limit', 'page']
 export default class Pagination {
   query: IQuery
   constructor(query: IQuery) {
     for (const key of requiredPaginationParams) {
-      if (!Object.keys(query).includes(key))
-        throw { showError: `Missing required param: ${key}`, status: 400 }
+      if (!Object.keys(query).includes(key)) throw { showError: `Missing required param: ${key}`, status: 400 }
     }
     this.query = query
   }
 
-  private preparePaginationObj(
-    totalDocuments: number,
-    page: number,
-    limit: number
-  ) {
+  private preparePaginationObj(totalDocuments: number, page: number, limit: number) {
     const paginationObj: IPaginationObj = {
       page,
       totalDocuments,
@@ -54,26 +49,19 @@ export default class Pagination {
       limit = 20,
       page = 1,
       initialRequestDate = moment().toISOString(),
-      sortField = "_id",
+      sortField = '_id',
       order = -1,
     } = this.query
-    const {
-      collection,
-      findObj,
-      projectionObj = {},
-      timeConstraintField = "created_at",
-      aggregationPipeline,
-    } = data
-    if (!collection) throw new Error("Collection not specified")
-    if (!findObj && !aggregationPipeline)
-      throw new Error("FindObj not specified")
+    const { collection, findObj, projectionObj = {}, timeConstraintField = 'created_at', aggregationPipeline } = data
+    if (!collection) throw new Error('Collection not specified')
+    if (!findObj && !aggregationPipeline) throw new Error('FindObj not specified')
 
     const skip = +((+page - 1) * +limit)
 
     let documentCount = 0
 
-    const sortObj = {
-      [sortField]: order,
+    const sortObj: { [key: string]: -1 | 1 } = {
+      [sortField]: +order > 0 ? 1 : -1,
     }
 
     const isAggregate = !!aggregationPipeline
@@ -94,14 +82,8 @@ export default class Pagination {
         ]
 
         documentCount =
-          (
-            await collection
-              .aggregate([
-                ...aggregateWithTimeConstraint,
-                { $count: "totalDocuments" },
-              ])
-              .toArray()
-          )?.[0]?.totalDocuments || 0
+          (await collection.aggregate([...aggregateWithTimeConstraint, { $count: 'totalDocuments' }]).toArray())?.[0]
+            ?.totalDocuments || 0
 
         records = await collection
           .aggregate([
@@ -138,11 +120,7 @@ export default class Pagination {
         break
     }
 
-    const paginationObj = this.preparePaginationObj(
-      documentCount,
-      +page,
-      +limit
-    )
+    const paginationObj = this.preparePaginationObj(documentCount, +page, +limit)
 
     return {
       documentCount,

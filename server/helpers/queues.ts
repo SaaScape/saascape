@@ -13,4 +13,7 @@ export default {
   INSTANCE: {
     DEPLOY_INSTANCE: 'deploy_instance',
   },
+  DEPLOYMENT: {
+    PROCESS_DEPLOYMENT: 'process_deployment',
+  },
 }

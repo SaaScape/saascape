@@ -6,12 +6,14 @@ import { sendSuccessResponse } from '../../helpers/responses'
 import { API } from '../../types/types'
 import versions from './versions'
 import instances from './instances'
+import deployments from './deployments'
 
 export default (app: Router, use: any) => {
   const router = Router()
   app.use('/applications', router)
   versions(router, use)
   instances(router, use)
+  deployments(router, use)
 
   router.get('/', use(withPerms([permissions.APPLICATIONS.VIEW_APPLICATIONS])), use(findMany))
   router.get('/:id', use(withPerms([permissions.APPLICATIONS.VIEW_APPLICATIONS])), use(findOne))

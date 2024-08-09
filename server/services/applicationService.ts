@@ -71,6 +71,7 @@ export default class ApplicationService {
     }
 
     const payload: IApplication = {
+      _id: new ObjectId(),
       application_name: data.application_name,
       status: constants.STATUSES.ACTIVE_STATUS,
       description: data.description,

@@ -6,17 +6,23 @@ import { db } from '../db'
 import { IServer } from '../schemas/Servers'
 import constants from '../helpers/constants'
 import DockerService from '../services/dockerService'
-import { IDockerClients, IInstanceClients, ISSHClients } from '../interfaces/clients'
+import { IDeploymentClients, IDockerClients, IInstanceClients, ISSHClients } from '../interfaces/clients'
 import SSHService from '../services/sshService'
 import { decipherData } from '../helpers/utils'
 import Dockerode from 'dockerode'
 import IInstance, { instanceDbStatus } from 'types/schemas/Instances'
 import Instance from '../modules/instance'
 
-const clients: { docker: IDockerClients; ssh: ISSHClients; instance: IInstanceClients } = {
+const clients: {
+  docker: IDockerClients
+  ssh: ISSHClients
+  instance: IInstanceClients
+  deployment: IDeploymentClients
+} = {
   docker: {},
   ssh: {},
   instance: {},
+  deployment: {},
 }
 export const initializeDockerClients = async () => {
   console.log('Initializing docker clients')

@@ -76,7 +76,6 @@ export default class Instance {
   }
 
   async updateInstanceDetails() {
-    // This method will be called to get latest service data from the db and service this is called when the instance is updated or every 1 hour by cron
     const instance = (
       await db.managementDb
         ?.collection<IInstance>('instances')

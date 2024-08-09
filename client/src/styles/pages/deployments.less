@@ -1,0 +1,48 @@
+/*
+ * Copyright SaaScape (c) 2024.
+ */
+
+section.view-deployment {
+  .deployment-stats-card {
+    .grid-main {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      align-items: center;
+      justify-items: flex-start;
+      h3.column-title{
+        font-size: 1rem;
+        font-weight: 600;
+        color: @dark-text;
+
+      }
+      .chart-container {
+        .pie-text {
+          position: absolute;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          top: 50%;
+          .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+          }
+          .entity {
+            font-size: 1.1rem;
+            color: @dark-gray;
+          }
+        }
+      }
+      .status-color-key{
+        padding: 20px 0 0 20px;
+        text-transform: capitalize;
+        .key{
+          margin-bottom: 5px;
+          .color-square{
+            height: 15px;
+            width: 15px;
+            margin-right: 10px;
+          }
+        }
+      }
+    }
+  }
+}

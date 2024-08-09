@@ -329,14 +329,13 @@ export default class Service {
 
     const timeStamp = Date.now()
 
-    const { tag: newTag, image: newImage } = await versionService.pullImage(
-      application,
-      dockerClient,
-      namespace,
-      repository,
-      tag,
-      timeStamp,
-    )
+    const pullResult = await versionService.pullImage(application, dockerClient, namespace, repository, tag, timeStamp)
+
+    if (!pullResult?.image || !pullResult.tag) {
+      throw new Error('Error getting image')
+    }
+
+    const { tag: newTag, image: newImage } = pullResult
 
     for (const client of dockerClients || []) {
       await versionService.pullImage(application, client, namespace, repository, tag, timeStamp)
@@ -616,12 +615,40 @@ export default class Service {
     if (!version) {
       throw new Error('Version not found')
     }
+
     const dockerClient = await this.getDockerClient()
     const image = await this.downloadImage(version, dockerClient)
     const service = dockerClient.getService(this.instanceClient.serviceId)
-    return await service.update({
-      TaskTemplate: { ContainerSpec: { Image: image, Labels: { versionId: versionId.toString() } } },
+    const serviceObj = await service.inspect()
+
+    serviceObj.Spec.TaskTemplate.ContainerSpec = {
+      ...serviceObj.Spec.TaskTemplate.ContainerSpec,
+      Image: image,
+    }
+
+    await service.update({
+      ...serviceObj.Spec,
+      version: +serviceObj.Version.Index,
+      UpdateConfig: {
+        Parallelism: 1,
+        Delay: 1000000000,
+        FailureAction: 'pause',
+        Monitor: 15000000000,
+        MaxFailureRatio: 0,
+        Order: 'stop-first',
+      },
     })
+
+    await db.managementDb?.collection<IInstance>('instances').updateOne(
+      { _id: this.instanceClient.instance._id },
+      {
+        $set: {
+          version_id: versionId,
+        },
+      },
+    )
+
+    await this.instanceClient.updateInstanceDetails()
   }
 
   async deleteService() {

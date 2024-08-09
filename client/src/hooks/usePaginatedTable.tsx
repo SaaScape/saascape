@@ -1,21 +1,27 @@
-import { useEffect, useRef, useState } from "react"
-import { IPaginatedData, ITableConfig } from "../components/PaginatedTable"
-import { queryParamBuilder } from "../helpers/utils"
-import { apiAxios } from "../helpers/axios"
+import { useEffect, useRef, useState } from 'react'
+import { IPaginatedData, ITableConfig } from '../components/PaginatedTable'
+import { queryParamBuilder } from '../helpers/utils'
+import { apiAxios } from '../helpers/axios'
 
 export interface IPaginatedViewProps {
   paginatedData: IPaginatedData
   tableConfig: ITableConfig
   onTableChange: (config: any) => void
 }
+
+type fetchArgument = string | number
+
 interface IProps {
   apiUrl: string
   sortField?: string
   order?: number
+  useCustomFetchMethod?: boolean
+  customFetchClass?: any
+  customFetchArguments?: fetchArgument[]
 }
 const usePaginatedTable = (props: IProps) => {
   // TODO: IMPLEMENT INITIAL REQUEST DATE FEATURE
-  const { apiUrl, sortField = "created_at", order = -1 } = props
+  const { apiUrl, sortField = 'created_at', order = -1, customFetchClass, useCustomFetchMethod } = props
 
   const [dataFetching, setDataFetching] = useState(false)
 
@@ -30,7 +36,7 @@ const usePaginatedTable = (props: IProps) => {
   })
 
   const [queryConfig, setQueryConfig] = useState({
-    searchValue: "",
+    searchValue: '',
   })
 
   const prevTableConfigRef = useRef<ITableConfig>()
@@ -44,10 +50,7 @@ const usePaginatedTable = (props: IProps) => {
   useEffect(() => {
     ;(() => {
       const records = paginatedData?.records?.[tableConfig?.current]?.length
-      if (
-        prevTableConfigRef.current?.current !== tableConfig?.current &&
-        !records
-      )
+      if (prevTableConfigRef.current?.current !== tableConfig?.current && !records)
         return getData(queryConfig?.searchValue)
 
       if (prevTableConfigRef.current?.pageSize !== tableConfig?.pageSize) {
@@ -60,31 +63,59 @@ const usePaginatedTable = (props: IProps) => {
     })()
   }, [tableConfig])
 
+  useEffect(() => {
+    if (!useCustomFetchMethod) return
+    getData(queryConfig?.searchValue)
+  }, [useCustomFetchMethod, customFetchClass?.paginatedFetch, customFetchClass?.applicationId])
+
   const getData = async (value: string) => {
     setDataFetching(true)
 
-    const {
-      data: { data, success },
-    } = await apiAxios.get(
-      `${apiUrl}${queryParamBuilder({
-        page: tableConfig?.current,
-        limit: tableConfig?.pageSize,
-        searchValue: value,
-        sortField,
-        order,
-      })}`
-    )
+    if (useCustomFetchMethod) {
+      const response =
+        (await customFetchClass?.paginatedFetch({
+          page: tableConfig?.current,
+          limit: tableConfig?.pageSize,
+          searchValue: value,
+          sortField,
+          order,
+        })) || {}
 
-    if (success) {
-      setPaginatedData((curr) => ({
-        totalDocuments: +data?.data?.documentCount,
-        records: {
-          ...(curr?.records || {}),
-          [+data?.data?.paginatedData?.page]:
-            data?.data?.paginatedData?.records,
-        },
-      }))
+      const { data, success } = response
+
+      if (success) {
+        setPaginatedData((curr) => ({
+          totalDocuments: +data?.data?.documentCount,
+          records: {
+            ...(curr?.records || {}),
+            [+data?.data?.paginatedData?.page]: data?.data?.paginatedData?.records,
+          },
+        }))
+      }
+    } else {
+      const {
+        data: { data, success },
+      } = await apiAxios.get(
+        `${apiUrl}${queryParamBuilder({
+          page: tableConfig?.current,
+          limit: tableConfig?.pageSize,
+          searchValue: value,
+          sortField,
+          order,
+        })}`,
+      )
+
+      if (success) {
+        setPaginatedData((curr) => ({
+          totalDocuments: +data?.data?.documentCount,
+          records: {
+            ...(curr?.records || {}),
+            [+data?.data?.paginatedData?.page]: data?.data?.paginatedData?.records,
+          },
+        }))
+      }
     }
+
     setDataFetching(false)
   }
 

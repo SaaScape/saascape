@@ -78,15 +78,14 @@ export default class VersionService {
 
       dockerClient.pull(dockerImage, { authconfig }, (err, stream) => {
         if (err) {
-          reject(err)
+          return reject(err)
         }
         const onFinished = async (err: any, output: any) => {
-          if (err) reject(err)
-
+          if (err) return reject(err)
+          if (output?.at(-1)?.error) return reject(output?.at(-1)?.error)
           await dockerClient?.getImage(dockerImage).tag({ repo, tag: newImageTag })
 
-          console.log('output', output)
-          resolve({ tag: newImageTag, image: `${repo}:${newImageTag}` })
+          return resolve({ tag: newImageTag, image: `${repo}:${newImageTag}` })
         }
         const onProgress = (event: any) => {}
 
@@ -94,7 +93,7 @@ export default class VersionService {
           dockerClient?.modem?.followProgress(stream, onFinished, onProgress)
         } catch (err) {
           console.log(err)
-          reject(err)
+          return reject(err)
         }
       })
     })
