@@ -1,18 +1,16 @@
-import { Link, useNavigate } from "react-router-dom"
-import { IBreadcrumbs } from "../store/slices/breadcrumbs"
-import { Select } from "antd"
-import { useSelector } from "react-redux"
-import { IStore } from "../store/store"
-import { useEffect, useRef, useState } from "react"
+import { Link, useNavigate } from 'react-router-dom'
+import { IBreadcrumbs } from '../store/slices/breadcrumbs'
+import { Select } from 'antd'
+import { useSelector } from 'react-redux'
+import { IStore } from '../store/store'
+import { useEffect, useRef, useState } from 'react'
 
 interface IProps {
   breadcrumbs: IBreadcrumbs[]
 }
 
 const Breadcrumbs = (props: IProps) => {
-  const { selectedApplication, applications } = useSelector(
-    (state: IStore) => state.applications
-  )
+  const { selectedApplication, applications } = useSelector((state: IStore) => state.applications)
   const [showApplicationSelect, setShowApplicationSelect] = useState(false)
   const applicationSelectRef = useRef<HTMLDivElement>(null)
 
@@ -24,9 +22,9 @@ const Breadcrumbs = (props: IProps) => {
       if (applicationSelectRef?.current?.contains(e.target as Node)) return
       setShowApplicationSelect(false)
     }
-    document.addEventListener("click", event)
+    document.addEventListener('click', event)
     return () => {
-      document.removeEventListener("click", event)
+      document.removeEventListener('click', event)
     }
   }, [showApplicationSelect])
 
@@ -36,27 +34,27 @@ const Breadcrumbs = (props: IProps) => {
 
   const onApplicationChange = (value: string) => {
     const path = props?.breadcrumbs?.[props?.breadcrumbs?.length - 1]?.path
-    const newPath = path?.split("/")
+    const newPath = path?.split('/')
     newPath[2] = value
-    navigate(newPath.join("/"))
+    navigate(newPath.join('/'))
     setShowApplicationSelect(false)
   }
 
   return (
-    <div className='custom-breadcrumbs'>
+    <div className="custom-breadcrumbs">
       <ul>
         {props?.breadcrumbs?.map((breadcrumb, index) => {
           let renderItem
           switch (breadcrumb?.type) {
-            case "application_select":
+            case 'application_select':
               renderItem = (
-                <li key={index} className='breadcrumb-item d-flex align-center'>
+                <li key={index} className="breadcrumb-item d-flex align-center">
                   {showApplicationSelect ? (
                     <div ref={applicationSelectRef}>
                       <Select
                         bordered={false}
                         style={{ width: 150 }}
-                        defaultValue={selectedApplication?._id}
+                        defaultValue={selectedApplication?._id?.toString()}
                         onChange={onApplicationChange}
                         open={showApplicationSelect}
                         showSearch
@@ -65,10 +63,7 @@ const Breadcrumbs = (props: IProps) => {
                           label: application?.application_name,
                         }))}
                         filterOption={(input, option) => {
-                          return (
-                            option?.label?.toLowerCase()?.includes(input) ||
-                            false
-                          )
+                          return option?.label?.toLowerCase()?.includes(input) || false
                         }}
                       />
                     </div>
@@ -89,7 +84,7 @@ const Breadcrumbs = (props: IProps) => {
               break
             default:
               renderItem = (
-                <li key={index} className='breadcrumb-item'>
+                <li key={index} className="breadcrumb-item">
                   <Link to={breadcrumb?.path}>{breadcrumb.title}</Link>
                 </li>
               )

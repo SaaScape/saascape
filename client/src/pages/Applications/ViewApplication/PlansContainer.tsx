@@ -118,7 +118,7 @@ const PlansContainer = (props: IApplicationProps) => {
     } = await apiAxios.get(
       `/plans${queryParamBuilder({
         ...planQueryConfig,
-        applicationId: selectedApplication?._id,
+        applicationId: selectedApplication?._id?.toString(),
       })}`,
     )
     if (success) {
