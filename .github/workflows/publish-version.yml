@@ -11,7 +11,7 @@ jobs:
     name: Build and Tag Docker Image
     runs-on: ubuntu-latest
     permissions:
-      deployments: read/write
+      deployments: write
       
     steps:
       - name: Checkout code
