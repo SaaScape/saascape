@@ -8,10 +8,16 @@ aside {
   overflow-y: auto;
   overflow-x: hidden;
   color: white;
-  h1 {
+  .app-title {
+    overflow: hidden;
     padding: @defaultPadding;
-    font-weight: 500;
-    font-size: 22px;
+    .logo {
+      padding-right: 10px;
+    }
+    h1 {
+      font-weight: 500;
+      font-size: 22px;
+    }
   }
   &.hidden {
     width: 0px;
@@ -37,8 +43,8 @@ aside {
           &::after {
             transition: all 0.3s;
 
-            content: "\f0d7";
-            font-family: "FontAwesome";
+            content: '\f0d7';
+            font-family: 'FontAwesome';
             color: white;
             position: absolute;
             right: -20px;
@@ -69,8 +75,8 @@ aside {
             &::after {
               transition: all 0.3s;
 
-              content: "\f0d7";
-              font-family: "FontAwesome";
+              content: '\f0d7';
+              font-family: 'FontAwesome';
               color: white;
               position: absolute;
               right: 20px;
@@ -88,7 +94,7 @@ aside {
           transition: all 0.3s;
           display: grid;
           grid-template-columns: 35px 1fr;
-          grid-template-areas: "icon title";
+          grid-template-areas: 'icon title';
           color: @gray;
           text-decoration: none;
           justify-items: flex-start;
@@ -105,7 +111,7 @@ aside {
 
         &.active {
           &::before {
-            content: "";
+            content: '';
             position: absolute;
             top: 0;
             left: 0;

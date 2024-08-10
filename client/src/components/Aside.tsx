@@ -209,7 +209,12 @@ const Aside = () => {
 
   return (
     <aside className={`aside ${asideOpen ? '' : 'hidden'}`}>
-      <h1>SaaScape</h1>
+      <div className={'d-flex justify-start align-center app-title'}>
+        <figure className={'logo'}>
+          <img alt={'SaaScape logo'} width={45} src={'/files/images/saascape_no_text_blue.png'} />
+        </figure>
+        <h1>SaaScape</h1>
+      </div>
       <div className={`user ${userMenuOpen ? 'open' : ''}`}>
         <MenuContainer MenuComponent={<UserMenu />} onChange={userMenuChange}>
           <div className="user-menu d-flex justify-start">
