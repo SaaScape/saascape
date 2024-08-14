@@ -4,7 +4,11 @@
 
 SaaScape is a powerful SaaS management platform that enables users to create plans, manage subscriptions, and automate the deployment of tenant services & databases. Leveraging Nginx & Docker Swarm, this platform provides seamless control over instances, offering a robust infrastructure for your applications.
 
-***
+## Where are the docs?
+
+You can access our docs [here](https://saascape.gitbook.io/saascape-docs). They are hosted with [GitBook](https://www.gitbook.com/)'s community plan!
+
+
 
 ## Getting Started
 
