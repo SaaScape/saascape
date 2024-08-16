@@ -1,6 +1,6 @@
-import { db } from "../db"
-import constants from "../helpers/constants"
-import { IIntegration } from "../schemas/Integrations"
+import { db } from '../db'
+import constants from '../helpers/constants'
+import { IIntegration } from '../schemas/Integrations'
 
 export default class IntegrationService {
   constructor() {}
@@ -10,17 +10,19 @@ export default class IntegrationService {
       constants.INTEGRATIONS.DOCKER,
       constants.INTEGRATIONS.DOCKER_HUB,
       constants.INTEGRATIONS.STRIPE,
+      constants.INTEGRATIONS.OVH,
     ]
     const enabledIntegrations = {
       [constants.INTEGRATIONS.DOCKER]: false,
       [constants.INTEGRATIONS.DOCKER_HUB]: false,
       [constants.INTEGRATIONS.STRIPE]: false,
+      [constants.INTEGRATIONS.OVH]: false,
     }
     const integrations: { [key: string]: any[] } = {}
 
     const foundIntegrations =
       (await db.managementDb
-        ?.collection<IIntegration>("integrations")
+        ?.collection<IIntegration>('integrations')
         .find({
           name: { $in: allIntegrations },
           status: constants.STATUSES.ACTIVE_STATUS,

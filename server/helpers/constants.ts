@@ -39,6 +39,7 @@ export default {
     DOCKER_HUB: 'docker_hub',
     DOCKER: 'docker',
     NGINX: 'nginx',
+    OVH: 'ovh',
   },
   SERVICE: 'service',
   INTEGRATION_TYPES: {

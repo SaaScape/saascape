@@ -1,11 +1,11 @@
-import { useEffect } from "react"
-import useSetBreadcrumbs from "../../middleware/useSetBreadcrumbs"
-import ViewSettings from "./ViewSettings"
-import breadcrumbs from "../../helpers/constants/breadcrumbs"
-import { IconStyles } from "../../components/Icon"
-import { useSelector } from "react-redux"
-import { IStore } from "../../store/store"
-import constants from "../../helpers/constants/constants"
+import { ReactElement, useEffect } from 'react'
+import useSetBreadcrumbs from '../../middleware/useSetBreadcrumbs'
+import ViewSettings from './ViewSettings'
+import breadcrumbs from '../../helpers/constants/breadcrumbs'
+import { IconStyles } from '../../components/Icon'
+import { useSelector } from 'react-redux'
+import { IStore } from '../../store/store'
+import constants from '../../helpers/constants/constants'
 
 export interface ISettingItem {
   key: number
@@ -18,8 +18,8 @@ export interface ISettingItem {
 
 export interface IIntegrationSettingItem {
   key: number
-  icon: string
-  iconStyle: IconStyles
+  icon: string | ReactElement
+  iconStyle: IconStyles | 'custom'
   name: string
   description: string
   value: boolean
@@ -36,19 +36,19 @@ export interface IViewProps {
 const settingItems: ISettingItem[] = [
   {
     key: 1,
-    icon: "SETTINGS",
-    iconStyle: "solid",
-    name: "General",
-    description: "View and managed SaaScape configuration",
-    path: "/settings/general",
+    icon: 'SETTINGS',
+    iconStyle: 'solid',
+    name: 'General',
+    description: 'View and managed SaaScape configuration',
+    path: '/settings/general',
   },
   {
     key: 2,
-    icon: "DOCKER",
-    iconStyle: "brands",
-    name: "Docker",
-    description: "View and managed Docker configuration",
-    path: "/settings/docker",
+    icon: 'DOCKER',
+    iconStyle: 'brands',
+    name: 'Docker',
+    description: 'View and managed Docker configuration',
+    path: '/settings/docker',
   },
 ]
 
@@ -64,21 +64,30 @@ const ViewSettingsContainer = () => {
   const integrationSettingItems: IIntegrationSettingItem[] = [
     {
       key: 1,
-      icon: "STRIPE",
-      iconStyle: "brands",
-      name: "Stripe",
-      description: "View and managed Stripe configuration",
-      path: "/settings/stripe",
+      icon: 'STRIPE',
+      iconStyle: 'brands',
+      name: 'Stripe',
+      description: 'View and managed Stripe configuration',
+      path: '/settings/stripe',
       value: enabledIntegrations?.[constants.INTEGRATIONS.STRIPE],
     },
     {
       key: 2,
-      icon: "DOCKER_HUB",
-      iconStyle: "brands",
-      name: "Docker Hub",
-      description: "View and managed Docker Hub configuration",
-      path: "/settings/docker-hub",
-      value: enabledIntegrations?.[constants.INTEGRATIONS.DOCKER_HUB],
+      icon: (
+        <figure>
+          <img
+            alt={'ovh logo'}
+            src={
+              'https://www.google.com/url?sa=i&url=https%3A%2F%2Fuxwing.com%2Fovh-icon%2F&psig=AOvVaw06ZTaudoU97fF5H_5ON5pa&ust=1723875416806000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCNC8jsHu-IcDFQAAAAAdAAAAABAE'
+            }
+          />
+        </figure>
+      ),
+      iconStyle: 'custom',
+      name: 'OVH',
+      description: 'View and manage OVH integration',
+      path: '/settings/ovh',
+      value: enabledIntegrations?.[constants.INTEGRATIONS.OVH],
     },
   ]
 

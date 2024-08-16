@@ -2,7 +2,7 @@
  * Copyright SaaScape (c) 2024.
  */
 
-import { useEffect } from 'react'
+import { createContext, useEffect, useState } from 'react'
 import Aside from './components/Aside'
 import Header from './components/Header'
 import { apiAxios } from './helpers/axios'
@@ -16,19 +16,26 @@ import { setSwarms } from './store/slices/swarmSlice'
 import ManageInstances from './components/InstanceManager.tsx'
 import { setNotifications } from './store/slices/notificationsSlice.ts'
 
+export const LoadingInitialDataContext = createContext(true)
+
 const MainLayout = () => {
   const dispatch = useDispatch()
   // const user = useSelector((state: IStore) => state.user)
+  const [loadingInitialData, setLoadingInitialData] = useState<boolean>(false)
 
   useEffect(() => {
-    Promise.allSettled([
-      getIntegrations(),
-      getCurrencies(),
-      getApplications(),
-      getServers(),
-      getSwarms(),
-      getNotifications(),
-    ])
+    ;(async () => {
+      setLoadingInitialData(true)
+      await Promise.allSettled([
+        getIntegrations(),
+        getCurrencies(),
+        getApplications(),
+        getServers(),
+        getSwarms(),
+        getNotifications(),
+      ])
+      setLoadingInitialData(false)
+    })()
   }, [])
 
   const getCurrencies = async () => {
@@ -84,13 +91,15 @@ const MainLayout = () => {
   }
 
   return (
-    <ManageInstances>
-      <div className="main-layout">
-        <Header />
-        <Aside />
-        <Main />
-      </div>
-    </ManageInstances>
+    <LoadingInitialDataContext.Provider value={loadingInitialData}>
+      <ManageInstances>
+        <div className="main-layout">
+          <Header />
+          <Aside />
+          <Main />
+        </div>
+      </ManageInstances>
+    </LoadingInitialDataContext.Provider>
   )
 }
 

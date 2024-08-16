@@ -233,4 +233,14 @@ export default {
       path: '/settings',
     },
   ],
+  OVH_SETTINGS: [
+    {
+      title: 'Settings',
+      path: '/settings',
+    },
+    {
+      title: 'OVH',
+      path: '/settings/ovh',
+    },
+  ],
 }

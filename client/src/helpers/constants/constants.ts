@@ -16,6 +16,7 @@ export default {
     DOCKER: 'docker',
     DOCKER_HUB: 'docker_hub',
     STRIPE: 'stripe',
+    OVH: 'ovh',
   },
   BILLING_INTERVAL: {
     DAY: 'day',
